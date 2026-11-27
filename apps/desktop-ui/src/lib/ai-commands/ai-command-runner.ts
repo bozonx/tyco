@@ -108,9 +108,12 @@ function answerText(state: ChatToolLoopState): string {
     .join('')
 }
 
-export class QuietRunConfirmationError extends Error {
-  constructor() {
-    super('A tool in this command requires confirmation')
+export class QuietRunToolError extends Error {
+  constructor(
+    readonly code: 'ConfirmationRequired' | 'QuietRunUnsupported',
+    message: string
+  ) {
+    super(message)
   }
 }
 
@@ -137,8 +140,8 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
     const signal = confirmationAbort
       ? AbortSignal.any([options.signal, confirmationAbort.signal])
       : options.signal
-    const requiresConfirmation = () => {
-      const error = new QuietRunConfirmationError()
+    const failQuietRun = (code: QuietRunToolError['code'], message: string) => {
+      const error = new QuietRunToolError(code, message)
       confirmationAbort?.abort(error)
       return error
     }
@@ -173,8 +176,15 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
             isRecord(input) ? input : {},
             signal
           )
-          if (options.isQuiet && outcome.code === 'ConfirmationRequired')
-            throw requiresConfirmation()
+          if (
+            options.isQuiet &&
+            (outcome.code === 'ConfirmationRequired' ||
+              outcome.code === 'QuietRunUnsupported')
+          )
+            throw failQuietRun(
+              outcome.code,
+              outcome.message ?? 'A tool cannot run quietly'
+            )
           const result = toolResultForModel(outcome)
           // only a text the command returned may stand for the answer, never
           // a status such as `Done` or an i18n key
@@ -204,6 +214,7 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
     const policy = createChatToolPolicy({ canAsk: options.isQuiet === true })
     const scope: ToolScope = {
       kind: 'aiCommand',
+      isQuiet: options.isQuiet,
       commandId: options.commandId ?? '',
       tools: config.tools,
       catalog: options.catalog,
@@ -237,7 +248,11 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
         stream: (prompt, streamOptions) =>
           deps.stream('aiTask', prompt, streamOptions),
         requestApproval: async () => {
-          if (options.isQuiet) throw requiresConfirmation()
+          if (options.isQuiet)
+            throw failQuietRun(
+              'ConfirmationRequired',
+              'A tool in this command requires confirmation'
+            )
           return 'deny'
         },
         policy,

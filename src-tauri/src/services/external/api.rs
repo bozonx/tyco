@@ -120,15 +120,24 @@ pub fn supply_input_for_window(
     Ok(())
 }
 
+fn ensure_cancel_window(
+    jobs: &ExternalJobs,
+    window_label: &str,
+    id: &str,
+) -> Result<(), crate::errors::AppError> {
+    if window_label == runtime::MAIN_WINDOW_LABEL && jobs.is_quiet(id) {
+        return Ok(());
+    }
+    ensure_job_window(window_label, "cancels command runs")
+}
+
 /// Cancels the run of the window, as Esc in its overlay does.
 pub fn cancel_for_window(
     app: &AppHandle,
     window_label: &str,
     id: &str,
 ) -> Result<(), crate::errors::AppError> {
-    if window_label != runtime::MAIN_WINDOW_LABEL || !app.state::<ExternalJobs>().is_quiet(id) {
-        ensure_job_window(window_label, "cancels command runs")?;
-    }
+    ensure_cancel_window(&app.state::<ExternalJobs>(), window_label, id)?;
     cancel(app, id, ErrorCode::Cancelled);
     Ok(())
 }
@@ -227,5 +236,35 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
                 Err(error) => *error,
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::external::jobs::NewJob;
+
+    #[test]
+    fn main_can_cancel_a_quiet_job_only() {
+        let jobs = ExternalJobs::default();
+        let create = |quiet| {
+            jobs.create(NewJob {
+                command_id: "fixture".into(),
+                command_name: "Fixture".into(),
+                request: tyco_activation_protocol::RunRequest {
+                    quiet,
+                    ..Default::default()
+                },
+                is_internal: false,
+                command_snapshot: None,
+            })
+            .unwrap()
+        };
+        let visible = create(false);
+        let quiet = create(true);
+        assert!(ensure_cancel_window(&jobs, runtime::MAIN_WINDOW_LABEL, &quiet.id).is_ok());
+        assert!(ensure_cancel_window(&jobs, runtime::MAIN_WINDOW_LABEL, &visible.id).is_err());
+        assert!(ensure_cancel_window(&jobs, runtime::QUICK_WINDOW_LABEL, &visible.id).is_ok());
+        assert!(ensure_cancel_window(&jobs, "subtitles", &quiet.id).is_err());
     }
 }

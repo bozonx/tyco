@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 216cddfb6d98b8729a98255304c7d195d9bcb3d04f3f8824555747b0ae81f83b
+// Source hash: a43c4b045238b1268b91f0dd622b555707dd0f7f056efc00ae4a37a62cf338dc
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -858,6 +858,7 @@ export type OperationCatalogEntry = {
   reason?: string | null
   inputSchema?: Record<string, unknown>
   commandInputs: { [key in string]: CommandInputDescription }
+  canRunQuietly?: boolean
 }
 
 /** How a command of a tool gets its input from a text. */
@@ -959,6 +960,7 @@ export type QuietRunEvent = {
   jobId: string
   commandName: string
   state: ExternalJobState
+  startedAt: number | null
 }
 
 export type QuietRunLabels = {

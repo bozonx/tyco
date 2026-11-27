@@ -12,10 +12,14 @@ use super::validation::{
 use super::ApiResult;
 use crate::errors::AppError;
 use crate::events;
+use crate::models::{
+    EditorHistoryEntry, EditorHistoryFailure, EditorHistoryFailureKind, EditorHistoryKind,
+    EditorHistoryOrigin,
+};
 use crate::services::activation::{
     Activation, ActivationMode, ActivationSource, CommandRunRequest,
 };
-use crate::services::external::jobs::{CreateJobError, ExternalJobs, NewJob};
+use crate::services::external::jobs::{CreateJobError, ExternalJobs, NewJob, RunHistory};
 use crate::services::external::{access, command_library};
 use crate::services::{runtime, selection_replace, visible_work};
 use crate::state::AppState;
@@ -101,19 +105,8 @@ pub(super) fn start(
         )));
     }
     let config = state.user_config();
-    if request.quiet
-        && app
-            .state::<command_library::OperationCatalogState>()
-            .get()
-            .is_none()
-    {
-        return Err(Box::new(Response::coded_error(
-            ErrorCode::NotReady,
-            "The command executor is still loading",
-        )));
-    }
-    if request.quiet && !command_library::can_run_quietly(&config, &command.id) {
-        return Err(Box::new(confirmation_required()));
+    if request.quiet {
+        ensure_quiet_run(app, &config, &command.id)?;
     }
     let name = command_name(&config, &command.id);
     let jobs = app.state::<ExternalJobs>();
@@ -456,9 +449,17 @@ pub fn claim(app: &AppHandle, id: &str) -> Option<CommandRunPayload> {
         );
         return None;
     }
-    if request.quiet && !command_library::can_run_quietly(&config, &command_id) {
-        fail_with(app, id, confirmation_required());
-        return None;
+    if request.quiet {
+        if let Err(error) = ensure_quiet_run(app, &config, &command_id) {
+            fail_with(app, id, *error);
+            return None;
+        }
+        if let Some(event) = jobs
+            .active_quiet_status()
+            .filter(|event| event.job_id == id)
+        {
+            publish_quiet_status(app, event);
+        }
     }
     Some(CommandRunPayload {
         command_id,
@@ -469,20 +470,41 @@ pub fn claim(app: &AppHandle, id: &str) -> Option<CommandRunPayload> {
     })
 }
 
-fn confirmation_required() -> Response {
-    Response::coded_error(
-        ErrorCode::ConfirmationRequired,
-        "A tool in this command requires confirmation",
-    )
+fn ensure_quiet_run(app: &AppHandle, config: &Value, id: &str) -> ApiResult<()> {
+    let catalog = app.state::<command_library::OperationCatalogState>().get();
+    validate_quiet_run(config, id, catalog.as_ref())
 }
 
-fn record_history(app: &AppHandle, job: &Job, history: super::super::jobs::RunHistory) {
-    use crate::models::{
-        EditorHistoryEntry, EditorHistoryFailure, EditorHistoryFailureKind, EditorHistoryKind,
-        EditorHistoryOrigin,
+fn validate_quiet_run(
+    config: &Value,
+    id: &str,
+    catalog: Option<&command_library::OperationCatalog>,
+) -> ApiResult<()> {
+    let Some(catalog) = catalog else {
+        return Err(Box::new(Response::coded_error(
+            ErrorCode::NotReady,
+            "The command executor is still loading",
+        )));
     };
-    use crate::services::storage;
+    if let Some(code) = command_library::quiet_run_error(config, id, Some(catalog)) {
+        let message = if code == ErrorCode::ConfirmationRequired {
+            "A tool in this command requires confirmation"
+        } else {
+            "An operation or tool in this command does not support quiet runs"
+        };
+        return Err(Box::new(Response::coded_error(code, message)));
+    }
+    Ok(())
+}
 
+fn command_history_entry(
+    job: &Job,
+    history: RunHistory,
+) -> (
+    EditorHistoryEntry,
+    String,
+    Result<Option<String>, EditorHistoryFailure>,
+) {
     let result = if job.state == JobState::Succeeded {
         Ok(job.output.clone())
     } else {
@@ -510,27 +532,41 @@ fn record_history(app: &AppHandle, job: &Job, history: super::super::jobs::RunHi
         instruction: None,
         profile_id: None,
     };
-    if let Err(error) = storage::add_command_run_history(app, entry, history.command_name, result) {
+    (entry, history.command_name, result)
+}
+
+fn record_history(app: &AppHandle, job: &Job, history: RunHistory) {
+    let (entry, command_name, result) = command_history_entry(job, history);
+    if let Err(error) =
+        crate::services::storage::add_command_run_history(app, entry, command_name, result)
+    {
         log::warn!("Could not save command run history: {error}");
     }
 }
 
 fn quiet_status(app: &AppHandle, job: &Job, command_name: String) {
-    let handle = app.clone();
     let event = events::QuietRunEvent {
         job_id: job.id.clone(),
         command_name,
+        started_at: app.state::<ExternalJobs>().started_at(&job.id),
         state: if job.code.as_deref() == Some(ErrorCode::TimedOut.as_str()) {
             JobState::Failed
         } else {
             job.state.clone()
         },
     };
+    publish_quiet_status(app, event);
+}
+
+fn publish_quiet_status(app: &AppHandle, event: events::QuietRunEvent) {
+    let handle = app.clone();
     let _ = app.run_on_main_thread(move || {
-        let active = handle.state::<ExternalJobs>().active_id_for(true);
+        let active = handle.state::<ExternalJobs>().active_quiet_status();
         let is_running = !event.state.is_terminal();
-        if (is_running && active.as_deref() != Some(event.job_id.as_str()))
-            || (!is_running && active.is_some())
+        if is_running
+            && !active
+                .as_ref()
+                .is_some_and(|active| active.job_id == event.job_id && active.state == event.state)
         {
             return;
         }
@@ -541,8 +577,12 @@ fn quiet_status(app: &AppHandle, job: &Job, command_name: String) {
             return;
         }
         let text = runtime::quiet_run_label(&handle, &event.state, &event.command_name);
-        if let Err(error) = runtime::set_tray_quiet_run(&handle, is_running.then(|| text.clone())) {
-            log::warn!("Could not update quiet run tray status: {error}");
+        if is_running || active.is_none() {
+            if let Err(error) =
+                runtime::set_tray_quiet_run(&handle, is_running.then(|| text.clone()))
+            {
+                log::warn!("Could not update quiet run tray status: {error}");
+            }
         }
         #[cfg(target_os = "linux")]
         {
@@ -553,7 +593,10 @@ fn quiet_status(app: &AppHandle, job: &Job, command_name: String) {
                 JobState::Cancelled => StatusOverlayKind::Info,
                 _ => StatusOverlayKind::Pending,
             };
-            quiet::show(&handle, kind, text);
+            quiet::show(&handle, kind, text, event.state == JobState::Running);
+            if !is_running && active.is_none() {
+                quiet::clear_pending(&handle);
+            }
         }
         #[cfg(target_os = "windows")]
         if !is_running
@@ -561,11 +604,11 @@ fn quiet_status(app: &AppHandle, job: &Job, command_name: String) {
                 .get_webview_window(runtime::MAIN_WINDOW_LABEL)
                 .is_some_and(|window| window.is_focused().unwrap_or(false))
         {
-            use crate::services::platform::notifications::NotificationService;
-            if let Err(error) = handle
-                .state::<std::sync::Arc<NotificationService>>()
-                .notify(&text, "")
-            {
+            if let Err(error) = crate::services::platform::notifications::notify_quiet_run(
+                &handle,
+                handle.package_info().name.as_str(),
+                &text,
+            ) {
                 log::warn!("Could not show quiet run notification: {error}");
             }
         }
@@ -626,7 +669,58 @@ pub fn spawn_reaper(app: AppHandle) -> Result<(), AppError> {
 
 #[cfg(test)]
 mod tests {
-    use super::keep_selection_whitespace;
+    use super::*;
+
+    #[test]
+    fn quiet_claim_rechecks_current_operation_metadata() {
+        let config =
+            serde_json::json!({"commands": [{"id": "fixture", "operationId": "Plugin.task"}]});
+        let operation = serde_json::from_value(serde_json::json!({
+            "id": "Plugin.task", "input": "none", "available": true, "canRunQuietly": true,
+        }))
+        .unwrap();
+        let mut catalog = command_library::catalog_from(vec![operation]);
+        assert!(validate_quiet_run(&config, "fixture", Some(&catalog)).is_ok());
+        catalog.get_mut("Plugin.task").unwrap().can_run_quietly = false;
+        assert_eq!(
+            validate_quiet_run(&config, "fixture", Some(&catalog))
+                .unwrap_err()
+                .error_code(),
+            ErrorCode::QuietRunUnsupported,
+        );
+    }
+
+    #[test]
+    fn quiet_timeout_preserves_input_and_history_origin() {
+        let jobs = ExternalJobs::default();
+        let job = jobs
+            .create(NewJob {
+                command_id: "fixture".into(),
+                command_name: "Fixture".into(),
+                request: RunRequest {
+                    quiet: true,
+                    text: Some("original".into()),
+                    ..Default::default()
+                },
+                is_internal: false,
+                command_snapshot: None,
+            })
+            .unwrap();
+        let (job, _, history) = jobs
+            .finish_with_history(
+                &job.id,
+                JobState::Cancelled,
+                None,
+                Some("Run timed out".into()),
+                Some(ErrorCode::TimedOut.into()),
+            )
+            .unwrap();
+        let (entry, name, outcome) = command_history_entry(&job, history.unwrap());
+        assert_eq!(entry.origin, Some(EditorHistoryOrigin::ExternalRun));
+        assert_eq!(entry.text, "original");
+        assert_eq!(name, "Fixture");
+        assert_eq!(outcome.unwrap_err().kind, EditorHistoryFailureKind::Timeout);
+    }
 
     #[test]
     fn replacement_preserves_original_surrounding_whitespace() {

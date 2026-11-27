@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Варианты ответа" }
   },
   "commandRun": {
+    "quietAccepted": "Ожидает запуска: {name}",
     "quietRunning": "Выполняется: {name}",
     "quietSucceeded": "Готово: {name}",
     "quietFailed": "Ошибка: {name}",

@@ -10,6 +10,7 @@ import type {
   InvocationOutcome,
 } from '../invocation/invocation-types'
 import { createOperationInvoker } from '../invocation/invoke-operation'
+import { canOperationRunQuietly } from '../operations/quiet-operation'
 import type { OperationResult } from '../operations/operation-types'
 import { invocationUnavailableReason } from '../invocation/invoke-operation'
 import { commandInvocation, preTransformCommandText } from './command-runtime'
@@ -42,6 +43,9 @@ function createInputPreparation(deps: CommandTransformDependencies) {
     text: string,
     options: InvocationOptions
   ) => {
+    const tool = deps.operations.get(command.operationId)
+    if (options.isQuiet && tool && !canOperationRunQuietly(tool))
+      return { ok: true as const, text, options }
     // a command that cannot run here is not prepared by the LLM for nothing:
     // the run that follows tells why it does not run
     if (

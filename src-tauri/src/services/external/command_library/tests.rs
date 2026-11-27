@@ -120,6 +120,7 @@ fn catalog() -> OperationCatalog {
         reason: reason.map(str::to_owned),
         input_schema: None,
         command_inputs: HashMap::new(),
+        can_run_quietly: true,
     };
     catalog_from(vec![
         entry("script", OperationInputKind::Text, true, None),
@@ -156,6 +157,7 @@ fn configured_input_changes_schema_and_call_capabilities() {
         reason: None,
         input_schema: None,
         command_inputs: HashMap::new(),
+        can_run_quietly: true,
     };
     tool.command_inputs.insert("configured".into(), CommandInputDescription {
         operation_config: command["operationConfig"].clone(), input: OperationInputKind::Structured,
@@ -493,11 +495,44 @@ fn quiet_runs_refuse_confirmation_in_reachable_command_whitelists() {
             ]}},
             {"id": "child", "operationId": "core.aiTask", "operationConfig": {"tools": [
                 {"sourceKind": "commands", "sourceId": "commands", "toolName": "parent"},
-                {"sourceKind": "plugin", "sourceId": "fixture", "toolName": "run", "policy": "ask"}
+                {"sourceKind": "core", "sourceId": "web", "policy": "ask"}
             ]}}
         ]
     });
-    assert!(!can_run_quietly(&config, "parent"));
+    let mut catalog = catalog();
+    let mut ai = catalog["script"].clone();
+    ai.id = "core.aiTask".into();
+    catalog.insert(ai.id.clone(), ai);
+    use tyco_activation_protocol::ErrorCode;
+    assert_eq!(
+        quiet_run_error(&config, "parent", Some(&catalog)),
+        Some(ErrorCode::ConfirmationRequired)
+    );
     config["commands"][1]["operationConfig"]["tools"][1]["policy"] = json!("allow");
-    assert!(can_run_quietly(&config, "parent"));
+    assert_eq!(quiet_run_error(&config, "parent", Some(&catalog)), None);
+    config["commands"][1]["operationId"] = json!("core.copy");
+    assert_eq!(
+        quiet_run_error(&config, "parent", Some(&catalog)),
+        Some(ErrorCode::QuietRunUnsupported)
+    );
+    for id in [
+        "core.insert",
+        "core.copy",
+        "core.askInChat",
+        "core.askInNewChat",
+        "core.askInCurrentChat",
+    ] {
+        config["commands"][1]["operationId"] = json!(id);
+        assert_eq!(
+            quiet_run_error(&config, "child", Some(&catalog)),
+            Some(ErrorCode::QuietRunUnsupported)
+        );
+    }
+    config["commands"][1]["operationId"] = json!("Home.lights");
+    assert_eq!(quiet_run_error(&config, "child", Some(&catalog)), None);
+    catalog.get_mut("Home.lights").unwrap().can_run_quietly = false;
+    assert_eq!(
+        quiet_run_error(&config, "child", Some(&catalog)),
+        Some(ErrorCode::QuietRunUnsupported)
+    );
 }

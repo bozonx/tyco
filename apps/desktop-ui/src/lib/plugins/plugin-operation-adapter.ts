@@ -32,6 +32,10 @@ export function createPluginOperationAdapter(
   function tool(definition: OperationDefinition): HostOperationDefinition {
     return {
       ...definition,
+      canRunQuietly:
+        definition.canRunQuietly === true &&
+        !lifecycle.capabilities.includes('browser') &&
+        !lifecycle.capabilities.includes('editor'),
       icon: pluginIconName(id, definition.icon, lifecycle.iconPrefix),
       labelKey: definition.labelKey ? key(definition.labelKey) : undefined,
       descriptionKey: definition.descriptionKey
@@ -166,6 +170,11 @@ export function createPluginOperationAdapter(
         typeof definition.inputSchema !== 'object'
       )
         throw new Error('Invalid plugin tool')
+      if (
+        definition.canRunQuietly !== undefined &&
+        typeof definition.canRunQuietly !== 'boolean'
+      )
+        throw new Error('Invalid quiet run capability')
       validateOperationSchema(definition.inputSchema)
       if (
         definition.parseText !== undefined &&

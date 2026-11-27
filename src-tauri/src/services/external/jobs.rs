@@ -33,6 +33,7 @@ struct ExternalJobEntry {
     /// `None` until the job is handed off.
     run_limit: Option<Duration>,
     claimed_at: Option<Instant>,
+    started_at: Option<u64>,
     /// When the job finished and began to wait for its selection replacement
     pending_since: Option<Instant>,
 }
@@ -139,6 +140,7 @@ impl ExternalJobs {
                 is_selection_approved: false,
                 run_limit: None,
                 claimed_at: None,
+                started_at: None,
                 pending_since: None,
             },
         );
@@ -173,7 +175,14 @@ impl ExternalJobs {
                 job_id: entry.job.id.clone(),
                 command_name: entry.command_name.clone(),
                 state: entry.job.state.clone(),
+                started_at: entry.started_at,
             })
+    }
+
+    pub fn started_at(&self, id: &str) -> Option<u64> {
+        self.lock_entries()
+            .get(id)
+            .and_then(|entry| entry.started_at)
     }
 
     pub fn is_quiet(&self, id: &str) -> bool {
@@ -253,6 +262,7 @@ impl ExternalJobs {
         }
         entry.job.state = JobState::Running;
         entry.claimed_at = Some(now);
+        entry.started_at = Some(crate::services::clock::now_ms());
         entry.run_limit = run_limit;
         Some((entry.job.command_id.clone(), entry.request.clone()))
     }

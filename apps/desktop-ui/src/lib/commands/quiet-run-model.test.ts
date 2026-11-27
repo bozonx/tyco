@@ -8,6 +8,7 @@ const event: QuietRunEvent = {
   jobId: 'job',
   commandName: 'Backup',
   state: 'accepted',
+  startedAt: null,
 }
 
 function setup(text?: string) {

@@ -106,8 +106,9 @@ desktop_events! {
     /// A run was refused while another command runs; to the quick window,
     /// which tells it in the running overlay.
     CommandRunRejected = "app://command-run-rejected" => CommandRunRejectedEvent;
-    /// Carries the id of the job to stop.
+    /// Lifecycle of the quiet command run.
     QuietRunChanged = "app://quiet-run-changed" => QuietRunEvent;
+    /// Carries the id of the job to stop.
     ExternalJobCancel = "app://external-job-cancel" => String;
     /// Asks every window to end what it shows gracefully before an external
     /// request; carries the request id to answer with `visible_work_ended`.
@@ -167,4 +168,6 @@ pub struct QuietRunEvent {
     pub job_id: String,
     pub command_name: String,
     pub state: tyco_activation_protocol::JobState,
+    #[ts(type = "number | null")]
+    pub started_at: Option<u64>,
 }

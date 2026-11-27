@@ -14,13 +14,14 @@ it('shows the running command, cancels it, and opens history on completion', asy
     global: { plugins: [desktop.pinia, i18n] },
   })
   const store = useQuietRunStore()
-  const run = { commandName: 'Backup', jobId: 'job' }
+  const run = { commandName: 'Backup', jobId: 'job', startedAt: null }
   try {
-    expect(wrapper.find('summary').exists()).toBe(false)
+    expect(wrapper.find('button').exists()).toBe(false)
     store.update({ ...run, state: 'accepted' })
     await nextTick()
-    expect(wrapper.get('summary').text()).toContain('Backup')
+    expect(wrapper.get('button').text()).toContain('Backup')
     await wrapper.get('button').trigger('click')
+    await wrapper.get('.quiet-run-popover button').trigger('click')
     expect(desktop.backend.calls).toContainEqual({
       command: 'cancel_external_job',
       args: { id: 'job' },
@@ -29,6 +30,44 @@ it('shows the running command, cancels it, and opens history on completion', asy
     await nextTick()
     await wrapper.get('button').trigger('click')
     expect(wrapper.emitted('openHistory')).toHaveLength(1)
+  } finally {
+    wrapper.unmount()
+    desktop.dispose()
+  }
+})
+
+it('keeps a completion visible beside a new active job and shows its original start time', async () => {
+  const desktop = await loadFakeDesktop()
+  const wrapper = mount(QuietRunChip, {
+    attachTo: document.body,
+    global: { plugins: [desktop.pinia, i18n] },
+  })
+  const store = useQuietRunStore()
+  try {
+    store.update({
+      jobId: 'new',
+      commandName: 'New run',
+      state: 'running',
+      startedAt: Date.now() - 65_000,
+    })
+    store.update({
+      jobId: 'old',
+      commandName: 'Previous run',
+      state: 'failed',
+      startedAt: null,
+    })
+    await nextTick()
+    expect(wrapper.text()).toContain('Previous run')
+    const trigger = wrapper.get('button[aria-expanded]')
+    ;(trigger.element as HTMLButtonElement).focus()
+    await trigger.trigger('click')
+    expect(wrapper.get('time').text()).toBe('1:05')
+    await trigger.trigger('keydown', { key: 'Escape' })
+    expect(wrapper.find('time').exists()).toBe(false)
+    await trigger.trigger('click')
+    document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await nextTick()
+    expect(wrapper.find('time').exists()).toBe(false)
   } finally {
     wrapper.unmount()
     desktop.dispose()

@@ -440,6 +440,7 @@ export type ToolScope =
   | {
       kind: 'aiCommand'
       commandId: string
+      isQuiet?: boolean
       tools: readonly ToolRef[]
       catalog: ToolCatalogSettings | undefined
     }
@@ -463,6 +464,13 @@ export function toolStateIn(scope: ToolScope, tool: CatalogTool): ToolState {
     case 'aiCommand':
       if (!isToolAvailable(scope.catalog, tool)) return 'off'
       if (
+        scope.isQuiet &&
+        tool.source.kind !== 'commands' &&
+        !(tool.source.kind === 'core' && tool.source.id === CORE_SOURCE_IDS.web)
+      )
+        return 'off'
+      if (
+        scope.isQuiet &&
         scope.tools.some(
           (ref) =>
             ref.policy === 'ask' && whitelistHas([ref], tool.source, tool.name)

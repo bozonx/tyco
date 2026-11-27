@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Varianty odpovědí" }
   },
   "commandRun": {
+    "quietAccepted": "Čeká na spuštění: {name}",
     "quietRunning": "Probíhá: {name}",
     "quietSucceeded": "Hotovo: {name}",
     "quietFailed": "Chyba: {name}",

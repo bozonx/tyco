@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Жауап нұсқалары" }
   },
   "commandRun": {
+    "quietAccepted": "Іске қосылуды күтуде: {name}",
     "quietRunning": "Орындалуда: {name}",
     "quietSucceeded": "Аяқталды: {name}",
     "quietFailed": "Қате: {name}",

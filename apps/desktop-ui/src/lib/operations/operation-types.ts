@@ -5,9 +5,14 @@ import type {
   OperationCommandParameter as SdkOperationCommandParameter,
   JsonSchema,
   OperationCall,
-  OperationResult,
+  OperationResult as SdkOperationResult,
 } from '@tyco/plugin-sdk'
 export * from '@tyco/plugin-sdk'
+
+export interface OperationResult extends SdkOperationResult {
+  /** Machine-readable failure reported to the command executor. */
+  code?: string
+}
 
 /** A call of a tool of the app: what the host knows beyond the plugin SDK */
 export interface HostOperationCall extends OperationCall {
@@ -15,7 +20,6 @@ export interface HostOperationCall extends OperationCall {
    * The AI commands that led to this call, outermost first; absent for a call
    * made by the user
    */
-  isQuiet?: boolean
   callerCommandIds?: readonly string[]
 }
 

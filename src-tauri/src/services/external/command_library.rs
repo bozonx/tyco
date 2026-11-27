@@ -56,6 +56,9 @@ pub struct OperationCatalogEntry {
     pub input_schema: Option<Value>,
     #[serde(default)]
     pub command_inputs: HashMap<String, CommandInputDescription>,
+    #[serde(default)]
+    #[ts(as = "Option<bool>", optional)]
+    pub can_run_quietly: bool,
 }
 
 /// The tools of the webview registry by id. Plugin tools and whether a tool
@@ -453,7 +456,12 @@ pub fn list(user_config: &Value, catalog: Option<&OperationCatalog>) -> Value {
 
 /// AI command whitelists normally grant tools directly. An explicit ask
 /// anywhere in the reachable command chain requires a visible run.
-pub fn can_run_quietly(config: &Value, command_id: &str) -> bool {
+pub fn quiet_run_error(
+    config: &Value,
+    command_id: &str,
+    catalog: Option<&OperationCatalog>,
+) -> Option<tyco_activation_protocol::ErrorCode> {
+    use tyco_activation_protocol::ErrorCode;
     let mut pending = vec![command_id.to_owned()];
     let mut seen = std::collections::HashSet::new();
     while let Some(id) = pending.pop() {
@@ -463,7 +471,25 @@ pub fn can_run_quietly(config: &Value, command_id: &str) -> bool {
         let Some(command) = commands_of(config).find(|command| id_of(command) == id) else {
             continue;
         };
-        if !is_enabled(command) || str_field(command, "operationId").trim() != "core.aiTask" {
+        if !is_enabled(command) {
+            continue;
+        }
+        let operation = str_field(command, "operationId").trim();
+        let is_safe = match operation {
+            "core.insert"
+            | "core.copy"
+            | "core.askInChat"
+            | "core.askInCurrentChat"
+            | "core.askInNewChat" => false,
+            "script" | "webhook" => true,
+            _ => catalog
+                .and_then(|catalog| catalog.get(operation))
+                .is_some_and(|entry| entry.can_run_quietly),
+        };
+        if !is_safe {
+            return Some(ErrorCode::QuietRunUnsupported);
+        }
+        if operation != "core.aiTask" {
             continue;
         }
         for tool in command["operationConfig"]["tools"]
@@ -472,16 +498,20 @@ pub fn can_run_quietly(config: &Value, command_id: &str) -> bool {
             .flatten()
         {
             if tool["policy"] == "ask" {
-                return false;
+                return Some(ErrorCode::ConfirmationRequired);
             }
-            if tool["sourceKind"] == "commands" {
-                if let Some(id) = tool["toolName"].as_str() {
-                    pending.push(id.to_owned());
+            match tool["sourceKind"].as_str() {
+                Some("commands") => {
+                    if let Some(id) = tool["toolName"].as_str() {
+                        pending.push(id.to_owned());
+                    }
                 }
+                Some("core") if tool["sourceId"] == "web" => {}
+                _ => return Some(ErrorCode::QuietRunUnsupported),
             }
         }
     }
-    true
+    None
 }
 
 /// Describe the same effective input used by the execution registry.
@@ -509,7 +539,7 @@ pub fn describe(
         "name": raw.map_or(command.id.as_str(), display_name),
         "input": if command.has_structured_input { "structured" } else if command.can_take_text { "text" } else { "none" },
         "textAccepted": command.can_take_text,
-        "canRunQuietly": can_run_quietly(user_config, &command.id),
+        "canRunQuietly": quiet_run_error(user_config, &command.id, catalog).is_none(),
         "canReplaceSelection": command.accepts_selection(),
         "output": "return",
         "inputSchema": schema,

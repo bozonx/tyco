@@ -16,10 +16,18 @@ import { useOperationsStore } from './operations'
 
 export const useQuietRunStore = defineStore('quietRun', () => {
   const status = shallowRef<QuietRunEvent>()
-  const startedAt = shallowRef(0)
+  const completion = shallowRef<QuietRunEvent>()
+  const cancellingJobId = shallowRef<string>()
   let clearTimer: ReturnType<typeof setTimeout> | undefined
   let dispose: (() => void) | undefined
   let handleExecution: ((event: QuietRunEvent) => void) | undefined
+
+  const clearCompletionOnFocus = () => {
+    if (!completion.value || !document.hasFocus()) return
+    clearTimeout(clearTimer)
+    clearTimer = setTimeout(() => (completion.value = undefined), 5000)
+  }
+  window.addEventListener('focus', clearCompletionOnFocus)
 
   const ipc = useIpcStore()
   const reportError = (error: unknown) =>
@@ -55,12 +63,15 @@ export const useQuietRunStore = defineStore('quietRun', () => {
   const update = (event: QuietRunEvent) => {
     handleExecution?.(event)
     const isActive = event.state === 'accepted' || event.state === 'running'
-    if (!isActive && status.value && status.value.jobId !== event.jobId) return
+    if (isActive) {
+      status.value = event
+      return
+    }
+    if (status.value?.jobId === event.jobId) status.value = undefined
+    if (cancellingJobId.value === event.jobId) cancellingJobId.value = undefined
     clearTimeout(clearTimer)
-    if (status.value?.jobId !== event.jobId) startedAt.value = Date.now()
-    status.value = event
-    if (!isActive)
-      clearTimer = setTimeout(() => (status.value = undefined), 3500)
+    completion.value = event
+    clearCompletionOnFocus()
   }
 
   const refresh = async () => {
@@ -72,15 +83,23 @@ export const useQuietRunStore = defineStore('quietRun', () => {
 
   onScopeDispose(() => {
     clearTimeout(clearTimer)
+    window.removeEventListener('focus', clearCompletionOnFocus)
     dispose?.()
   })
 
   return {
     status,
-    startedAt,
+    completion,
+    cancellingJobId,
     startExecutor,
     refresh,
     update,
-    cancel: (id: string) => ipc.callOrNotify('cancel_external_job', { id }),
+    async cancel(id: string) {
+      if (cancellingJobId.value === id) return
+      cancellingJobId.value = id
+      const result = await ipc.callOrNotify('cancel_external_job', { id })
+      if (!result.success && cancellingJobId.value === id)
+        cancellingJobId.value = undefined
+    },
   }
 })

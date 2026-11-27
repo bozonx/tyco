@@ -74,6 +74,8 @@ export interface OperationCall {
   config: Record<string, unknown>
   /** Where the call came from */
   source: CommandRunSource
+  /** The operation runs without user interaction or desktop UI. */
+  isQuiet?: boolean
   /** Present when the toolbar captured the input from the editor. */
   editorSnapshot?: EditorInputSnapshot
   signal: AbortSignal
@@ -205,6 +207,11 @@ export interface OperationDefinition {
    * the chat model.
    */
   canRunFromChat?: boolean
+  /**
+   * Opt in only when the operation works without changing focus, UI or
+   * clipboard.
+   */
+  canRunQuietly?: boolean
   /**
    * Whether commands using this tool offer a per-platform filter in settings.
    * Defaults to false so cross-platform tools run on every OS.

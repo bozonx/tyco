@@ -45,13 +45,15 @@ pub fn manage_state(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri
         .manage(ActivationCoordinator::default())
         .manage(crate::services::selection_replace::SelectionRunCoordinator::default())
         .manage(RuntimeWindows::default())
-        .manage(std::sync::Arc::new(
-            crate::services::platform::notifications::NotificationService::default(),
-        ))
         .manage(super::screenshot::ScreenshotCropCoordinator::default())
 }
 
 pub fn setup(app: &mut App) -> Result<(), AppError> {
+    app.manage(std::sync::Arc::new(
+        crate::services::platform::notifications::NotificationService::for_app(
+            &app.config().identifier,
+        ),
+    ));
     let main_window = app
         .get_webview_window(MAIN_WINDOW_LABEL)
         .ok_or_else(|| AppError::ServiceUnavailable("Main window not found".into()))?;

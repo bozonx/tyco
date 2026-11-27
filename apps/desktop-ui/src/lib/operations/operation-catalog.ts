@@ -2,6 +2,7 @@ import { watch } from 'vue'
 
 import type { CommandConfig, OperationCatalogEntry } from '@tyco/shared'
 
+import { canOperationRunQuietly } from './quiet-operation'
 import { commandInputSchema } from './command-parameters'
 import { schemaShape } from './operation-input'
 import type { RegisteredOperation } from './operation-types'
@@ -29,6 +30,7 @@ export function buildOperationCatalog(
             ? 'parsed'
             : 'structured',
       available: !reason,
+      canRunQuietly: canOperationRunQuietly(tool),
       inputSchema: tool.inputSchema,
       commandInputs: {},
     }

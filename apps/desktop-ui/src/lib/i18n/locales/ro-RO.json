@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
   },
   "commandRun": {
+    "quietAccepted": "În așteptarea pornirii: {name}",
     "quietRunning": "În curs: {name}",
     "quietSucceeded": "Finalizat: {name}",
     "quietFailed": "Eroare: {name}",

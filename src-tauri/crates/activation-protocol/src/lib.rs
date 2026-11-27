@@ -125,7 +125,10 @@ pub enum Request {
 /// and D-Bus error names (`org.tyco.Error.<code>`) depend on them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ErrorCode {
+    /// A tool cannot run until the user confirms its access.
     ConfirmationRequired,
+    /// The operation needs access to the interactive desktop.
+    QuietRunUnsupported,
     /// A request or its input the API cannot take.
     InvalidInput,
     /// The frame was not a request of this protocol.
@@ -153,7 +156,8 @@ pub enum ErrorCode {
 }
 
 impl ErrorCode {
-    pub const ALL: [Self; 18] = [
+    pub const ALL: [Self; 19] = [
+        Self::QuietRunUnsupported,
         Self::ConfirmationRequired,
         Self::InvalidInput,
         Self::InvalidRequest,
@@ -177,6 +181,7 @@ impl ErrorCode {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::ConfirmationRequired => "ConfirmationRequired",
+            Self::QuietRunUnsupported => "QuietRunUnsupported",
             Self::InvalidInput => "InvalidInput",
             Self::InvalidRequest => "InvalidRequest",
             Self::InputRequired => "InputRequired",
@@ -205,7 +210,8 @@ impl ErrorCode {
     /// The exit status `tyco-ctl` ends with on this code.
     pub fn exit_code(self) -> i32 {
         match self {
-            Self::InvalidInput
+            Self::QuietRunUnsupported
+            | Self::InvalidInput
             | Self::InvalidRequest
             | Self::InputRequired
             | Self::AmbiguousName => 2,

@@ -5,7 +5,7 @@ use crate::errors::AppError;
 use crate::locks::MutexExt;
 use crate::state::AppState;
 use std::sync::Mutex;
-use tauri::menu::{MenuBuilder, MenuItem, MenuItemBuilder};
+use tauri::menu::{Menu, MenuBuilder, MenuItem, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{App, Manager};
 
@@ -50,6 +50,7 @@ struct TrayState {
     show_item: MenuItem<tauri::Wry>,
     quit_item: MenuItem<tauri::Wry>,
     quiet_item: MenuItem<tauri::Wry>,
+    menu: Menu<tauri::Wry>,
     default_icon: tauri::image::Image<'static>,
     recording_icon: tauri::image::Image<'static>,
     quiet_icon: tauri::image::Image<'static>,
@@ -74,8 +75,15 @@ impl TrayState {
                 .unwrap_or_else(|| activity.default_tooltip.clone());
             (quiet, icon.clone(), tooltip)
         };
-        self.quiet_item
-            .set_text(quiet.as_deref().unwrap_or("TyCo"))?;
+        let is_listed = self.menu.get(self.quiet_item.id()).is_some();
+        if let Some(label) = quiet {
+            self.quiet_item.set_text(label)?;
+            if !is_listed {
+                self.menu.insert(&self.quiet_item, 0)?;
+            }
+        } else if is_listed {
+            self.menu.remove(&self.quiet_item)?;
+        }
         if let Some(tray) = app.tray_by_id("main-tray") {
             tray.set_icon(Some(icon))?;
             let _ = tray.set_tooltip(Some(tooltip));
@@ -220,11 +228,11 @@ fn load_png_image(bytes: &[u8]) -> Result<tauri::image::Image<'static>, AppError
 pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
     let show_item = MenuItemBuilder::with_id(TRAY_SHOW_ID, "Show TyCo").build(app)?;
     let quit_item = MenuItemBuilder::with_id(TRAY_QUIT_ID, "Quit").build(app)?;
-    let quiet_item = MenuItemBuilder::with_id("quiet-run-status", "TyCo")
+    let quiet_item = MenuItemBuilder::with_id("quiet-run-status", "")
         .enabled(false)
         .build(app)?;
     let menu = MenuBuilder::new(app)
-        .items(&[&quiet_item, &show_item])
+        .items(&[&show_item])
         .separator()
         .items(&[&quit_item])
         .build()?;
@@ -239,6 +247,7 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
         show_item,
         quit_item,
         quiet_item,
+        menu: menu.clone(),
         quiet_icon: command_activity_icon(&default_icon),
         quiet_recording_icon: command_activity_icon(&recording_icon),
         default_icon: default_icon.clone(),

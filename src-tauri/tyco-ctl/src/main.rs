@@ -19,7 +19,7 @@ const USAGE: &str = "Usage: tyco-ctl status
 Modes: editor, quick-input, chat, voice-commands, voice, selection-actions,
        chat-prompts, correction, translation, history, settings.
 Pages: selection-actions:N opens action page N; custom-action:N runs custom action slot N.
-Use --stdin for private text. Input is preserved exactly.
+Use --stdin to keep text out of process arguments. Editor history can still keep it.
 Run shows the command in the Tyco overlay; one command runs at a time.
 Without input, a text command asks for the text in the overlay.
 Use --replace to replace a selection.
@@ -322,8 +322,8 @@ fn help(args: &[String]) -> Option<&'static str> {
         ["commands"] => "Usage: tyco-ctl commands <list [--json] | describe <id | --name NAME>>\nDiscover callable commands and inspect their accepted input without executing them.",
         ["commands", "list"] => "Usage: tyco-ctl commands list [--json]\nPrint callable commands as id<TAB>name lines, or JSON with --json.",
         ["commands", "describe"] => "Usage: tyco-ctl commands describe <id | --name NAME>\nPrint the command's effective input schema and capabilities as JSON.",
-        ["run"] => "Usage: tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]\n       [--replace] [--wait] [--json] [--timeout SECONDS]\nRun a library command in the Tyco overlay or without opening a window with --quiet. A run fails with Busy (exit 8) when its slot is occupied. Without --wait, returns a job. With --wait, returns output.\n--json formats results and stderr errors as JSON. --timeout (1-3600 s) only bounds waiting;
-without it --wait lasts until Tyco ends the job, within its start and run limits.\nInput sources are exclusive; --replace requires --selection. Use --stdin for private text.",
+        ["run"] => "Usage: tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]\n       [--replace] [--quiet] [--wait] [--json] [--timeout SECONDS]\nRun a library command in the Tyco overlay or without opening a window with --quiet. A run fails with Busy (exit 8) when its slot is occupied. Without --wait, returns a job. With --wait, returns output.\n--json formats results and stderr errors as JSON. --timeout (1-3600 s) only bounds waiting;
+without it --wait lasts until Tyco ends the job, within its start and run limits.\nInput sources are exclusive; --replace requires --selection. Use --stdin to keep text out of process arguments. Editor history can still keep it.",
         ["replace"] | ["replace", "correction"] => "Usage: tyco-ctl replace correction\nRequest correction of the current selection without waiting; requires selection permission.",
         ["jobs"] => "Usage: tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]\nInspect retained invocations, cancel work, or collect results. Only wait accepts --timeout.",
         ["jobs", "status"] => "Usage: tyco-ctl jobs status <job-id> [--json]\nPrint job details as JSON. Exit 0 means the job was found, even if it failed.",

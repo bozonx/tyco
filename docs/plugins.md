@@ -107,6 +107,11 @@ The build writes `dist/plugin.tyco-plugin`, the file to install. Everything
 must be bundled into one module: extra chunks, external imports and separate
 CSS files are refused. The plugins in `packages/plugin-*` are working examples.
 
+An operation can opt in to quiet external runs with `canRunQuietly: true`.
+Its `run` callback receives `isQuiet: true` for these calls. Keep quiet
+operations free of UI changes, focus changes, and clipboard writes. TyCo
+excludes plugins that declare editor or browser capabilities from quiet runs.
+
 ## Tools for the chat
 
 A plugin can offer tools to the model of a profile chat with

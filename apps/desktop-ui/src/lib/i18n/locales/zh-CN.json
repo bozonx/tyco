@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "回复块" }
   },
   "commandRun": {
+    "quietAccepted": "等待启动：{name}",
     "quietRunning": "正在运行：{name}",
     "quietSucceeded": "已完成：{name}",
     "quietFailed": "错误：{name}",

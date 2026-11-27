@@ -22,7 +22,7 @@ import {
 } from './ai-command-config'
 import {
   createAiCommandRunner,
-  QuietRunConfirmationError,
+  QuietRunToolError,
   type AiCommandAgentTool,
   type AiCommandRunnerDependencies,
 } from './ai-command-runner'
@@ -206,6 +206,7 @@ export function createAiCommandOperation(
                 .find((command) => command.id === commandId)
               return {
                 kind: 'aiCommand',
+                isQuiet: call.isQuiet,
                 commandId,
                 tools:
                   current?.isEnabled &&
@@ -225,12 +226,8 @@ export function createAiCommandOperation(
         return { ok: true, content, message: notice(content) }
       } catch (error) {
         if (call.signal.aborted) return cancelled
-        if (error instanceof QuietRunConfirmationError)
-          return {
-            ok: false,
-            code: 'ConfirmationRequired',
-            message: error.message,
-          }
+        if (error instanceof QuietRunToolError)
+          return { ok: false, code: error.code, message: error.message }
         return { ok: false, message: deps.describeError(error) }
       }
     },

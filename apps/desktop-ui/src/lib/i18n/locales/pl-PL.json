@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
   },
   "commandRun": {
+    "quietAccepted": "Oczekuje na uruchomienie: {name}",
     "quietRunning": "W toku: {name}",
     "quietSucceeded": "Gotowe: {name}",
     "quietFailed": "Błąd: {name}",

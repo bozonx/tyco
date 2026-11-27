@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "პასუხის ბლოკები" }
   },
   "commandRun": {
+    "quietAccepted": "ელოდება გაშვებას: {name}",
     "quietRunning": "სრულდება: {name}",
     "quietSucceeded": "დასრულდა: {name}",
     "quietFailed": "შეცდომა: {name}",

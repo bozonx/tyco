@@ -94,9 +94,20 @@ impl<C> StoppableService for PersistentSender<C> {
 pub struct NotificationService {
     #[cfg(target_os = "linux")]
     sender: PersistentSender<zbus::blocking::Connection>,
+    #[cfg(target_os = "windows")]
+    identifier: String,
 }
 
 impl NotificationService {
+    pub fn for_app(_identifier: &str) -> Self {
+        Self {
+            #[cfg(target_os = "linux")]
+            sender: PersistentSender::default(),
+            #[cfg(target_os = "windows")]
+            identifier: _identifier.to_owned(),
+        }
+    }
+
     #[cfg(target_os = "linux")]
     pub fn notify(&self, summary: &str, body: &str) -> Result<(), AppError> {
         use std::collections::HashMap;
@@ -151,12 +162,17 @@ impl NotificationService {
                     .replace('<', "&lt;")
                     .replace('>', "&gt;")
             };
+            let body = if body.is_empty() {
+                String::new()
+            } else {
+                format!("<text>{}</text>", escape(body))
+            };
             document.LoadXml(&HSTRING::from(format!(
-                "<toast><visual><binding template=\"ToastGeneric\"><text>{}</text><text>{}</text></binding></visual></toast>",
-                escape(summary), escape(body)
+                "<toast><visual><binding template=\"ToastGeneric\"><text>{}</text>{body}</binding></visual></toast>",
+                escape(summary),
             )))?;
             let toast = ToastNotification::CreateToastNotification(&document)?;
-            ToastNotificationManager::CreateToastNotifierWithId(&HSTRING::from("com.tyco.app"))?
+            ToastNotificationManager::CreateToastNotifierWithId(&HSTRING::from(&self.identifier))?
                 .Show(&toast)
         };
         notify()
@@ -167,6 +183,98 @@ impl NotificationService {
     pub fn notify(&self, _summary: &str, _body: &str) -> Result<(), AppError> {
         Ok(())
     }
+}
+
+/// The shell balloon also works for unpackaged development binaries without
+/// an AUMID registered by an installer.
+#[cfg(target_os = "windows")]
+pub(crate) fn notify_quiet_run(
+    app: &tauri::AppHandle,
+    title: &str,
+    text: &str,
+) -> Result<(), AppError> {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    use tauri::Manager;
+    use windows_sys::Win32::UI::Shell::{
+        Shell_NotifyIconW, NIF_ICON, NIF_INFO, NIIF_INFO, NIIF_RESPECT_QUIET_TIME, NIM_ADD,
+        NIM_DELETE, NIM_MODIFY, NOTIFYICONDATAW,
+    };
+    use windows_sys::Win32::UI::WindowsAndMessaging::{LoadIconW, IDI_APPLICATION};
+
+    if !cfg!(debug_assertions) {
+        match app
+            .state::<std::sync::Arc<NotificationService>>()
+            .notify(title, text)
+        {
+            Ok(()) => return Ok(()),
+            Err(error) => {
+                log::debug!("Windows toast unavailable, using the shell notification area: {error}")
+            }
+        }
+    }
+
+    static NEXT_ICON: AtomicU32 = AtomicU32::new(1);
+    let id = NEXT_ICON.fetch_add(1, Ordering::Relaxed);
+    let window = app
+        .get_webview_window(crate::services::runtime::MAIN_WINDOW_LABEL)
+        .ok_or_else(|| AppError::ServiceUnavailable("Main window is unavailable".into()))?;
+    let hwnd = window.hwnd()?.0;
+    let mut icon = NOTIFYICONDATAW {
+        cbSize: std::mem::size_of::<NOTIFYICONDATAW>() as u32,
+        hWnd: hwnd,
+        uID: id,
+        uFlags: NIF_ICON,
+        // A shared system icon is owned by Windows.
+        hIcon: unsafe { LoadIconW(std::ptr::null_mut(), IDI_APPLICATION) },
+        ..Default::default()
+    };
+    if unsafe { Shell_NotifyIconW(NIM_ADD, &icon) } == 0 {
+        return Err(AppError::Failed(
+            "Could not register the shell notification".into(),
+        ));
+    }
+    fn notification_text<const N: usize>(value: &str) -> [u16; N] {
+        let mut buffer = [0; N];
+        let limit = N - 1;
+        for (index, unit) in value.encode_utf16().take(limit).enumerate() {
+            buffer[index] = unit;
+        }
+        if (0xd800..=0xdbff).contains(&buffer[limit - 1]) {
+            buffer[limit - 1] = 0;
+        }
+        buffer
+    }
+    icon.szInfoTitle = notification_text(title);
+    icon.szInfo = notification_text(text);
+    icon.uFlags = NIF_INFO;
+    icon.dwInfoFlags = NIIF_INFO | NIIF_RESPECT_QUIET_TIME;
+    if unsafe { Shell_NotifyIconW(NIM_MODIFY, &icon) } == 0 {
+        unsafe { Shell_NotifyIconW(NIM_DELETE, &icon) };
+        return Err(AppError::Failed(
+            "Could not show the shell notification".into(),
+        ));
+    }
+
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_secs(12)).await;
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            if let Some(hwnd) = handle
+                .get_webview_window(crate::services::runtime::MAIN_WINDOW_LABEL)
+                .and_then(|window| window.hwnd().ok())
+            {
+                let icon = NOTIFYICONDATAW {
+                    cbSize: std::mem::size_of::<NOTIFYICONDATAW>() as u32,
+                    hWnd: hwnd.0,
+                    uID: id,
+                    ..Default::default()
+                };
+                unsafe { Shell_NotifyIconW(NIM_DELETE, &icon) };
+            }
+        });
+    });
+    Ok(())
 }
 
 impl StoppableService for NotificationService {

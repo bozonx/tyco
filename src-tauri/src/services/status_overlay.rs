@@ -126,43 +126,53 @@ pub(crate) mod quiet {
     }
 
     thread_local! {
-        static NOTICE: RefCell<Option<Notice>> = const { RefCell::new(None) };
+        static PENDING: RefCell<Option<Notice>> = const { RefCell::new(None) };
+        static COMPLETIONS: RefCell<std::collections::VecDeque<Notice>> = const { RefCell::new(std::collections::VecDeque::new()) };
+        static TIMER: RefCell<Option<gtk::glib::SourceId>> = const { RefCell::new(None) };
     }
 
-    pub(crate) fn show(app: &AppHandle, kind: StatusOverlayKind, text: String) {
-        let duration = match kind {
-            StatusOverlayKind::Pending => START_NOTICE_DURATION,
-            StatusOverlayKind::Error => Duration::from_secs(8),
-            _ => Duration::from_secs(4),
-        };
+    pub(crate) fn show(app: &AppHandle, kind: StatusOverlayKind, text: String, is_claimed: bool) {
         let has_tray =
             app.tray_by_id("main-tray").is_some() && HAS_TRAY_HOST.load(Ordering::Relaxed);
-        if !status_overlay::can_show() {
-            if (kind != StatusOverlayKind::Pending || !has_tray) && !focused(app) {
-                let service =
-                    app.state::<std::sync::Arc<
-                        crate::services::platform::notifications::NotificationService,
-                    >>();
-                let service = std::sync::Arc::clone(&service);
-                let _ = app
-                    .state::<crate::services::background::BackgroundServices>()
-                    .spawn_thread("quiet-run-notice", move |_| {
-                        if let Err(error) = service.notify(&text, "") {
-                            log::warn!("Could not show quiet run notification: {error}");
-                        }
-                    });
+        if !status_overlay::can_show() && kind == StatusOverlayKind::Pending {
+            if !has_tray && is_claimed && !focused(app) {
+                notify(app, vec![text]);
             }
             return;
         }
-        NOTICE.with(|notice| {
-            *notice.borrow_mut() = Some(Notice {
-                kind,
-                text,
-                expires_at: (kind != StatusOverlayKind::Pending || has_tray)
-                    .then(|| Instant::now() + duration),
-                was_focused: false,
+        let mut notice = Notice {
+            kind,
+            text,
+            expires_at: None,
+            was_focused: false,
+        };
+        if kind == StatusOverlayKind::Pending {
+            PENDING.with(|pending| {
+                let mut pending = pending.borrow_mut();
+                if is_claimed {
+                    if let Some(pending) = pending.as_mut() {
+                        pending.text = notice.text;
+                        return;
+                    }
+                }
+                notice.expires_at = has_tray.then(|| Instant::now() + START_NOTICE_DURATION);
+                *pending = Some(notice);
             });
-        });
+        } else {
+            COMPLETIONS.with(|queue| {
+                let mut queue = queue.borrow_mut();
+                // Keep notifications bounded while a TyCo window has the focus.
+                if queue.len() >= 16 {
+                    queue.pop_front();
+                }
+                queue.push_back(notice);
+            });
+        }
+        refresh(app);
+    }
+
+    pub(crate) fn clear_pending(app: &AppHandle) {
+        PENDING.with(|pending| pending.borrow_mut().take());
         refresh(app);
     }
 
@@ -172,33 +182,136 @@ pub(crate) mod quiet {
             .any(|window| window.is_focused().unwrap_or(false))
     }
 
+    fn notify(app: &AppHandle, messages: Vec<String>) {
+        if messages.is_empty() {
+            return;
+        }
+        let service = app
+            .state::<std::sync::Arc<crate::services::platform::notifications::NotificationService>>(
+            );
+        let service = std::sync::Arc::clone(&service);
+        let _ = app
+            .state::<crate::services::background::BackgroundServices>()
+            .spawn_thread("quiet-run-notice", move |_| {
+                for message in messages {
+                    if let Err(error) = service.notify(&message, "") {
+                        log::warn!("Could not show quiet run notification: {error}");
+                    }
+                }
+            });
+    }
+
     pub(crate) fn refresh(app: &AppHandle) {
         let focused = focused(app);
-        let request = NOTICE.with(|notice| {
-            let mut notice = notice.borrow_mut();
-            let notice = notice.as_mut()?;
-            if notice.kind == StatusOverlayKind::Pending
-                && notice.expires_at.is_some()
-                && notice.was_focused
-                && !focused
-            {
-                notice.expires_at = Some(Instant::now() + START_NOTICE_DURATION);
+        if !status_overlay::can_show() {
+            if !focused {
+                let messages = COMPLETIONS.with(|queue| {
+                    queue
+                        .borrow_mut()
+                        .drain(..)
+                        .map(|notice| notice.text)
+                        .collect()
+                });
+                notify(app, messages);
+            }
+            return;
+        }
+        TIMER.with(|timer| {
+            if let Some(timer) = timer.borrow_mut().take() {
+                timer.remove();
+            }
+        });
+        let now = Instant::now();
+        let pending = PENDING.with(|pending| {
+            let mut pending = pending.borrow_mut();
+            let notice = pending.as_mut()?;
+            if notice.expires_at.is_some() && notice.was_focused && !focused {
+                notice.expires_at = Some(now + START_NOTICE_DURATION);
             }
             notice.was_focused = focused;
-            let remaining = notice
-                .expires_at
-                .map(|deadline| deadline.saturating_duration_since(Instant::now()));
-            if focused || remaining.is_some_and(|remaining| remaining.is_zero()) {
-                return None;
-            }
-            Some(StatusOverlayRequest {
-                kind: notice.kind,
-                text: notice.text.clone(),
-                delay_ms: 0,
-                hide_after_ms: remaining.map(|remaining| remaining.as_millis() as u64),
-                only_if_visible: false,
-            })
+            (!focused).then(|| request_for(notice, now)).flatten()
         });
+        let completion =
+            COMPLETIONS.with(|queue| completion_request(&mut queue.borrow_mut(), focused, now));
+        let request = completion.or(pending);
+        if let Some(delay) = request.as_ref().and_then(|request| request.hide_after_ms) {
+            let app = app.clone();
+            let timer =
+                gtk::glib::timeout_add_local_once(Duration::from_millis(delay), move || {
+                    TIMER.with(|timer| timer.borrow_mut().take());
+                    refresh(&app);
+                });
+            TIMER.with(|slot| *slot.borrow_mut() = Some(timer));
+        }
         status_overlay::update_quiet(request);
+    }
+
+    fn completion_request(
+        queue: &mut std::collections::VecDeque<Notice>,
+        focused: bool,
+        now: Instant,
+    ) -> Option<StatusOverlayRequest> {
+        while queue
+            .front()
+            .is_some_and(|notice| notice.expires_at.is_some_and(|deadline| deadline <= now))
+        {
+            queue.pop_front();
+        }
+        if focused {
+            return None;
+        }
+        let notice = queue.front_mut()?;
+        let duration = if notice.kind == StatusOverlayKind::Error {
+            8
+        } else {
+            4
+        };
+        notice
+            .expires_at
+            .get_or_insert(now + Duration::from_secs(duration));
+        request_for(notice, now)
+    }
+
+    fn request_for(notice: &Notice, now: Instant) -> Option<StatusOverlayRequest> {
+        let remaining = notice
+            .expires_at
+            .map(|deadline| deadline.saturating_duration_since(now));
+        if remaining.is_some_and(|remaining| remaining.is_zero()) {
+            return None;
+        }
+        Some(StatusOverlayRequest {
+            kind: notice.kind,
+            text: notice.text.clone(),
+            delay_ms: 0,
+            hide_after_ms: remaining.map(|remaining| (remaining.as_millis() as u64).max(1)),
+            only_if_visible: false,
+        })
+    }
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn completion_waits_for_focus_to_leave_before_its_display_duration_begins() {
+            let mut queue = std::collections::VecDeque::from([Notice {
+                kind: StatusOverlayKind::Error,
+                text: "Failed".into(),
+                expires_at: None,
+                was_focused: false,
+            }]);
+            let first = Instant::now();
+            assert!(completion_request(&mut queue, true, first).is_none());
+            let later = first + Duration::from_secs(30);
+            assert_eq!(
+                completion_request(&mut queue, false, later)
+                    .unwrap()
+                    .hide_after_ms,
+                Some(8000)
+            );
+            assert!(
+                completion_request(&mut queue, false, later + Duration::from_secs(8)).is_none()
+            );
+            assert!(queue.is_empty());
+        }
     }
 }

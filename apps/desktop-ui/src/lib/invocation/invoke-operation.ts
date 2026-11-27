@@ -1,3 +1,4 @@
+import { canOperationRunQuietly } from '../operations/quiet-operation'
 import {
   cancelledOperationResult,
   isPluginError,
@@ -38,7 +39,6 @@ export interface OperationInvokerDependencies {
 export type InvokeResult = OperationResult & {
   /** Why the call failed, for the log */
   failure?: string
-  code?: string
   /** The text the tool got, the source of its output */
   sourceText?: string
   /** Why the tool could not be called, as an i18n key */
@@ -140,6 +140,13 @@ export function createOperationInvoker(deps: OperationInvokerDependencies) {
         message: invocation.label,
         failure: unavailable,
         unavailable,
+      }
+    }
+    if (options.isQuiet && !canOperationRunQuietly(tool)) {
+      return {
+        ok: false,
+        code: 'QuietRunUnsupported',
+        message: 'This operation does not support quiet runs',
       }
     }
     const signal = options.signal ?? new AbortController().signal

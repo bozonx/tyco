@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Blokovi odgovora" }
   },
   "commandRun": {
+    "quietAccepted": "Čeka pokretanje: {name}",
     "quietRunning": "Izvršava se: {name}",
     "quietSucceeded": "Dovršeno: {name}",
     "quietFailed": "Pogreška: {name}",

@@ -242,7 +242,13 @@ An external visible run or `open` asks both webviews to end visible work.
 `visible_work.rs` waits up to three seconds for `visible_work_ended` off
 the main thread. Quiet jobs neither request nor subscribe to this barrier
 and can overlap dictation and dialog recording. They require explicit input
-when needed and refuse confirmation requests.
+when needed and refuse confirmation requests. The backend checks the command
+chain against the operation catalog at submission and at claim. The invocation
+runner checks the live operation before invoking it. Plugin operations opt in
+through the SDK, and plugins with browser or editor capabilities are excluded.
+A terminal event is published even when a later run has reserved the slot.
+Linux completion notices take precedence over the running notice, and their
+display duration starts when TyCo can show them outside its focused windows.
 
 Finalizing either slot records a single editor history entry with input,
 command name, and outcome according to the user's history policy. External

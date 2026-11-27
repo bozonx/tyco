@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Yanıt blokları" }
   },
   "commandRun": {
+    "quietAccepted": "Başlatılmayı bekliyor: {name}",
     "quietRunning": "Çalışıyor: {name}",
     "quietSucceeded": "Tamamlandı: {name}",
     "quietFailed": "Hata: {name}",

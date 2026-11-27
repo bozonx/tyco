@@ -594,3 +594,34 @@ fn the_memory_only_history_shows_the_stored_entries_and_hides_none() {
         .unwrap();
     assert_eq!(texts(&location), ["new", "stored"]);
 }
+
+#[test]
+fn command_run_history_persists_failures_and_commands_without_input() {
+    use crate::models::{EditorHistoryFailureKind, EditorHistoryOrigin};
+    let dir = TestDir::new("command-run-history");
+    let location = HistoryLocation::at(&dir, LAPTOP);
+    let mut history = session(&location, policy());
+    let mut source = entry("");
+    source.kind = EditorHistoryKind::Source;
+    source.origin = Some(EditorHistoryOrigin::ExternalRun);
+    assert!(save_history_entry(
+        &mut history,
+        source,
+        Some("Scheduled check".into()),
+        Err(EditorHistoryFailure {
+            kind: EditorHistoryFailureKind::Timeout,
+            message: Some("Time limit".into())
+        }),
+    )
+    .unwrap()
+    .is_some());
+    let reopened = session(&location, policy());
+    let saved = reopened.load().unwrap();
+    assert_eq!(saved.len(), 1);
+    assert_eq!(saved[0].command_name.as_deref(), Some("Scheduled check"));
+    assert_eq!(saved[0].origin, Some(EditorHistoryOrigin::ExternalRun));
+    assert_eq!(
+        saved[0].failure.as_ref().unwrap().kind,
+        EditorHistoryFailureKind::Timeout
+    );
+}

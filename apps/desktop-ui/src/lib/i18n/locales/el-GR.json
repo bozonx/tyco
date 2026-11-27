@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Μπλοκ απαντήσεων" }
   },
   "commandRun": {
+    "quietAccepted": "Αναμονή για έναρξη: {name}",
     "quietRunning": "Εκτελείται: {name}",
     "quietSucceeded": "Ολοκληρώθηκε: {name}",
     "quietFailed": "Σφάλμα: {name}",

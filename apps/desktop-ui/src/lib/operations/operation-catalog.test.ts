@@ -75,6 +75,7 @@ describe('buildOperationCatalog', () => {
       [
         {
           id: 'script',
+          canRunQuietly: true,
           input: 'text',
           available: true,
           commandInputs: {},
@@ -82,6 +83,7 @@ describe('buildOperationCatalog', () => {
         },
         {
           id: 'core.translate',
+          canRunQuietly: true,
           input: 'text',
           available: false,
           reason: 't:reason.noLlm',
@@ -90,6 +92,7 @@ describe('buildOperationCatalog', () => {
         },
         {
           id: 'Home.lights',
+          canRunQuietly: false,
           input: 'none',
           available: true,
           commandInputs: {},
@@ -97,6 +100,7 @@ describe('buildOperationCatalog', () => {
         },
         {
           id: 'Home.remind',
+          canRunQuietly: false,
           input: 'parsed',
           available: true,
           commandInputs: {},
@@ -104,6 +108,7 @@ describe('buildOperationCatalog', () => {
         },
         {
           id: 'Home.todo',
+          canRunQuietly: false,
           input: 'structured',
           available: true,
           commandInputs: {},
@@ -178,6 +183,7 @@ describe('createOperationCatalogSync', () => {
     expect(send).toHaveBeenCalledTimes(3)
     expect(send.mock.calls[2][0][1]).toEqual({
       id: 'core.correct',
+      canRunQuietly: true,
       inputSchema: TEXT_INPUT_SCHEMA,
       commandInputs: {},
       input: 'text',

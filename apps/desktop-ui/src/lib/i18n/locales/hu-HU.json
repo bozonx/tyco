@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Válaszblokkok" }
   },
   "commandRun": {
+    "quietAccepted": "Indításra vár: {name}",
     "quietRunning": "Fut: {name}",
     "quietSucceeded": "Kész: {name}",
     "quietFailed": "Hiba: {name}",

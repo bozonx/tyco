@@ -269,3 +269,34 @@ describe('createOperationInvoker', () => {
     })
   })
 })
+
+it('guards interactive operations and passes quiet mode only to opted-in plugins', async () => {
+  const run = vi.fn(async (): Promise<OperationResult> => ({ ok: true }))
+  const registry = createOperationRegistry([
+    tool(run, { id: 'core.insert' }),
+    tool(run, { id: 'core.copy' }),
+    tool(run, { id: 'core.askInNewChat' }),
+  ])
+  registry.registerPluginOperations('Fixture', [
+    tool(run, { id: 'interactive' }),
+    tool(run, { id: 'safe', canRunQuietly: true }),
+  ])
+  const invoke = createOperationInvoker({ operations: registry })
+  for (const operationId of [
+    'core.insert',
+    'core.copy',
+    'core.askInNewChat',
+    'Fixture.interactive',
+  ]) {
+    expect(
+      await invoke({ ...invocation, operationId }, 'text', { isQuiet: true })
+    ).toMatchObject({ ok: false, code: 'QuietRunUnsupported' })
+  }
+  expect(run).not.toHaveBeenCalled()
+  await invoke({ ...invocation, operationId: 'Fixture.safe' }, 'text', {
+    isQuiet: true,
+  })
+  expect(run).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ isQuiet: true })
+  )
+})

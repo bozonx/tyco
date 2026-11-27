@@ -254,9 +254,9 @@ For example, a text command description can look like:
   used. It is true for a text command and also for a script or webhook that
   takes no text but uses `{{SELECTION}}`. It describes command compatibility,
   not the current selection permission or platform support.
-- `canRunQuietly` indicates whether the command's whitelist permits a run
-  without confirmation. Supply any required inputs and check for runtime
-  errors as usual.
+- `canRunQuietly` checks known operation capabilities and explicit tool
+  confirmation policies in the command and its callable commands. It does
+  not validate input or predict approvals that depend on a runtime tool call.
 - `output: "return"` means external runs return tool output instead of applying
   the library command's configured `afterRun` action.
 - `inputSchema` is the effective schema after command-specific overrides,
@@ -333,7 +333,17 @@ Pass required input explicitly. `--selection` and `--replace` are incompatible
 with `--quiet` (`InvalidInput`). Missing input gives `InputRequired`. An
 explicit `ask` policy in the command's tool whitelist gives
 `ConfirmationRequired` before execution. A confirmation requested during
-execution also fails the job with that code. The CLI reports when an older
+execution also fails the job with that code. Visible AI commands continue
+to grant access through their whitelist as before.
+
+Commands that insert text, write to the clipboard, or open a chat return
+`QuietRunUnsupported` (exit status 2). The same check covers nested commands.
+Plugin operations must opt in, and plugins with editor or browser access are
+excluded. Quiet AI commands can use library commands and built-in web tools.
+Scripts and webhooks still perform their configured actions, so use scripts
+that leave the desktop alone when scheduling unattended runs.
+
+The CLI reports when an older
 Tyco instance lacks API 5.
 
 While running, the tray shows an activity indicator and the command name.
