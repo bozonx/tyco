@@ -16,6 +16,7 @@
     "allow-clear-editor-history",
     "allow-hide-window",
     "allow-copy-text",
+    "allow-get-system-info",
     "allow-execute-script-action",
     "allow-exit-app",
     "allow-get-chat",

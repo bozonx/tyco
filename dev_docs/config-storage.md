@@ -171,8 +171,9 @@ Conventions:
   boundary.
 - An id is stable and independent of the display name.
 
-Script operations use `workingDirectory` and `isDetached`; webhook operations use `isAuthEnabled` and
-`authSecretId`; commands use `isLlmArgumentParsingEnabled`. The standard
+Script operations use `workingDirectory` and `isDetached`; webhook
+operations keep every header value, Authorization included, as a secret
+reference; commands use `isLlmArgumentParsingEnabled`. The standard
 menu actions `transformationMenu`, `stylingMenu` and `translationMenu` open a
 menu to pick from; one transformation, style or language is an item of the
 `transformation`, `styling` or `translation` type.
@@ -700,15 +701,14 @@ clean up their own files.
 ## Credentials and undo
 
 A secret id names what the key is for: `llm.<provider id>`,
-`translation.deepl`, `translation.google`, `stt.deepgram`, `webhook.auth.<uuid>`
-and `webhook.header.<uuid>` (see `packages/shared/src/secret-ids.ts`). Ids of
+`translation.deepl`, `translation.google`, `stt.deepgram` and
+`webhook.header.<uuid>` (see `packages/shared/src/secret-ids.ts`). Ids of
 earlier versions, digests included, stay valid as they are.
 
 The values and `secrets.json` belong to the device and are never synced: each
 machine has its own keys under the ids the shared config refers to. So an id
-is made once, with the reference to it, and never changes: `authSecretId` when
-a webhook first gets an authorization key, `webhook.header.<uuid>` when a
-header first becomes secret. A key entered again goes under the id the config
+is made once, with the reference to it, and never changes:
+`webhook.header.<uuid>` when a header first becomes secret. A key entered again goes under the id the config
 has, at once and on this device only; the config does not change, and a
 settings undo does not bring the old value back. The origins of a key are
 those of the URL on this device. A key a device has no value for is a state,

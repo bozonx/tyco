@@ -6,7 +6,14 @@ use super::run_blocking;
 use crate::errors::AppError;
 use crate::services::platform::clipboard::copy_for_user;
 use crate::services::platform::open_web_page;
+use crate::services::platform::system_info::{self, SystemInfo};
 use crate::services::status_overlay::{self, StatusOverlayRequest};
+
+/// What an assistant may be told about this computer.
+#[tauri::command]
+pub fn get_system_info() -> SystemInfo {
+    system_info::current()
+}
 
 /// Leaves the windows as they are: a command run in the background copies
 /// its output while another Tyco window may be in use.

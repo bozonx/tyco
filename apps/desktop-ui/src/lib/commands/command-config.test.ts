@@ -295,24 +295,6 @@ describe('menu commands', () => {
 })
 
 describe('validateCommand', () => {
-  it('warns that the stored key replaces an Authorization header', () => {
-    const hook = withConfig(namedCommand('webhook', 'h'), {
-      url: 'https://x.test',
-      headers: { authorization: 'Bearer x' },
-      isAuthEnabled: true,
-    })
-    expect(validateCommand(hook, tools)).toEqual([
-      {
-        field: 'headers',
-        messageKey: 'commands.errorAuthHeaderOverridden',
-        isWarning: true,
-      },
-    ])
-    expect(
-      validateCommand(withConfig(hook, { isAuthEnabled: false }), tools)
-    ).toEqual([])
-  })
-
   it('requires a name', () => {
     const script = withConfig(createCommand('script', 'a'), { command: 'ls' })
     expect(validateCommand(script, tools)).toEqual([

@@ -14,6 +14,7 @@ import { createChatHistoryModel } from '../lib/history/chat-history'
 import { translate } from '../lib/i18n'
 import { normalizeLlmConfig, withPickedTaskModel } from '../lib/llm/llm-config'
 import { clientLogger } from '../lib/logger'
+import { useSystemContextStore } from './system-context'
 import { appNavigation } from '../navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import { isSecretUsable } from '../lib/net/secrets'
@@ -94,6 +95,7 @@ function createChatStoreSetup(profileId: string | null) {
       operations: operationsStore,
       environment: operationsStore.environment,
       pluginTools: usePluginChatToolsStore().dependencies,
+      systemContext: useSystemContextStore().context,
       getSessionState: () => desktopStore.sessionState,
       saveSessionState: desktopStore.patchSessionState,
       saveChatModelId: async (modelId) => {

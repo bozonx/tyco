@@ -1,3 +1,4 @@
+import { systemContextText } from '../lib/system-context/system-context'
 import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
@@ -65,6 +66,13 @@ beforeEach(() => {
   })
 })
 afterEach(() => disposePinia(pinia))
+
+/** The block without the system: these tests run without a desktop */
+const SYSTEM_BLOCK = systemContextText(
+  new Date(),
+  Intl.DateTimeFormat().resolvedOptions().timeZone,
+  undefined
+)
 
 describe('chat store dependency wiring', () => {
   it('connects the real chat model and controller to input, editor, and AI services', async () => {
@@ -207,7 +215,7 @@ describe('profile chats', () => {
     expect(ai.sendChatMessage).toHaveBeenCalledWith(
       'Hello',
       [],
-      'Current environment: chat.\n\n# Edited by hand',
+      `Current environment: chat.\n\n${SYSTEM_BLOCK}\n\n# Edited by hand`,
       expect.objectContaining({ temperature: 1.1, maxOutputTokens: 500 })
     )
     const [, , , options] = ai.sendChatMessage.mock.calls[0] as unknown[]
@@ -224,7 +232,7 @@ describe('profile chats', () => {
     expect(ai.sendChatMessage).toHaveBeenCalledWith(
       'Question',
       [],
-      APP_CONFIG.aiInstructions.chat,
+      `${APP_CONFIG.aiInstructions.chat.trim()}\n\n${SYSTEM_BLOCK}`,
       expect.objectContaining({ rules: 'Ask AI rules' })
     )
   })

@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 0ff174531ed5246c289b6d1dc7afb3dafa5a62f85ecce1f04a79ec7df6a47d1e
+// Source hash: 9be8fd6a62c985264bf9162611ac790e7409f7bc33f754df4ce5e977b72cb131
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -1178,6 +1178,20 @@ export type SubtitlesView = {
    */
   recordingStartedAt?: number | null
   recordingLabel: string
+}
+
+export type SystemInfo = {
+  /**
+   * The system as people name it, e.g. `Linux (Fedora Linux 44)` or `Windows
+   * 11`.
+   */
+  os: string
+  /** The processor architecture, e.g. `x86_64`. */
+  arch: string
+  /** The window system on Linux, `x11` or `wayland`; `None` elsewhere. */
+  displayServer: string | null
+  /** The desktop environment on Linux when Tyco knows it, e.g. `KDE`. */
+  desktop: string | null
 }
 
 /** How Tyco finds the window to insert into. */

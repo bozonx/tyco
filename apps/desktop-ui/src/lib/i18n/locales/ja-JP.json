@@ -198,6 +198,11 @@
       "groupHint": "Jina AI でウェブを検索し、ページを読みます。",
       "searchLabel": "ウェブ検索"
     },
+    "system": {
+      "group": "システム",
+      "groupHint": "正確な時刻とオペレーティングシステム。日付、タイムゾーン、システム名は常に指示に含まれます。",
+      "infoLabel": "システム情報"
+    },
     "commands": {
       "group": "コマンド",
       "groupHint": "モデルがあなたのコマンドを実行できます。AI 向けの説明があるコマンドだけが提供されます。「確認する」では実行のたびに確認を待ちます。",
@@ -272,7 +277,6 @@
     "editCommand": "コマンドを編集",
     "empty": "コマンドはまだありません。",
     "enable": "コマンドを有効化",
-    "errorAuthHeaderOverridden": "認証が有効な間、Authorization ヘッダーは保存されたキーに置き換えられます。",
     "errorInvalidUrl": "有効な http(s) URL を入力してください。",
     "errorNoCommand": "実行するコマンドを入力してください。",
     "errorNoLanguage": "翻訳先の言語を選択してください。",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "コマンド",
     "actionCommandPlaceholder": "例: notify-send Tyco {placeholder}",
     "actionInsertScript": "スクリプトファイルを挿入…",
-    "actionInsertText": "{placeholder} を挿入",
     "actionLogOutput": "出力をログに記録",
     "actionLogOutputInfo": "アプリのログフォルダー内の actions.log に出力を書き込みます（「設定」→「ストレージ」→「ログ」）。失敗は常に記録されます。入力テキストは記録されません。",
     "actionPage": "ページ {page}",
     "actionPageTakesText": "選択したテキストを受け入れる",
     "actionPageTakesTextInfo": "無効にすると、このページを開いても他のアプリケーションから選択したテキストがコピーされません。",
-    "actionWebhookAuthInfo": "Authorizationヘッダー（例:「Bearer …」）。システムキーチェーンに安全に保存されます。",
-    "actionWebhookAuthLabel": "認証",
-    "actionWebhookAuthPlaceholder": "例: Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "保存済み。置き換える新しい値を入力してください",
     "actionWebhookBodyInfo": "JSONテンプレートでは、{placeholder} は文字列内ではJSONエスケープされたテキストに置換され、引用符なしで使用された場合はJSON文字列に置換されます。プレーンテキストテンプレートでは、余分な引用符やエスケープなしで元のテキストに置換されます。",
     "actionWebhookBodyLabel": "リクエスト本文",
     "actionWebhookHeaderDuplicate": "名前が重複するヘッダーは無視されます",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "クリア",
     "profileMemoryResetCoreConfirm": "メインの記憶ファイル core.md をクリアしますか？内容は空のテンプレートに置き換えられます。",
     "profileMemoryCompactConfirmTitle": "記憶を圧縮しますか？",
-    "profileMemoryCompactConfirm": "モデルが {file} を短く書き直し、重複や古い内容を取り除きます。リクエストはトークンを消費します。保存前に変更を確認し、取り消すこともできます。"
+    "profileMemoryCompactConfirm": "モデルが {file} を短く書き直し、重複や古い内容を取り除きます。リクエストはトークンを消費します。保存前に変更を確認し、取り消すこともできます。",
+    "actionWebhookHeaderReplacePlaceholder": "保存済み。置き換える新しい値を入力してください",
+    "actionWebhookHeadersInfo": "ヘッダーの値は安全なストアに保存され、Webhook のアドレスにのみ送信されます。トークンには例えば Authorization: Bearer … を追加します"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

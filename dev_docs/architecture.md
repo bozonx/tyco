@@ -96,6 +96,13 @@ tool; it stays only in project permissions.
   `external` there, since inside the command it has no leak protection. A third-party plugin's
   tools ask whatever risk they declare; MCP hints will count only for a trusted
   server.
+- The system source (`core:system`, `lib/chat-tools/system-tools.ts`) has one
+  `read` tool, `get_system_info`: profiles get it by default, AI commands by
+  their whitelist, "Ask AI" never. The date, time zone and system name it
+  builds on go into every system prompt of Ask AI, profiles and AI commands
+  (`lib/system-context/system-context.ts`), without the time of day, so the
+  prompt stays cacheable for the day; Rust gives the system through
+  `get_system_info` (`services/platform/system_info.rs`).
 - Memory, the reply blocks and the attachments are always on and never ask;
   `memoryMode` (`auto`, `read-only`, `off`) decides only whether the memory is
   there and writable. The file tools take their policy from the project

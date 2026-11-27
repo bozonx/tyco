@@ -136,19 +136,21 @@ describe('buildWebhookRequest', () => {
     expect(body).toMatchObject({ action: 'My Webhook', source: 'tyco' })
   })
 
-  it('adds the custom headers and the secret Authorization', () => {
+  it('adds the custom headers, keeping secret references for the proxy', () => {
     const { init } = buildWebhookRequest(
       webhook({
         id: 'ABC',
-        headers: { 'X-Token': 't', ' ': 'skip' },
-        isAuthEnabled: true,
-        authSecretId: 'webhook.auth.abc',
+        headers: {
+          'X-Token': 't',
+          ' ': 'skip',
+          Authorization: 'tyco-secret:webhook.header.abc',
+        },
       }),
       'a'
     )
     expect(init.headers['x-token']).toBe('t')
     expect(init.headers[' ']).toBeUndefined()
-    expect(init.headers.authorization).toBe('tyco-secret:webhook.auth.abc')
+    expect(init.headers.authorization).toBe('tyco-secret:webhook.header.abc')
   })
 })
 

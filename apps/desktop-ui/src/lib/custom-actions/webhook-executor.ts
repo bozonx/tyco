@@ -9,7 +9,7 @@ import {
   type WebhookOperationConfig,
 } from '@tyco/shared'
 
-import { isSecretRef, secretRef } from '../net/secrets'
+import { isSecretRef } from '../net/secrets'
 
 const MAX_LOG_RESPONSE_CHARS = 4096
 /** How much of an error response the failure message quotes */
@@ -20,7 +20,7 @@ export type WebhookCallLog = (name: string, details: string) => Promise<void>
 
 /** A webhook to call: the settings of the tool and who calls it */
 export interface WebhookTarget extends WebhookOperationConfig {
-  /** The id of the command; the Authorization secret is kept under it */
+  /** The id of the command */
   id: string
   name: string
   isOutputLogged?: boolean
@@ -119,14 +119,6 @@ export function buildWebhookRequest(
     headers[name.trim().toLowerCase()] = isSecretRef(value)
       ? value
       : filled(value, variables, 'header', null)
-  }
-  if (target.isAuthEnabled) {
-    if (!target.authSecretId)
-      throw new WebhookConfigError(
-        'toast.webhookKeyNotSet',
-        target.name || 'Webhook'
-      )
-    headers.authorization = secretRef(target.authSecretId)
   }
 
   return { url, init: { method, headers, body } }

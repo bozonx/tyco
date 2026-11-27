@@ -149,13 +149,6 @@ export interface WebhookOperationConfig {
   method?: 'GET' | 'POST'
   headers?: Record<string, string>
   payloadTemplate?: string
-  /**
-   * The Authorization header is kept in the secret store under `authSecretId`,
-   * bound to the origin of the URL
-   */
-  isAuthEnabled?: boolean
-  /** Opaque secret identity, independent of the command display name and id. */
-  authSecretId?: string
 }
 
 /**

@@ -63,6 +63,7 @@ fn main() {
             "cancel_script_action",
             "claim_external_job",
             "get_quiet_run_status",
+            "get_system_info",
             "supply_command_run_input",
             "delete_ai_profile_memory_file",
             "clear_chats",

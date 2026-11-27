@@ -28,6 +28,8 @@ import { createChatToolApprovals } from '../lib/chat-tools/chat-tool-approvals'
 import { createDesktopWebToolProvider } from '../lib/chat-tools/desktop-chat-tools'
 import { invokeDesktop } from '../lib/desktop/invoke'
 import { clientLogger } from '../lib/logger'
+import { createSystemToolProvider } from '../lib/chat-tools/system-tools'
+import { useSystemContextStore } from './system-context'
 import { createPluginChatToolProvider } from '../lib/chat-tools/plugin-chat-tools'
 import { usePluginChatToolsStore } from './plugin-chat-tools'
 import { createCommandTransformer } from '../lib/commands/command-runner'
@@ -205,13 +207,16 @@ export const useOperationsStore = defineStore('tools', () => {
       desktopStore.userConfig?.llm?.webSearch?.fetchMaxCharacters,
     warn: (message) => clientLogger.warn(message, 'tools'),
   })
+  const systemContext = useSystemContextStore().context
+  const systemTools = createSystemToolProvider(systemContext)
   const pluginTools = createPluginChatToolProvider(
     usePluginChatToolsStore().dependencies
   )
   const aiCommandOperation = createAiCommandOperation({
     stream: (task, prompt, options) =>
       llmStore.client.stream(task, prompt, options),
-    instructions: () => APP_CONFIG.aiInstructions.aiTask,
+    instructions: () =>
+      [APP_CONFIG.aiInstructions.aiTask, systemContext.text()].join('\n\n'),
     defaultMaxSteps: () => commandAiMaxStepsOf(desktopStore.userConfig),
     commands: () => desktopStore.userConfig?.commands ?? [],
     commandInputSchema: (command, source) => {
@@ -238,7 +243,7 @@ export const useOperationsStore = defineStore('tools', () => {
     getUnavailableReasonKey: () => getLlmUnavailableReasonKey('aiTask'),
     describeError: (error) => describeError(error, translate),
     variables: () => environment().variables,
-    toolProviders: () => [webTools, pluginTools, ...debugTools],
+    toolProviders: () => [webTools, systemTools, pluginTools, ...debugTools],
     toolCatalog: () => desktopStore.userConfig?.tools,
     requestApproval: toolApprovals.request,
   })

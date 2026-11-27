@@ -1,8 +1,10 @@
 import type { ToolPolicy, ToolRisk } from '@tyco/shared'
 
 import { FILE_TOOL_CATALOG } from './file-tools'
+import { SYSTEM_TOOL_CATALOG } from './system-tools'
 import {
   FILES_SOURCE,
+  SYSTEM_SOURCE,
   WEB_SOURCE,
   type CatalogTool,
   type ToolSourceRef,
@@ -59,6 +61,13 @@ export const CORE_CATALOG: readonly CatalogSourceEntry[] = [
         defaultPolicy: 'allow',
       },
     ],
+  },
+  {
+    source: SYSTEM_SOURCE,
+    labelKey: 'chatTools.system.group',
+    descriptionKey: 'chatTools.system.groupHint',
+    icon: 'mdi:monitor-dashboard',
+    tools: SYSTEM_TOOL_CATALOG,
   },
 ]
 

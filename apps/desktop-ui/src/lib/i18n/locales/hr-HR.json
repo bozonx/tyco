@@ -198,6 +198,11 @@
       "groupHint": "Pretraživanje weba i čitanje stranica putem Jina AI.",
       "searchLabel": "Web pretraživanje"
     },
+    "system": {
+      "group": "Sustav",
+      "groupHint": "Točno vrijeme i operacijski sustav. Datum, vremenska zona i naziv sustava uvijek su u uputama.",
+      "infoLabel": "Podaci o sustavu"
+    },
     "commands": {
       "group": "Naredbe",
       "groupHint": "Model smije pokretati vaše naredbe. Nude se samo naredbe s opisom za AI. „Pitaj” znači da svako pokretanje čeka vašu potvrdu.",
@@ -272,7 +277,6 @@
     "editCommand": "Uredi naredbu",
     "empty": "Još nema naredbi.",
     "enable": "Omogući naredbu",
-    "errorAuthHeaderOverridden": "Dok je autorizacija uključena, zaglavlje Authorization zamjenjuje se spremljenim ključem.",
     "errorInvalidUrl": "Unesite valjani http(s) URL.",
     "errorNoCommand": "Unesite naredbu za pokretanje.",
     "errorNoLanguage": "Odaberite ciljni jezik prijevoda.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Naredba",
     "actionCommandPlaceholder": "npr. notify-send Tyco {placeholder}",
     "actionInsertScript": "Umetni datoteku skripte…",
-    "actionInsertText": "Umetni {placeholder}",
     "actionLogOutput": "Zapisuj izlaz",
     "actionLogOutputInfo": "Zapisuje izlaz u actions.log u mapi zapisnika aplikacije (Postavke → Pohrana → Zapisnici). Pogreške se uvijek zapisuju. Ulazni tekst se ne zapisuje.",
     "actionPage": "Stranica {page}",
     "actionPageTakesText": "Prihvati odabrani tekst",
     "actionPageTakesTextInfo": "Kada je onemogućeno, otvaranje ove stranice ne kopira odabrani tekst iz drugih aplikacija.",
-    "actionWebhookAuthInfo": "Zaglavlje Authorization, npr. „Bearer …”. Čuva se u sigurnoj pohrani i šalje samo na adresu webhooka.",
-    "actionWebhookAuthLabel": "Autorizacija",
-    "actionWebhookAuthPlaceholder": "npr. Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Spremljeno. Unesite novu vrijednost za zamjenu",
     "actionWebhookBodyInfo": "U JSON predlošcima {placeholder} se unutar nizova zamjenjuje tekstom escapiranim za JSON, a bez navodnika JSON nizom. U predlošcima običnog teksta zamjenjuje se izvornim tekstom, bez dodanih navodnika ili escapiranja.",
     "actionWebhookBodyLabel": "Tijelo zahtjeva",
     "actionWebhookHeaderDuplicate": "Zaglavlja s ponovljenim nazivom zanemaruju se",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Isprazni",
     "profileMemoryResetCoreConfirm": "Isprazniti glavnu datoteku memorije core.md? Njezin sadržaj zamijenit će prazan predložak.",
     "profileMemoryCompactConfirmTitle": "Sažeti memoriju?",
-    "profileMemoryCompactConfirm": "Model će prepisati {file} kraće, uklanjajući ponavljanja i zastarjelo. Zahtjev troši tokene. Prije spremanja vidjet ćete promjene i moći ih odbiti."
+    "profileMemoryCompactConfirm": "Model će prepisati {file} kraće, uklanjajući ponavljanja i zastarjelo. Zahtjev troši tokene. Prije spremanja vidjet ćete promjene i moći ih odbiti.",
+    "actionWebhookHeaderReplacePlaceholder": "Spremljeno. Unesite novu vrijednost za zamjenu",
+    "actionWebhookHeadersInfo": "Vrijednosti zaglavlja čuvaju se u sigurnoj pohrani i šalju se samo na adresu webhooka. Za token dodajte npr. Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

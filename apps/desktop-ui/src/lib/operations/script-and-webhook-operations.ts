@@ -157,17 +157,12 @@ function createScriptOperation(
   }
 }
 
-/**
- * The keys a webhook refers to: its authorization and its secret headers. An
- * authorization without a key id refers to a key that cannot exist: `''`
- */
+/** The keys a webhook refers to: its secret headers */
 function webhookSecretIds(config: WebhookOperationConfig): string[] {
-  const ids = Object.values(config.headers ?? {}).flatMap((value) => {
+  return Object.values(config.headers ?? {}).flatMap((value) => {
     const id = secretIdFromRef(value)
     return id ? [id] : []
   })
-  if (config.isAuthEnabled) ids.push(config.authSecretId ?? '')
-  return ids
 }
 
 function createWebhookOperation(

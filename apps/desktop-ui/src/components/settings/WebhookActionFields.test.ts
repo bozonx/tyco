@@ -131,26 +131,29 @@ describe('WebhookActionFields.vue', () => {
     expect((value.element as HTMLInputElement).value).toBe('')
   })
 
-  it('stores a new credential bound to the webhook origin', async () => {
-    const wrapper = mountFields(webhook())
-    const auth = wrapper.findAll('input[type="password"]').at(-1)!
-    await auth.setValue(' token ')
+  it('stores a new value of a secret header under its id, bound to the webhook origin', async () => {
+    const wrapper = mountFields(
+      webhook({ headers: { Authorization: 'tyco-secret:webhook.header.a' } })
+    )
+    await wrapper.get('input[type="password"]').setValue(' token ')
     await button(wrapper, 'common.save').trigger('click')
     await flushPromises()
     expect(secrets.setSecret).toHaveBeenCalledWith(
-      expect.stringMatching(/^webhook/),
+      'webhook.header.a',
       'token',
       ['https://hooks.example.com']
     )
-    expect(updates(wrapper).map(([field]) => field)).toEqual([
-      'authSecretId',
-      'isAuthEnabled',
-    ])
+    expect(updates(wrapper)).toEqual([])
   })
 
-  it('refuses a credential for an invalid URL', async () => {
-    const wrapper = mountFields(webhook({ url: 'not a url' }))
-    await wrapper.findAll('input[type="password"]').at(-1)!.setValue('token')
+  it('refuses a secret value for an invalid URL', async () => {
+    const wrapper = mountFields(
+      webhook({
+        url: 'not a url',
+        headers: { Authorization: 'tyco-secret:webhook.header.a' },
+      })
+    )
+    await wrapper.get('input[type="password"]').setValue('token')
     await button(wrapper, 'common.save').trigger('click')
     await flushPromises()
     expect(toastKey).toHaveBeenCalledWith('settings.invalidBaseUrl', 'error')
@@ -165,30 +168,31 @@ describe('WebhookActionFields.vue', () => {
     const fieldRows = wrapper.findAllComponents({ name: 'FieldRow' })
     expect(fieldRows[0].props('info')).toBe('settings.actionWebhookUrlInfo')
     expect(fieldRows[1].props('info')).toBe('settings.actionWebhookBodyInfo')
-    expect(fieldRows[3].props('info')).toBe('settings.actionWebhookAuthInfo')
+    expect(fieldRows[2].props('info')).toBe('settings.actionWebhookHeadersInfo')
   })
 
-  it('warns about a credential bound to another origin and removes it', async () => {
-    secrets.secrets = { 'webhook-1': { origins: ['https://old.example.com'] } }
+  it('warns about a secret bound to another origin and removes it with its header', async () => {
+    secrets.secrets = {
+      'webhook.header.a': { origins: ['https://old.example.com'] },
+    }
     const wrapper = mountFields(
-      webhook({ isAuthEnabled: true, authSecretId: 'webhook-1' })
+      webhook({ headers: { Authorization: 'tyco-secret:webhook.header.a' } })
     )
     expect(secrets.refreshSecrets).toHaveBeenCalledOnce()
     expect(wrapper.text()).toContain('settings.apiKeyBoundTo')
-    await button(wrapper, 'common.remove').trigger('click')
+    await wrapper.get('button[aria-label="common.remove"]').trigger('click')
     await flushPromises()
-    expect(updates(wrapper)).toEqual([
-      ['isAuthEnabled', false],
-      ['authSecretId', undefined],
-    ])
+    expect(updates(wrapper)).toEqual([['headers', {}]])
     expect(session.persist).toHaveBeenCalledOnce()
-    expect(secrets.removeSecret).toHaveBeenCalledWith('webhook-1')
+    expect(secrets.removeSecret).toHaveBeenCalledWith('webhook.header.a')
   })
 
-  it('reports a credential that could not be stored', async () => {
+  it('reports a secret value that could not be stored', async () => {
     secrets.setSecret.mockRejectedValueOnce(new Error('Locked'))
-    const wrapper = mountFields(webhook())
-    await wrapper.findAll('input[type="password"]').at(-1)!.setValue('token')
+    const wrapper = mountFields(
+      webhook({ headers: { Authorization: 'tyco-secret:webhook.header.a' } })
+    )
+    await wrapper.get('input[type="password"]').setValue('token')
     await button(wrapper, 'common.save').trigger('click')
     await flushPromises()
     expect(toastError).toHaveBeenCalledWith(

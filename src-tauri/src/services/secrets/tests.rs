@@ -317,23 +317,14 @@ fn two_devices_keep_their_own_keys_under_one_shared_reference() {
         "operationId": "webhook",
         "operationConfig": {
             "url": "https://hooks.example/path",
-            "headers": {"x-key": "laptop value"},
-            "isAuthEnabled": true,
-            "authSecretId": "webhook.auth.shared"
+            "headers": {"x-key": "laptop value"}
         }
     }]});
 
-    // the laptop makes the header secret and enters its authorization key
+    // the laptop makes the header secret
     let pending =
         webhook::protect_for_save(&laptop, &mut config, &VariableValues::default()).unwrap();
     pending.commit(&config.clone(), &config);
-    laptop
-        .set(
-            "webhook.auth.shared",
-            "laptop token",
-            Some(vec!["https://hooks.example".into()]),
-        )
-        .unwrap();
     let header_ref = config["commands"][0]["operationConfig"]["headers"]["x-key"].clone();
     let header_id = header_ref
         .as_str()
@@ -350,15 +341,14 @@ fn two_devices_keep_their_own_keys_under_one_shared_reference() {
     pending.commit(&synced, &config);
     assert_eq!(config, synced, "a save without new values rebinds nothing");
 
-    // the desktop enters its own values under the same ids
-    for (id, value) in [
-        (&header_id[..], "desktop value"),
-        ("webhook.auth.shared", "desktop token"),
-    ] {
-        desktop
-            .set(id, value, Some(vec!["https://hooks.example".into()]))
-            .unwrap();
-    }
+    // the desktop enters its own value under the same id
+    desktop
+        .set(
+            &header_id,
+            "desktop value",
+            Some(vec!["https://hooks.example".into()]),
+        )
+        .unwrap();
     webhook::cleanup_after_startup(&laptop, &config);
     webhook::cleanup_after_startup(&desktop, &config);
 
@@ -370,15 +360,7 @@ fn two_devices_keep_their_own_keys_under_one_shared_reference() {
         |store: &SecretStore, id: &str| store.snapshot().get(id).map(|entry| entry.value.clone());
     assert_eq!(value(&laptop, &header_id).as_deref(), Some("laptop value"));
     assert_eq!(
-        value(&laptop, "webhook.auth.shared").as_deref(),
-        Some("laptop token")
-    );
-    assert_eq!(
         value(&desktop, &header_id).as_deref(),
         Some("desktop value")
-    );
-    assert_eq!(
-        value(&desktop, "webhook.auth.shared").as_deref(),
-        Some("desktop token")
     );
 }

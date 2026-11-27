@@ -83,6 +83,7 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<models::EditorHistoryItem>();
     visitor.visit::<models::SessionState>();
     visitor.visit::<models::StorageInfo>();
+    visitor.visit::<services::platform::system_info::SystemInfo>();
     visitor.visit::<models::StorageKind>();
     visitor.visit::<models::UserDataRelocationMode>();
     visitor.visit::<models::SettingsConflictEvent>();

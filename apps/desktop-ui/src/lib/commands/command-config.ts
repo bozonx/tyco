@@ -83,10 +83,6 @@ export function webhookOperationConfigOf(
     method: config.method === 'GET' ? 'GET' : 'POST',
     headers: headersOf(config.headers),
     payloadTemplate: stringOr(config.payloadTemplate),
-    isAuthEnabled: config.isAuthEnabled === true,
-    ...(typeof config.authSecretId === 'string'
-      ? { authSecretId: config.authSecretId }
-      : {}),
   }
 }
 
@@ -120,13 +116,7 @@ function defaultOperationConfig(operationId: string): Record<string, unknown> {
     case 'script':
       return { command: '', workingDirectory: '', isDetached: false }
     case 'webhook':
-      return {
-        url: '',
-        method: 'POST',
-        headers: {},
-        payloadTemplate: '',
-        isAuthEnabled: false,
-      }
+      return { url: '', method: 'POST', headers: {}, payloadTemplate: '' }
     case 'core.aiTask':
       return { prompt: '', tools: [] }
     default:

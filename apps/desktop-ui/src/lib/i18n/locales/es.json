@@ -198,6 +198,11 @@
       "groupHint": "Buscar en la web y leer páginas con Jina AI.",
       "searchLabel": "Búsqueda web"
     },
+    "system": {
+      "group": "Sistema",
+      "groupHint": "La hora exacta y el sistema operativo. La fecha, la zona horaria y el nombre del sistema siempre están en las instrucciones.",
+      "infoLabel": "Información del sistema"
+    },
     "commands": {
       "group": "Comandos",
       "groupHint": "El modelo puede ejecutar tus comandos. Solo se ofrecen los comandos con una descripción para la IA. «Preguntar» hace que cada ejecución espere tu confirmación.",
@@ -272,7 +277,6 @@
     "editCommand": "Editar el comando",
     "empty": "Todavía no hay comandos.",
     "enable": "Activar el comando",
-    "errorAuthHeaderOverridden": "Mientras la autorización esté activada, el encabezado Authorization se sustituye por la clave guardada.",
     "errorInvalidUrl": "Introduce una URL http(s) válida.",
     "errorNoCommand": "Introduce el comando que se ejecutará.",
     "errorNoLanguage": "Elige el idioma al que traducir.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Comando",
     "actionCommandPlaceholder": "p. ej., notify-send Tyco {placeholder}",
     "actionInsertScript": "Insertar un archivo de script…",
-    "actionInsertText": "Insertar {placeholder}",
     "actionLogOutput": "Registrar la salida",
     "actionLogOutputInfo": "Escribe la salida en actions.log, en la carpeta de registros de la aplicación (Configuración → Almacenamiento → Registros). Los fallos siempre se registran. El texto de entrada no se registra.",
     "actionPage": "Página {page}",
     "actionPageTakesText": "Aceptar texto seleccionado",
     "actionPageTakesTextInfo": "Si está desactivado, abrir esta página no copia el texto seleccionado de otras aplicaciones.",
-    "actionWebhookAuthInfo": "El encabezado Authorization, p. ej., «Bearer …». Se guarda en el almacén seguro y solo se envía a la dirección del webhook.",
-    "actionWebhookAuthLabel": "Autorización",
-    "actionWebhookAuthPlaceholder": "p. ej., Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Guardado. Introduce un valor nuevo para reemplazarlo",
     "actionWebhookBodyInfo": "En las plantillas JSON, {placeholder} se reemplaza por texto escapado para JSON dentro de cadenas, o por una cadena JSON si se usa sin comillas. En las plantillas de texto sin formato se reemplaza por el texto original, sin añadir comillas ni escapes.",
     "actionWebhookBodyLabel": "Cuerpo de la solicitud",
     "actionWebhookHeaderDuplicate": "Se ignoran los encabezados con un nombre repetido",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Vaciar",
     "profileMemoryResetCoreConfirm": "¿Vaciar el archivo de memoria principal core.md? Su contenido se sustituirá por una plantilla vacía.",
     "profileMemoryCompactConfirmTitle": "¿Compactar la memoria?",
-    "profileMemoryCompactConfirm": "El modelo reescribirá {file} más corto, quitando repeticiones y lo obsoleto. La petición consume tokens. Verás los cambios antes de guardarlos y podrás descartarlos."
+    "profileMemoryCompactConfirm": "El modelo reescribirá {file} más corto, quitando repeticiones y lo obsoleto. La petición consume tokens. Verás los cambios antes de guardarlos y podrás descartarlos.",
+    "actionWebhookHeaderReplacePlaceholder": "Guardado. Introduce un valor nuevo para reemplazarlo",
+    "actionWebhookHeadersInfo": "Los valores de los encabezados se guardan en el almacén seguro y solo se envían a la dirección del webhook. Para un token, añade p. ej. Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

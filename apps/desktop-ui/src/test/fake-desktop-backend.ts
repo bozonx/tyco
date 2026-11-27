@@ -385,6 +385,12 @@ export class FakeDesktopBackend {
       commands: {},
       platform: 'linux',
     }))
+    this.handle('get_system_info', () => ({
+      os: 'Linux (Test Linux)',
+      arch: 'x86_64',
+      displayServer: 'wayland',
+      desktop: 'KDE',
+    }))
     this.handle('get_storage_info', () => ({
       locations: [
         { kinds: ['device'], path: '/home/tester/.config/tyco' },

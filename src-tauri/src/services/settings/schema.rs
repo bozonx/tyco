@@ -458,16 +458,6 @@ pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
                 "commands.operationConfig",
             )?;
         }
-        if command["operationId"] == "webhook"
-            && command["operationConfig"]["isAuthEnabled"] == true
-        {
-            let id = command["operationConfig"]["authSecretId"]
-                .as_str()
-                .ok_or_else(|| invalid_field("commands.operationConfig.authSecretId"))?;
-            if !crate::services::secrets::is_valid_id(id) {
-                return Err(invalid_field("commands.operationConfig.authSecretId"));
-            }
-        }
     }
     validate_references(config)
 }

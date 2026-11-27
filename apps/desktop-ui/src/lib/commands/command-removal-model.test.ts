@@ -17,8 +17,7 @@ describe('command removal model', () => {
       ...createCommand('webhook', 'test'),
       operationConfig: {
         url: 'https://example.com',
-        isAuthEnabled: true,
-        authSecretId: 'webhook.auth.test',
+        headers: { authorization: 'tyco-secret:webhook.header.test' },
       },
     }
     let commands = [command]
@@ -67,7 +66,7 @@ describe('command removal model', () => {
     f.model.removeCommand(f.command)
     await vi.waitFor(() =>
       expect(f.removeSecret).toHaveBeenCalledExactlyOnceWith(
-        'webhook.auth.test'
+        'webhook.header.test'
       )
     )
   })
@@ -78,7 +77,7 @@ describe('command removal model', () => {
       ...createCommand('webhook', 'twin'),
       operationConfig: {
         url: 'https://example.com',
-        headers: { authorization: secretRef('webhook.auth.test') },
+        headers: { authorization: secretRef('webhook.header.test') },
       },
     }
     let commands = [f.command, twin]
@@ -102,23 +101,26 @@ describe('command removal model', () => {
     expect(removeSecret).not.toHaveBeenCalled()
   })
 
-  it('finds the secrets of a webhook in its headers and its Authorization', () => {
+  it('finds the secrets of a webhook in its headers', () => {
     const command = {
       ...createCommand('webhook', 'hook'),
       operationConfig: {
         url: 'https://example.com',
-        authSecretId: 'webhook.auth.a',
-        headers: { 'x-key': secretRef('webhook.header.b'), plain: 'value' },
+        headers: {
+          authorization: secretRef('webhook.header.a'),
+          'x-key': secretRef('webhook.header.b'),
+          plain: 'value',
+        },
       },
     }
     expect(commandSecretIds(command).sort()).toEqual([
-      'webhook.auth.a',
+      'webhook.header.a',
       'webhook.header.b',
     ])
     expect(commandSecretIds(createCommand('script', 'script'))).toEqual([])
     expect(isSecretReferenced([command], 'webhook.header.b')).toBe(true)
     // an id that only contains another one is not a reference to it
-    expect(isSecretReferenced([command], 'webhook.auth')).toBe(false)
+    expect(isSecretReferenced([command], 'webhook.header')).toBe(false)
   })
 
   it('handles secret cleanup failure without breaking command deletion', async () => {

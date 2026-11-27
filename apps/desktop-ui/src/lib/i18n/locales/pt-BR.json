@@ -198,6 +198,11 @@
       "groupHint": "Pesquisar na web e ler páginas com o Jina AI.",
       "searchLabel": "Pesquisa na Web"
     },
+    "system": {
+      "group": "Sistema",
+      "groupHint": "A hora exata e o sistema operacional. A data, o fuso horário e o nome do sistema estão sempre nas instruções.",
+      "infoLabel": "Informações do sistema"
+    },
     "commands": {
       "group": "Comandos",
       "groupHint": "O modelo pode executar seus comandos. Só são oferecidos comandos com uma descrição para a IA. \"Perguntar\" faz cada execução esperar sua confirmação.",
@@ -272,7 +277,6 @@
     "editCommand": "Editar o comando",
     "empty": "Ainda não há comandos.",
     "enable": "Ativar o comando",
-    "errorAuthHeaderOverridden": "Enquanto a autorização estiver ativada, o cabeçalho Authorization é substituído pela chave salva.",
     "errorInvalidUrl": "Insira uma URL http(s) válida.",
     "errorNoCommand": "Digite o comando a executar.",
     "errorNoLanguage": "Escolha o idioma para o qual traduzir.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Comando",
     "actionCommandPlaceholder": "ex.: notify-send Tyco {placeholder}",
     "actionInsertScript": "Inserir um arquivo de script…",
-    "actionInsertText": "Inserir {placeholder}",
     "actionLogOutput": "Registrar a saída",
     "actionLogOutputInfo": "Grava a saída em actions.log na pasta de logs do aplicativo (Configurações → Armazenamento → Logs). Falhas são sempre registradas. O texto de entrada não é registrado.",
     "actionPage": "Página {page}",
     "actionPageTakesText": "Aceitar texto selecionado",
     "actionPageTakesTextInfo": "Quando desativado, abrir esta página não copia o texto selecionado de outros aplicativos.",
-    "actionWebhookAuthInfo": "O cabeçalho Authorization, ex.: “Bearer …”. Ele fica no armazenamento seguro e é enviado apenas ao endereço do webhook.",
-    "actionWebhookAuthLabel": "Autorização",
-    "actionWebhookAuthPlaceholder": "ex.: Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Salvo. Digite um novo valor para substituí-lo",
     "actionWebhookBodyInfo": "Em modelos JSON, {placeholder} é substituído por texto escapado para JSON dentro de strings, ou por uma string JSON quando usado sem aspas. Em modelos de texto simples, é substituído pelo texto original, sem aspas ou escape adicionais.",
     "actionWebhookBodyLabel": "Corpo da solicitação",
     "actionWebhookHeaderDuplicate": "Cabeçalhos com nome repetido são ignorados",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Limpar",
     "profileMemoryResetCoreConfirm": "Limpar o arquivo de memória principal core.md? O conteúdo será substituído por um modelo vazio.",
     "profileMemoryCompactConfirmTitle": "Compactar a memória?",
-    "profileMemoryCompactConfirm": "O modelo reescreve {file} de forma mais curta, removendo repetições e o que está desatualizado. A solicitação consome tokens. Você verá as mudanças antes de salvar e poderá recusá-las."
+    "profileMemoryCompactConfirm": "O modelo reescreve {file} de forma mais curta, removendo repetições e o que está desatualizado. A solicitação consome tokens. Você verá as mudanças antes de salvar e poderá recusá-las.",
+    "actionWebhookHeaderReplacePlaceholder": "Salvo. Digite um novo valor para substituí-lo",
+    "actionWebhookHeadersInfo": "Os valores dos cabeçalhos ficam no armazenamento seguro e são enviados apenas ao endereço do webhook. Para um token, adicione, por exemplo, Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {

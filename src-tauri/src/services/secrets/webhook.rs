@@ -8,7 +8,6 @@ use crate::services::variables::{self, Place, VariableValues};
 
 /// The secrets the app makes for webhooks; it removes them once unused.
 const WEBHOOK_HEADER_PREFIX: &str = "webhook.header.";
-const WEBHOOK_AUTH_PREFIX: &str = "webhook.auth.";
 
 /// The id of a header that has just become secret. It is made once and never
 /// changes with the value, nor with the device the value was typed on: the
@@ -101,7 +100,7 @@ impl PendingHeaderSecrets<'_> {
             }
         }
         let candidates = referenced_secrets(previous);
-        cleanup(self.store, &retained, false, Some(&candidates));
+        cleanup(self.store, &retained, Some(&candidates));
     }
 }
 
@@ -176,14 +175,6 @@ fn collect_references(value: &Value, result: &mut HashSet<String>) {
             }
         }
         Value::Object(fields) => {
-            if fields
-                .get("isAuthEnabled")
-                .is_some_and(|value| value == true)
-            {
-                if let Some(id) = fields.get("authSecretId").and_then(Value::as_str) {
-                    result.insert(id.to_owned());
-                }
-            }
             for item in fields.values() {
                 collect_references(item, result);
             }
@@ -192,16 +183,12 @@ fn collect_references(value: &Value, result: &mut HashSet<String>) {
     }
 }
 
-fn cleanup(
-    store: &SecretStore,
-    retained: &HashSet<String>,
-    include_authorization: bool,
-    candidates: Option<&HashSet<String>>,
-) {
+fn cleanup(store: &SecretStore, retained: &HashSet<String>, candidates: Option<&HashSet<String>>) {
     for id in store.ids() {
-        let managed = id.starts_with(WEBHOOK_HEADER_PREFIX)
-            || (include_authorization && id.starts_with(WEBHOOK_AUTH_PREFIX));
-        if managed && !retained.contains(&id) && candidates.is_none_or(|ids| ids.contains(&id)) {
+        if id.starts_with(WEBHOOK_HEADER_PREFIX)
+            && !retained.contains(&id)
+            && candidates.is_none_or(|ids| ids.contains(&id))
+        {
             if let Err(error) = store.remove(&id) {
                 log::warn!("Could not remove unused webhook secret: {error}");
             }
@@ -211,7 +198,7 @@ fn cleanup(
 
 /// Startup has no outstanding drafts or undo actions.
 pub fn cleanup_after_startup(store: &SecretStore, config: &Value) {
-    cleanup(store, &referenced_secrets(config), true, None);
+    cleanup(store, &referenced_secrets(config), None);
 }
 
 #[cfg(test)]
@@ -228,7 +215,6 @@ mod tests {
             "webhook.header.shared",
             "webhook.header.obsolete",
             "webhook.header.undo",
-            "webhook.auth.unused",
         ]
         .into_iter()
         .map(|id| (id.to_owned(), origins.clone()))
@@ -240,16 +226,11 @@ mod tests {
             "webhook.header.shared".into(),
             "webhook.header.obsolete".into(),
         ]);
-        cleanup(
-            &store,
-            &referenced_secrets(&config),
-            false,
-            Some(&candidates),
-        );
+        cleanup(&store, &referenced_secrets(&config), Some(&candidates));
         assert!(store.ids().contains(&"webhook.header.shared".into()));
         assert!(store.ids().contains(&"webhook.header.undo".into()));
         assert!(!store.ids().contains(&"webhook.header.obsolete".into()));
-        cleanup(&store, &referenced_secrets(&config), true, None);
+        cleanup(&store, &referenced_secrets(&config), None);
         assert_eq!(store.ids(), vec![String::from("webhook.header.shared")]);
     }
 
@@ -269,7 +250,7 @@ mod tests {
         .unwrap());
         assert_eq!(stored.len(), 2);
         assert!(stored.iter().all(|(id, _, origin)| {
-            crate::services::secrets::is_valid_id(id)
+            crate::services::secrets::origins::is_valid_id(id)
                 && id.starts_with(WEBHOOK_HEADER_PREFIX)
                 && origin == "https://hooks.example"
         }));

@@ -198,6 +198,11 @@
       "groupHint": "Пошук в інтернеті й читання сторінок через Jina AI.",
       "searchLabel": "Пошук в інтернеті"
     },
+    "system": {
+      "group": "Система",
+      "groupHint": "Точний час і операційна система. Дата, часовий пояс і назва системи завжди є в інструкціях.",
+      "infoLabel": "Відомості про систему"
+    },
     "commands": {
       "group": "Команди",
       "groupHint": "Модель може запускати ваші команди. Доступні лише команди з описом для ШІ. «Питати» — кожен запуск чекає на ваше підтвердження.",
@@ -272,7 +277,6 @@
     "editCommand": "Редагувати команду",
     "empty": "Команд поки немає.",
     "enable": "Увімкнути команду",
-    "errorAuthHeaderOverridden": "Поки ввімкнено авторизацію, заголовок Authorization замінюється збереженим ключем.",
     "errorInvalidUrl": "Введіть коректну адресу http(s).",
     "errorNoCommand": "Введіть команду для виконання.",
     "errorNoLanguage": "Виберіть мову перекладу.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Команда",
     "actionCommandPlaceholder": "наприклад, notify-send Tyco {placeholder}",
     "actionInsertScript": "Вставити файл скрипту…",
-    "actionInsertText": "Вставити {placeholder}",
     "actionLogOutput": "Записувати вивід у журнал",
     "actionLogOutputInfo": "Записує вивід у actions.log у теці журналів застосунку (Налаштування → Сховище → Журнали). Помилки записуються завжди. Вхідний текст не записується.",
     "actionPage": "Сторінка {page}",
     "actionPageTakesText": "Приймати виділений текст",
     "actionPageTakesTextInfo": "Якщо вимкнено, відкриття цієї сторінки не копіює виділений текст з інших програм.",
-    "actionWebhookAuthInfo": "Заголовок Authorization, наприклад «Bearer …». Зберігається в захищеному сховищі й надсилається лише на адресу вебхука.",
-    "actionWebhookAuthLabel": "Авторизація",
-    "actionWebhookAuthPlaceholder": "наприклад, Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Збережено. Введіть нове значення, щоб замінити його",
     "actionWebhookBodyInfo": "У шаблонах JSON {placeholder} усередині рядків замінюється текстом, екранованим для JSON, а без лапок — рядком JSON. У шаблонах звичайного тексту замінюється вихідним текстом без доданих лапок чи екранування.",
     "actionWebhookBodyLabel": "Тіло запиту",
     "actionWebhookHeaderDuplicate": "Заголовки з повторюваною назвою ігноруються",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Очистити",
     "profileMemoryResetCoreConfirm": "Очистити основний файл пам’яті core.md? Його вміст заміниться порожнім шаблоном.",
     "profileMemoryCompactConfirmTitle": "Ущільнити пам’ять?",
-    "profileMemoryCompactConfirm": "Модель перепише {file} коротше: прибере повтори й застаріле. Запит витрачає токени. Перед збереженням ви побачите зміни й зможете відмовитися."
+    "profileMemoryCompactConfirm": "Модель перепише {file} коротше: прибере повтори й застаріле. Запит витрачає токени. Перед збереженням ви побачите зміни й зможете відмовитися.",
+    "actionWebhookHeaderReplacePlaceholder": "Збережено. Введіть нове значення, щоб замінити його",
+    "actionWebhookHeadersInfo": "Значення заголовків зберігаються в захищеному сховищі й надсилаються лише на адресу вебхука. Для токена додайте, наприклад, Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {

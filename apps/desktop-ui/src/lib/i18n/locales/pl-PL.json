@@ -198,6 +198,11 @@
       "groupHint": "Wyszukiwanie w internecie i czytanie stron przez Jina AI.",
       "searchLabel": "Wyszukiwanie w internecie"
     },
+    "system": {
+      "group": "System",
+      "groupHint": "Dokładny czas i system operacyjny. Data, strefa czasowa i nazwa systemu są zawsze w instrukcjach.",
+      "infoLabel": "Informacje o systemie"
+    },
     "commands": {
       "group": "Polecenia",
       "groupHint": "Model może uruchamiać Twoje polecenia. Dostępne są tylko polecenia z opisem dla AI. „Pytaj” sprawia, że każde uruchomienie czeka na Twoje potwierdzenie.",
@@ -272,7 +277,6 @@
     "editCommand": "Edytuj polecenie",
     "empty": "Brak poleceń.",
     "enable": "Włącz polecenie",
-    "errorAuthHeaderOverridden": "Gdy autoryzacja jest włączona, nagłówek Authorization jest zastępowany zapisanym kluczem.",
     "errorInvalidUrl": "Wpisz prawidłowy adres URL http(s).",
     "errorNoCommand": "Wpisz polecenie do uruchomienia.",
     "errorNoLanguage": "Wybierz język docelowy tłumaczenia.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Polecenie",
     "actionCommandPlaceholder": "np. notify-send Tyco {placeholder}",
     "actionInsertScript": "Wstaw plik skryptu…",
-    "actionInsertText": "Wstaw {placeholder}",
     "actionLogOutput": "Zapisuj wynik w dzienniku",
     "actionLogOutputInfo": "Zapisuje wynik do actions.log w folderze dzienników aplikacji (Ustawienia → Przechowywanie → Dzienniki). Błędy są zawsze zapisywane. Tekst wejściowy nie jest zapisywany.",
     "actionPage": "Strona {page}",
     "actionPageTakesText": "Akceptuj zaznaczony tekst",
     "actionPageTakesTextInfo": "Gdy wyłączone, otwarcie tej strony nie kopiuje zaznaczonego tekstu z innych aplikacji.",
-    "actionWebhookAuthInfo": "Nagłówek Authorization, np. „Bearer …”. Jest przechowywany w bezpiecznym magazynie i wysyłany tylko na adres webhooka.",
-    "actionWebhookAuthLabel": "Autoryzacja",
-    "actionWebhookAuthPlaceholder": "np. Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Zapisano. Wpisz nową wartość, aby ją zastąpić",
     "actionWebhookBodyInfo": "W szablonach JSON {placeholder} jest zastępowane tekstem zabezpieczonym dla JSON wewnątrz ciągów albo ciągiem JSON, gdy jest użyte bez cudzysłowów. W szablonach zwykłego tekstu jest zastępowane oryginalnym tekstem, bez dodatkowych cudzysłowów i zabezpieczania.",
     "actionWebhookBodyLabel": "Treść zapytania",
     "actionWebhookHeaderDuplicate": "Nagłówki o powtórzonej nazwie są ignorowane",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Wyczyść",
     "profileMemoryResetCoreConfirm": "Wyczyścić główny plik pamięci core.md? Jego treść zostanie zastąpiona pustym szablonem.",
     "profileMemoryCompactConfirmTitle": "Skompaktować pamięć?",
-    "profileMemoryCompactConfirm": "Model przepisze {file} krócej, usuwając powtórzenia i nieaktualne wpisy. Zapytanie zużywa tokeny. Przed zapisaniem zobaczysz zmiany i możesz je odrzucić."
+    "profileMemoryCompactConfirm": "Model przepisze {file} krócej, usuwając powtórzenia i nieaktualne wpisy. Zapytanie zużywa tokeny. Przed zapisaniem zobaczysz zmiany i możesz je odrzucić.",
+    "actionWebhookHeaderReplacePlaceholder": "Zapisano. Wpisz nową wartość, aby ją zastąpić",
+    "actionWebhookHeadersInfo": "Wartości nagłówków są przechowywane w bezpiecznym magazynie i wysyłane tylko na adres webhooka. Dla tokenu dodaj np. Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

@@ -198,6 +198,11 @@
       "groupHint": "ვებში ძიება და გვერდების კითხვა Jina AI-ით.",
       "searchLabel": "ვებ-ძიება"
     },
+    "system": {
+      "group": "სისტემა",
+      "groupHint": "ზუსტი დრო და ოპერაციული სისტემა. თარიღი, დროის სარტყელი და სისტემის სახელი ყოველთვის არის ინსტრუქციებში.",
+      "infoLabel": "სისტემის ინფორმაცია"
+    },
     "commands": {
       "group": "ბრძანებები",
       "groupHint": "მოდელს შეუძლია თქვენი ბრძანებების გაშვება. ხელმისაწვდომია მხოლოდ ბრძანებები ხელოვნური ინტელექტისთვის აღწერით. „კითხვა“ — ყოველი გაშვება ელოდება თქვენს დადასტურებას.",
@@ -272,7 +277,6 @@
     "editCommand": "ბრძანების რედაქტირება",
     "empty": "ბრძანებები ჯერ არ არის.",
     "enable": "ბრძანების ჩართვა",
-    "errorAuthHeaderOverridden": "სანამ ავტორიზაცია ჩართულია, Authorization სათაური შენახული გასაღებით იცვლება.",
     "errorInvalidUrl": "შეიყვანეთ სწორი http(s) URL.",
     "errorNoCommand": "შეიყვანეთ შესასრულებელი ბრძანება.",
     "errorNoLanguage": "აირჩიეთ თარგმანის ენა.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "ბრძანება",
     "actionCommandPlaceholder": "მაგ.: notify-send Tyco {placeholder}",
     "actionInsertScript": "სკრიპტის ფაილის ჩასმა…",
-    "actionInsertText": "{placeholder}-ის ჩასმა",
     "actionLogOutput": "გამონატანის ჟურნალში ჩაწერა",
     "actionLogOutputInfo": "გამონატანს წერს actions.log-ში აპის ჟურნალების საქაღალდეში (პარამეტრები → საცავი → ჟურნალები). შეცდომები ყოველთვის იწერება. შეყვანილი ტექსტი არ იწერება.",
     "actionPage": "გვერდი {page}",
     "actionPageTakesText": "არჩეული ტექსტის მიღება",
     "actionPageTakesTextInfo": "გამორთვის შემთხვევაში, ამ გვერდის გახსნა არ დააკოპირებს არჩეულ ტექსტს სხვა აპლიკაციებიდან.",
-    "actionWebhookAuthInfo": "Authorization სათაური, მაგ.: „Bearer …“. ინახება დაცულ საცავში და მხოლოდ ვებჰუკის მისამართზე იგზავნება.",
-    "actionWebhookAuthLabel": "ავტორიზაცია",
-    "actionWebhookAuthPlaceholder": "მაგ.: Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "შენახულია. ჩასანაცვლებლად შეიყვანეთ ახალი მნიშვნელობა",
     "actionWebhookBodyInfo": "JSON შაბლონებში {placeholder} სტრიქონების შიგნით JSON-ისთვის ეკრანირებული ტექსტით ჩანაცვლდება, ბრჭყალების გარეშე კი — JSON სტრიქონით. უბრალო ტექსტის შაბლონებში იგი ორიგინალი ტექსტით ჩანაცვლდება, დამატებითი ბრჭყალებისა და ეკრანირების გარეშე.",
     "actionWebhookBodyLabel": "მოთხოვნის სხეული",
     "actionWebhookHeaderDuplicate": "განმეორებული სახელის მქონე სათაურები იგნორირდება",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "გასუფთავება",
     "profileMemoryResetCoreConfirm": "გასუფთავდეს მეხსიერების მთავარი ფაილი core.md? მისი შიგთავსი ცარიელი შაბლონით შეიცვლება.",
     "profileMemoryCompactConfirmTitle": "შეიკუმშოს მეხსიერება?",
-    "profileMemoryCompactConfirm": "მოდელი {file}-ს უფრო მოკლედ გადაწერს: მოაშორებს გამეორებებს და მოძველებულს. მოთხოვნა ხარჯავს ტოკენებს. შენახვამდე ნახავთ ცვლილებებს და შეძლებთ უარის თქმას."
+    "profileMemoryCompactConfirm": "მოდელი {file}-ს უფრო მოკლედ გადაწერს: მოაშორებს გამეორებებს და მოძველებულს. მოთხოვნა ხარჯავს ტოკენებს. შენახვამდე ნახავთ ცვლილებებს და შეძლებთ უარის თქმას.",
+    "actionWebhookHeaderReplacePlaceholder": "შენახულია. ჩასანაცვლებლად შეიყვანეთ ახალი მნიშვნელობა",
+    "actionWebhookHeadersInfo": "სათაურების მნიშვნელობები ინახება დაცულ საცავში და იგზავნება მხოლოდ webhook-ის მისამართზე. ტოკენისთვის დაამატეთ, მაგ., Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {

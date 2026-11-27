@@ -38,6 +38,7 @@ export const CORE_SOURCE_IDS = {
   memory: 'memory',
   replyBlocks: 'replyBlocks',
   attachments: 'attachments',
+  system: 'system',
   debug: 'debug',
 } as const
 
@@ -50,6 +51,7 @@ export const WEB_SOURCE = coreSource(CORE_SOURCE_IDS.web)
 export const MEMORY_SOURCE = coreSource(CORE_SOURCE_IDS.memory)
 export const REPLY_BLOCKS_SOURCE = coreSource(CORE_SOURCE_IDS.replyBlocks)
 export const ATTACHMENTS_SOURCE = coreSource(CORE_SOURCE_IDS.attachments)
+export const SYSTEM_SOURCE = coreSource(CORE_SOURCE_IDS.system)
 export const DEBUG_SOURCE = coreSource(CORE_SOURCE_IDS.debug)
 /** The user's commands, one tool each */
 export const COMMANDS_SOURCE: ToolSourceRef = {
@@ -385,6 +387,7 @@ export const commandToolRef = (commandId: string): ToolRef => ({
  */
 const CORE_TOOL_RISKS: Readonly<Record<string, ToolRisk>> = {
   [CORE_SOURCE_IDS.web]: 'external',
+  [CORE_SOURCE_IDS.system]: 'read',
 }
 
 /**
@@ -450,6 +453,7 @@ export function isQuietTool(source: ToolSourceRef, name?: string): boolean {
     source.kind === 'commands' ||
     (source.kind === 'core' &&
       (source.id === CORE_SOURCE_IDS.web ||
+        source.id === CORE_SOURCE_IDS.system ||
         (source.id === CORE_SOURCE_IDS.debug && name === 'get_current_time')))
   )
 }

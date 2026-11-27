@@ -218,20 +218,24 @@ const available = <T extends CatalogTool>(tools: readonly T[]) =>
 
 /** What the agent may be allowed to call, by source */
 const candidateGroups = computed<ToolCandidateGroup[]>(() => {
-  const web = CORE_CATALOG.find((entry) => entry.source.id === 'web')!
   const lookup = commandRiskLookup(commands.value)
-  return [
-    {
-      id: 'web',
-      label: t(web.labelKey!),
-      icon: web.icon,
+  const coreGroup = (id: 'web' | 'system'): ToolCandidateGroup => {
+    const entry = CORE_CATALOG.find((item) => item.source.id === id)!
+    return {
+      id,
+      label: t(entry.labelKey!),
+      icon: entry.icon,
       emptyMessage: '',
-      items: available(web.tools).map((tool): ToolCandidate => ({
-        ref: { sourceKind: 'core', sourceId: 'web', toolName: tool.name },
+      items: available(entry.tools).map((tool): ToolCandidate => ({
+        ref: { sourceKind: 'core', sourceId: id, toolName: tool.name },
         label: t(tool.labelKey!),
         risk: tool.risk,
       })),
-    },
+    }
+  }
+  return [
+    coreGroup('web'),
+    coreGroup('system'),
     {
       id: 'commands',
       label: t('chatTools.commands.group'),

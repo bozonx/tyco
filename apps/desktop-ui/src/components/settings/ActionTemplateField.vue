@@ -27,17 +27,9 @@
     />
     <!-- mousedown.prevent: the field keeps its focus and caret -->
     <div class="template-field-actions" :class="{ 'is-vertical': multiline }">
-      <IconButton
-        v-if="!withoutText"
-        variant="ghost"
-        size="sm"
-        @mousedown.prevent
-        @click="insert(TEXT)"
-        :label="t('settings.actionInsertText', { placeholder: TEXT })"
-        icon="mdi:code-braces"
-      />
       <VariableInsertMenu
         v-if="canUseVariables"
+        :placeholders="withoutText ? [] : [TEXT]"
         @mousedown.prevent
         @insert="insert"
       />
@@ -53,11 +45,9 @@
 <script setup lang="ts">
 import { nextTick, ref, useAttrs } from 'vue'
 
-import { useI18n } from '../../composables/use-i18n'
 import type { TextControl } from '../../lib/ui/text-control'
 import FieldInput from '../common/FieldInput.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
-import IconButton from '../common/IconButton.vue'
 import VariableInsertMenu from './VariableInsertMenu.vue'
 import VariableReferenceHints from './VariableReferenceHints.vue'
 import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
@@ -80,7 +70,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
-const { t } = useI18n()
 const fieldRef = ref<TextControl | null>(null)
 
 /** Puts `favorite` in place of the selection, or at the end without focus. */

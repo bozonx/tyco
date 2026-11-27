@@ -24,6 +24,7 @@ pub mod session;
 pub mod session_files;
 pub mod shell;
 mod shortcut_settings;
+pub mod system_info;
 pub(crate) mod terminals;
 mod text_injector;
 mod titlebar;

@@ -46,7 +46,7 @@ describe('a window without the clients', () => {
 })
 
 describe('webhook keys', () => {
-  it('asks for the key of an authorization that has no key id', async () => {
+  it('asks for a secret header not set on this device', async () => {
     const executeWebhook = vi.fn()
     const [, webhook] = createScriptAndWebhookOperations({
       executeWebhook,
@@ -54,7 +54,10 @@ describe('webhook keys', () => {
     })
     const result = await webhook.run({
       input: {},
-      config: { url: 'https://x.test', isAuthEnabled: true },
+      config: {
+        url: 'https://x.test',
+        headers: { Authorization: 'tyco-secret:webhook.header.a' },
+      },
       source: 'menu',
       signal: new AbortController().signal,
       isOutputRequested: true,

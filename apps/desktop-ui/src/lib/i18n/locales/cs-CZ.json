@@ -198,6 +198,11 @@
       "groupHint": "Vyhledávání na webu a čtení stránek přes Jina AI.",
       "searchLabel": "Webové vyhledávání"
     },
+    "system": {
+      "group": "Systém",
+      "groupHint": "Přesný čas a operační systém. Datum, časové pásmo a název systému jsou vždy v instrukcích.",
+      "infoLabel": "Informace o systému"
+    },
     "commands": {
       "group": "Příkazy",
       "groupHint": "Model smí spouštět vaše příkazy. Nabízejí se jen příkazy s popisem pro AI. „Ptát se“ nechá každé spuštění čekat na vaše potvrzení.",
@@ -272,7 +277,6 @@
     "editCommand": "Upravit příkaz",
     "empty": "Zatím žádné příkazy.",
     "enable": "Zapnout příkaz",
-    "errorAuthHeaderOverridden": "Dokud je autorizace zapnutá, hlavička Authorization se nahrazuje uloženým klíčem.",
     "errorInvalidUrl": "Zadejte platnou adresu URL http(s).",
     "errorNoCommand": "Zadejte příkaz ke spuštění.",
     "errorNoLanguage": "Vyberte cílový jazyk překladu.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Příkaz",
     "actionCommandPlaceholder": "např. notify-send Tyco {placeholder}",
     "actionInsertScript": "Vložit soubor skriptu…",
-    "actionInsertText": "Vložit {placeholder}",
     "actionLogOutput": "Protokolovat výstup",
     "actionLogOutputInfo": "Zapisuje výstup do actions.log ve složce protokolů aplikace (Nastavení → Úložiště → Protokoly). Chyby se protokolují vždy. Vstupní text se neprotokoluje.",
     "actionPage": "Stránka {page}",
     "actionPageTakesText": "Přijímat vybraný text",
     "actionPageTakesTextInfo": "Je-li vypnuto, otevření této stránky nekopíruje vybraný text z jiných aplikací.",
-    "actionWebhookAuthInfo": "Hlavička Authorization, např. „Bearer …“. Uchovává se v zabezpečeném úložišti a posílá se jen na adresu webhooku.",
-    "actionWebhookAuthLabel": "Autorizace",
-    "actionWebhookAuthPlaceholder": "např. Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Uloženo. Zadejte novou hodnotu pro nahrazení",
     "actionWebhookBodyInfo": "V šablonách JSON se {placeholder} uvnitř řetězců nahradí textem escapovaným pro JSON, bez uvozovek pak řetězcem JSON. V šablonách prostého textu se nahradí původním textem bez přidaných uvozovek či escapování.",
     "actionWebhookBodyLabel": "Tělo požadavku",
     "actionWebhookHeaderDuplicate": "Hlavičky s opakovaným názvem se ignorují",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Vyprázdnit",
     "profileMemoryResetCoreConfirm": "Vyprázdnit hlavní soubor paměti core.md? Jeho obsah nahradí prázdná šablona.",
     "profileMemoryCompactConfirmTitle": "Zhustit paměť?",
-    "profileMemoryCompactConfirm": "Model přepíše {file} kratší: odstraní opakování a zastaralé položky. Požadavek spotřebuje tokeny. Před uložením uvidíte změny a můžete je odmítnout."
+    "profileMemoryCompactConfirm": "Model přepíše {file} kratší: odstraní opakování a zastaralé položky. Požadavek spotřebuje tokeny. Před uložením uvidíte změny a můžete je odmítnout.",
+    "actionWebhookHeaderReplacePlaceholder": "Uloženo. Zadejte novou hodnotu pro nahrazení",
+    "actionWebhookHeadersInfo": "Hodnoty hlaviček se ukládají do zabezpečeného úložiště a posílají se jen na adresu webhooku. Pro token přidejte např. Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

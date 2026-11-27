@@ -21,12 +21,21 @@ import { SETTINGS_CONTEXT_KEY } from '../../lib/settings/settings-context'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import { BUILTIN_VARIABLES, variablePlaceholder } from '@tyco/shared'
 
-/** Offers the declared and the built-in variables to insert as `{{var:NAME}}` */
+/**
+ * Offers what a template field takes, in one menu: the placeholders of the run
+ * (e.g. `{{TEXT}}`) first, then the declared and the built-in variables as
+ * `{{var:NAME}}`
+ */
+const props = defineProps<{ placeholders?: readonly string[] }>()
 const emit = defineEmits<{ insert: [placeholder: string] }>()
 const { t } = useI18n()
 const context = inject(SETTINGS_CONTEXT_KEY, null)
 
 const items = computed<DropdownMenuItem[]>(() => [
+  ...(props.placeholders ?? []).map((placeholder) => ({
+    label: placeholder,
+    action: () => emit('insert', placeholder),
+  })),
   ...[
     ...(context?.draft.value.variables ?? []).map((variable) => variable.name),
     ...BUILTIN_VARIABLES,

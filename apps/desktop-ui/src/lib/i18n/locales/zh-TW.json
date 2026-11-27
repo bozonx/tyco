@@ -198,6 +198,11 @@
       "groupHint": "透過 Jina AI 搜尋網路並閱讀網頁。",
       "searchLabel": "網頁搜尋"
     },
+    "system": {
+      "group": "系統",
+      "groupHint": "精確時間和作業系統。日期、時區和系統名稱一律包含在指示中。",
+      "infoLabel": "系統資訊"
+    },
     "commands": {
       "group": "命令",
       "groupHint": "模型可以執行你的命令。只提供附有 AI 說明的命令。選擇「詢問」時，每次執行都會等待你的確認。",
@@ -272,7 +277,6 @@
     "editCommand": "編輯命令",
     "empty": "尚無命令。",
     "enable": "啟用命令",
-    "errorAuthHeaderOverridden": "啟用授權時，Authorization 標頭會被已儲存的金鑰取代。",
     "errorInvalidUrl": "請輸入有效的 http(s) URL。",
     "errorNoCommand": "請輸入要執行的命令。",
     "errorNoLanguage": "請選擇要翻譯成的語言。",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "命令",
     "actionCommandPlaceholder": "例如：notify-send Tyco {placeholder}",
     "actionInsertScript": "插入指令碼檔案…",
-    "actionInsertText": "插入 {placeholder}",
     "actionLogOutput": "記錄輸出",
     "actionLogOutputInfo": "將輸出寫入應用程式記錄資料夾中的 actions.log（設定 → 儲存位置 → 記錄）。失敗一律會記錄。輸入的文字不會被記錄。",
     "actionPage": "第 {page} 頁",
     "actionPageTakesText": "接收選取文字",
     "actionPageTakesTextInfo": "停用後，開啟此分頁不會從其他應用程式複製選取文字。",
-    "actionWebhookAuthInfo": "Authorization 標頭，例如「Bearer …」。它會保存在安全儲存庫中，且只會發送至該 Webhook 的位址。",
-    "actionWebhookAuthLabel": "Authorization",
-    "actionWebhookAuthPlaceholder": "例如：Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "已儲存。輸入新值以取代",
     "actionWebhookBodyInfo": "在 JSON 範本中，字串內的 {placeholder} 會被替換為經過 JSON 逸出的文字，若不加引號則替換為 JSON 字串。在純文字範本中，它會被替換為原始文字，不添加額外的引號或逸出。",
     "actionWebhookBodyLabel": "請求內文",
     "actionWebhookHeaderDuplicate": "名稱重複的標頭將被忽略",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "清空",
     "profileMemoryResetCoreConfirm": "要清空主記憶檔案 core.md 嗎？其內容將被替換為空白範本。",
     "profileMemoryCompactConfirmTitle": "壓縮記憶？",
-    "profileMemoryCompactConfirm": "模型會把 {file} 改寫得更短，去除重複和過時的內容。此請求會消耗 token。儲存前你會看到變更，並可以拒絕。"
+    "profileMemoryCompactConfirm": "模型會把 {file} 改寫得更短，去除重複和過時的內容。此請求會消耗 token。儲存前你會看到變更，並可以拒絕。",
+    "actionWebhookHeaderReplacePlaceholder": "已儲存。輸入新值以取代",
+    "actionWebhookHeadersInfo": "標頭的值保存在安全儲存區中，只會傳送到 Webhook 的位址。若需權杖，請新增例如 Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

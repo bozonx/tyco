@@ -46,8 +46,7 @@ const webhook = {
   name: 'Hook',
   operationConfig: {
     url: 'https://x.test',
-    isAuthEnabled: true,
-    authSecretId: 'webhook.auth.wh1',
+    headers: { Authorization: 'tyco-secret:webhook.header.wh1' },
   },
 }
 const script = { ...createCommand('script', 'sc1'), name: 'Backup' }
@@ -327,7 +326,7 @@ describe('SettingsCommandsTab.vue', () => {
     await nextTick()
 
     await vi.waitFor(() =>
-      expect(removeSecret).toHaveBeenCalledWith('webhook.auth.wh1')
+      expect(removeSecret).toHaveBeenCalledWith('webhook.header.wh1')
     )
   })
 

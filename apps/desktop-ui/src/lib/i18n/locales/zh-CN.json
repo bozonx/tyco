@@ -198,6 +198,11 @@
       "groupHint": "通过 Jina AI 搜索网络并阅读网页。",
       "searchLabel": "网页搜索"
     },
+    "system": {
+      "group": "系统",
+      "groupHint": "精确时间和操作系统。日期、时区和系统名称始终包含在指令中。",
+      "infoLabel": "系统信息"
+    },
     "commands": {
       "group": "命令",
       "groupHint": "模型可以运行你的命令。只提供带有 AI 说明的命令。选择“询问”时，每次运行都会等待你的确认。",
@@ -272,7 +277,6 @@
     "editCommand": "编辑命令",
     "empty": "暂无命令。",
     "enable": "启用命令",
-    "errorAuthHeaderOverridden": "启用授权时，Authorization 请求头会被已保存的密钥替换。",
     "errorInvalidUrl": "请输入有效的 http(s) URL。",
     "errorNoCommand": "请输入要运行的命令。",
     "errorNoLanguage": "请选择要翻译的目标语言。",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "命令",
     "actionCommandPlaceholder": "例如 notify-send Tyco {placeholder}",
     "actionInsertScript": "插入脚本文件…",
-    "actionInsertText": "插入 {placeholder}",
     "actionLogOutput": "记录输出日志",
     "actionLogOutputInfo": "将输出写入应用日志文件夹中的 actions.log（设置 → 存储 → 日志）。失败操作始终会记录日志。输入文本不会被记录。",
     "actionPage": "第 {page} 页",
     "actionPageTakesText": "接收选中文本",
     "actionPageTakesTextInfo": "禁用后，打开此页面不会从其他应用程序复制选中文本。",
-    "actionWebhookAuthInfo": "Authorization 请求头，例如 “Bearer …”。保存在安全存储区中，仅发送至该 Webhook 的目标地址。",
-    "actionWebhookAuthLabel": "认证",
-    "actionWebhookAuthPlaceholder": "例如 Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "已保存。输入新值以替换",
     "actionWebhookBodyInfo": "在 JSON 模板中，字符串内的 {placeholder} 会被替换为 JSON 转义文本，无引号使用时会被替换为 JSON 字符串。在纯文本模板中，它会被替换为原始文本，不添加额外的引号或转义。",
     "actionWebhookBodyLabel": "请求体",
     "actionWebhookHeaderDuplicate": "名称重复的请求头将被忽略",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "清空",
     "profileMemoryResetCoreConfirm": "要清空主记忆文件 core.md 吗？其内容将被替换为空模板。",
     "profileMemoryCompactConfirmTitle": "压缩记忆？",
-    "profileMemoryCompactConfirm": "模型会把 {file} 改写得更短，去掉重复和过时的内容。此请求会消耗 token。保存前你会看到更改，并可以拒绝。"
+    "profileMemoryCompactConfirm": "模型会把 {file} 改写得更短，去掉重复和过时的内容。此请求会消耗 token。保存前你会看到更改，并可以拒绝。",
+    "actionWebhookHeaderReplacePlaceholder": "已保存。输入新值以替换",
+    "actionWebhookHeadersInfo": "标头的值保存在安全存储中，只发送到 Webhook 的地址。如需令牌，请添加例如 Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

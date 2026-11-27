@@ -52,6 +52,7 @@
       vertical
       density="compact"
       :label="t('settings.actionWebhookHeadersLabel')"
+      :info="t('settings.actionWebhookHeadersInfo')"
       :warning="warningsOf('headers')"
     >
       <div
@@ -72,7 +73,7 @@
             type="password"
             :aria-label="t('settings.actionWebhookHeaderValue')"
             :model-value="secretDrafts[headerIndex] ?? ''"
-            :placeholder="t('settings.actionWebhookAuthReplacePlaceholder')"
+            :placeholder="t('settings.actionWebhookHeaderReplacePlaceholder')"
             @update:model-value="secretDrafts[headerIndex] = $event"
           />
           <Button
@@ -130,45 +131,6 @@
         </Button>
       </div>
     </FieldRow>
-
-    <FieldRow
-      class="action-field"
-      vertical
-      density="compact"
-      :label="t('settings.actionWebhookAuthLabel')"
-      :info="t('settings.actionWebhookAuthInfo')"
-    >
-      <div class="action-field-row">
-        <FieldInput
-          class="flex-1"
-          type="password"
-          :model-value="authDraft"
-          :placeholder="
-            hasAuth
-              ? t('settings.actionWebhookAuthReplacePlaceholder')
-              : t('settings.actionWebhookAuthPlaceholder')
-          "
-          @update:model-value="authDraft = $event"
-        />
-        <Button
-          variant="primary"
-          size="sm"
-          :disabled="!authDraft.trim()"
-          @click="saveAuth"
-        >
-          {{ t('common.save') }}
-        </Button>
-        <Button v-if="hasAuth" size="sm" variant="ghost" @click="removeAuth">
-          {{ t('common.remove') }}
-        </Button>
-      </div>
-      <p v-if="isAuthMissingHere" class="action-field-warning">
-        {{ t('settings.secretNotSetOnDevice') }}
-      </p>
-      <p v-if="authBoundElsewhere" class="action-field-warning">
-        {{ t('settings.apiKeyBoundTo', { origin: authOrigins.join(', ') }) }}
-      </p>
-    </FieldRow>
   </div>
 </template>
 <script setup lang="ts">
@@ -180,7 +142,6 @@ import { useSettingsVariables } from '../../composables/use-settings-variables'
 import useToast from '../../composables/use-toast'
 import { webhookOperationConfig } from '../../lib/commands/command-config'
 import { isSecretReferenced } from '../../lib/commands/command-secrets'
-import { createWebhookAuthModel } from '../../lib/commands/webhook-auth-model'
 import {
   type WebhookHeaderRow,
   addWebhookHeaderRow,
@@ -191,6 +152,7 @@ import {
   webhookHeaderRows,
   webhookHeadersFromRows,
 } from '../../lib/commands/webhook-header-rows'
+import { createWebhookSecretsModel } from '../../lib/commands/webhook-secrets-model'
 import { clientLogger } from '../../lib/logger'
 import { httpOrigin, secretIdFromRef } from '../../lib/net/secrets'
 import { useSecretsStore } from '../../stores/secrets'
@@ -289,18 +251,6 @@ async function replaceHeaderSecret(index: number) {
   }
 }
 
-const session = useSettingsSessionStore()
-const secretId = computed(() => webhook.value.authSecretId ?? '')
-const hasAuth = computed(
-  () =>
-    props.command.operationId === 'webhook' &&
-    Boolean(webhook.value.isAuthEnabled) &&
-    Boolean(secretId.value)
-)
-/** The config refers to a key that this device has no value for yet */
-const isAuthMissingHere = computed(
-  () => hasAuth.value && !Object.hasOwn(secretsStore.secrets, secretId.value)
-)
 /** Secret headers whose value this device has not been given yet */
 const hasHeaderMissingHere = computed(() =>
   headerRows.value.some(([, value]) => {
@@ -308,15 +258,6 @@ const hasHeaderMissingHere = computed(() =>
     return Boolean(id) && !Object.hasOwn(secretsStore.secrets, id!)
   })
 )
-const authOrigins = computed(
-  () => secretsStore.secrets[secretId.value]?.origins ?? []
-)
-const authBoundElsewhere = computed(() => {
-  if (!hasAuth.value || isAuthMissingHere.value) return false
-  const origin = httpOrigin(urlHere.value)
-  return Boolean(origin) && !authOrigins.value.includes(origin!)
-})
-
 /**
  * The origins of the secret headers that do not go to the URL of the webhook:
  * the proxy refuses to send them there until their value is saved again
@@ -332,34 +273,30 @@ const headerSecretOrigins = computed(() => {
   return [...new Set(elsewhere)]
 })
 
-const { authDraft, saveAuth, removeAuth, replaceSecret, removeUnusedSecret } =
-  createWebhookAuthModel({
-    getUrl: () => webhook.value.url,
-    getSecretId: () => secretId.value,
-    getSecretOrigins: (id) => secretsStore.secrets[id]?.origins ?? [],
-    isSecretReferenced: (id) =>
-      isSecretReferenced(session.draft?.commands ?? [], id),
-    createId: () => crypto.randomUUID(),
-    setSecret: secretsStore.setSecret,
-    removeSecret: secretsStore.removeSecret,
-    update,
-    afterRender: nextTick,
-    persist: session.persist,
-    isSaved: session.isSaved,
-    notifyInvalidOrigin: () => toastKey('settings.invalidBaseUrl', 'error'),
-    variables,
-    notifyVariablesNotSet: (names) =>
-      toastText(`${t('toast.variablesNotSet')}\n${names.join(', ')}`, 'error'),
-    notifySavedOnDevice: () => toastKey('settings.keySavedOnDevice', 'success'),
-    reportSaveError: (error) => toastError(error, 'settings.keySaveFailed'),
-    reportRemoveError: (error) => toastError(error, 'settings.keyRemoveFailed'),
-  })
+const session = useSettingsSessionStore()
+const { replaceSecret, removeUnusedSecret } = createWebhookSecretsModel({
+  getUrl: () => webhook.value.url,
+  isSecretReferenced: (id) =>
+    isSecretReferenced(session.draft?.commands ?? [], id),
+  setSecret: secretsStore.setSecret,
+  removeSecret: secretsStore.removeSecret,
+  afterRender: nextTick,
+  persist: session.persist,
+  isSaved: session.isSaved,
+  notifyInvalidOrigin: () => toastKey('settings.invalidBaseUrl', 'error'),
+  variables,
+  notifyVariablesNotSet: (names) =>
+    toastText(`${t('toast.variablesNotSet')}\n${names.join(', ')}`, 'error'),
+  notifySavedOnDevice: () => toastKey('settings.keySavedOnDevice', 'success'),
+  reportSaveError: (error) => toastError(error, 'settings.keySaveFailed'),
+  reportRemoveError: (error) => toastError(error, 'settings.keyRemoveFailed'),
+})
 
 onMounted(() => {
   const hasSecretHeader = headerRows.value.some(([, value]) =>
     Boolean(secretIdOf(value))
   )
-  if (webhook.value.isAuthEnabled || hasSecretHeader)
+  if (hasSecretHeader)
     void secretsStore
       .refreshSecrets()
       .catch((error: unknown) =>

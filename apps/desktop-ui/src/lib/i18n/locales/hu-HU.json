@@ -198,6 +198,11 @@
       "groupHint": "Webes keresés és oldalak olvasása a Jina AI-jal.",
       "searchLabel": "Webes keresés"
     },
+    "system": {
+      "group": "Rendszer",
+      "groupHint": "A pontos idő és az operációs rendszer. A dátum, az időzóna és a rendszer neve mindig szerepel az utasításokban.",
+      "infoLabel": "Rendszerinformáció"
+    },
     "commands": {
       "group": "Parancsok",
       "groupHint": "A modell futtathatja a parancsaidat. Csak az MI-nek szóló leírással rendelkező parancsok érhetők el. A „Kérdezzen” beállításnál minden futtatás a megerősítésedre vár.",
@@ -272,7 +277,6 @@
     "editCommand": "Parancs szerkesztése",
     "empty": "Még nincsenek parancsok.",
     "enable": "Parancs bekapcsolása",
-    "errorAuthHeaderOverridden": "Amíg az engedélyezés be van kapcsolva, az Authorization fejlécet a mentett kulcs váltja fel.",
     "errorInvalidUrl": "Adj meg egy érvényes http(s) URL-t.",
     "errorNoCommand": "Adja meg a futtatandó parancsot.",
     "errorNoLanguage": "Válassza ki a célnyelvet.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Parancs",
     "actionCommandPlaceholder": "pl. notify-send Tyco {placeholder}",
     "actionInsertScript": "Szkriptfájl beszúrása…",
-    "actionInsertText": "{placeholder} beszúrása",
     "actionLogOutput": "Kimenet naplózása",
     "actionLogOutputInfo": "A kimenetet az alkalmazás naplómappájában lévő actions.log fájlba írja (Beállítások → Tárolás → Naplók). A hibák mindig naplózásra kerülnek. A bemeneti szöveg nem kerül naplózásra.",
     "actionPage": "{page}. oldal",
     "actionPageTakesText": "Kijelölt szöveg fogadása",
     "actionPageTakesTextInfo": "Ha ki van kapcsolva, az oldal megnyitása nem másolja a kijelölt szöveget más alkalmazásokból.",
-    "actionWebhookAuthInfo": "Az Authorization fejléc, pl. „Bearer …”. A biztonságos tárolóban marad, és csak a webhook címére kerül elküldésre.",
-    "actionWebhookAuthLabel": "Hitelesítés",
-    "actionWebhookAuthPlaceholder": "pl. Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Mentve. Adjon meg új értéket a cseréjéhez",
     "actionWebhookBodyInfo": "JSON-sablonokban a {placeholder} karakterláncokon belül JSON-escape-elt szövegre, idézőjelek nélkül pedig JSON-karakterláncra cserélődik. Egyszerű szöveges sablonokban az eredeti szövegre cserélődik, hozzáadott idézőjelek és escape-elés nélkül.",
     "actionWebhookBodyLabel": "Kérés törzse",
     "actionWebhookHeaderDuplicate": "Az ismétlődő nevű fejlécek figyelmen kívül maradnak",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Kiürítés",
     "profileMemoryResetCoreConfirm": "Kiüríted a fő memóriafájlt (core.md)? A tartalmát egy üres sablon váltja fel.",
     "profileMemoryCompactConfirmTitle": "Tömöríted a memóriát?",
-    "profileMemoryCompactConfirm": "A modell rövidebben újraírja a(z) {file} fájlt, eltávolítva az ismétléseket és az elavult elemeket. A kérés tokeneket használ. Mentés előtt látod a változásokat, és elvetheted őket."
+    "profileMemoryCompactConfirm": "A modell rövidebben újraírja a(z) {file} fájlt, eltávolítva az ismétléseket és az elavult elemeket. A kérés tokeneket használ. Mentés előtt látod a változásokat, és elvetheted őket.",
+    "actionWebhookHeaderReplacePlaceholder": "Mentve. Adjon meg új értéket a cseréjéhez",
+    "actionWebhookHeadersInfo": "A fejlécek értékei a biztonságos tárolóba kerülnek, és csak a webhook címére lesznek elküldve. Tokenhez adja hozzá pl.: Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

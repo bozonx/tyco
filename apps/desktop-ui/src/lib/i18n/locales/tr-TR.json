@@ -198,6 +198,11 @@
       "groupHint": "Jina AI ile web’de arama ve sayfa okuma.",
       "searchLabel": "Web araması"
     },
+    "system": {
+      "group": "Sistem",
+      "groupHint": "Tam saat ve işletim sistemi. Tarih, saat dilimi ve sistem adı talimatlarda her zaman bulunur.",
+      "infoLabel": "Sistem bilgisi"
+    },
     "commands": {
       "group": "Komutlar",
       "groupHint": "Model komutlarınızı çalıştırabilir. Yalnızca yapay zekâ için açıklaması olan komutlar sunulur. \"Sor\" seçeneğinde her çalıştırma onayınızı bekler.",
@@ -272,7 +277,6 @@
     "editCommand": "Komutu düzenle",
     "empty": "Henüz komut yok.",
     "enable": "Komutu etkinleştir",
-    "errorAuthHeaderOverridden": "Yetkilendirme açıkken Authorization başlığı kayıtlı anahtarla değiştirilir.",
     "errorInvalidUrl": "Geçerli bir http(s) URL'si girin.",
     "errorNoCommand": "Çalıştırılacak komutu girin.",
     "errorNoLanguage": "Çevrilecek dili seçin.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Komut",
     "actionCommandPlaceholder": "ör. notify-send Tyco {placeholder}",
     "actionInsertScript": "Betik dosyası ekle…",
-    "actionInsertText": "{placeholder} ekle",
     "actionLogOutput": "Çıktıyı günlüğe yaz",
     "actionLogOutputInfo": "Çıktıyı uygulamanın günlük klasöründeki actions.log dosyasına yazar (Ayarlar → Depolama → Günlükler). Hatalar her zaman yazılır. Giriş metni yazılmaz.",
     "actionPage": "Sayfa {page}",
     "actionPageTakesText": "Seçili metni kabul et",
     "actionPageTakesTextInfo": "Devre dışı bırakıldığında, bu sayfanın açılması diğer uygulamalardan seçilen metni kopyalamaz.",
-    "actionWebhookAuthInfo": "Authorization başlığı, ör. “Bearer …”. Güvenli depoda saklanır ve yalnızca webhook adresine gönderilir.",
-    "actionWebhookAuthLabel": "Authorization",
-    "actionWebhookAuthPlaceholder": "ör. Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Kaydedildi. Değiştirmek için yeni değer girin",
     "actionWebhookBodyInfo": "JSON şablonlarında {placeholder}, dizeler içinde JSON için kaçışlı metinle, tırnaksız kullanıldığında ise bir JSON dizesiyle değiştirilir. Düz metin şablonlarında özgün metin, ek tırnak veya kaçış olmadan eklenir.",
     "actionWebhookBodyLabel": "İstek gövdesi",
     "actionWebhookHeaderDuplicate": "Tekrarlanan ada sahip başlıklar yok sayılır",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Temizle",
     "profileMemoryResetCoreConfirm": "Ana bellek dosyası core.md temizlensin mi? İçeriği boş bir şablonla değiştirilir.",
     "profileMemoryCompactConfirmTitle": "Bellek sıkıştırılsın mı?",
-    "profileMemoryCompactConfirm": "Model {file} dosyasını tekrarları ve eskimiş öğeleri çıkararak daha kısa yeniden yazar. İstek token harcar. Kaydetmeden önce değişiklikleri görür ve reddedebilirsiniz."
+    "profileMemoryCompactConfirm": "Model {file} dosyasını tekrarları ve eskimiş öğeleri çıkararak daha kısa yeniden yazar. İstek token harcar. Kaydetmeden önce değişiklikleri görür ve reddedebilirsiniz.",
+    "actionWebhookHeaderReplacePlaceholder": "Kaydedildi. Değiştirmek için yeni değer girin",
+    "actionWebhookHeadersInfo": "Başlık değerleri güvenli depoda tutulur ve yalnızca webhook adresine gönderilir. Bir belirteç için örneğin Authorization: Bearer … ekleyin"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

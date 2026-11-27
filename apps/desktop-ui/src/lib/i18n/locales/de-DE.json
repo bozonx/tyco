@@ -198,6 +198,11 @@
       "groupHint": "Im Web suchen und Webseiten lesen mit Jina AI.",
       "searchLabel": "Websuche"
     },
+    "system": {
+      "group": "System",
+      "groupHint": "Die genaue Uhrzeit und das Betriebssystem. Datum, Zeitzone und Systemname stehen immer in den Anweisungen.",
+      "infoLabel": "Systeminfo"
+    },
     "commands": {
       "group": "Befehle",
       "groupHint": "Das Modell darf Ihre Befehle ausführen. Angeboten werden nur Befehle mit einer Beschreibung für die KI. „Nachfragen“ lässt jeden Start auf Ihre Bestätigung warten.",
@@ -272,7 +277,6 @@
     "editCommand": "Befehl bearbeiten",
     "empty": "Noch keine Befehle.",
     "enable": "Befehl aktivieren",
-    "errorAuthHeaderOverridden": "Solange die Autorisierung aktiv ist, wird der Header Authorization durch den gespeicherten Schlüssel ersetzt.",
     "errorInvalidUrl": "Gib eine gültige http(s)-URL ein.",
     "errorNoCommand": "Geben Sie den auszuführenden Befehl ein.",
     "errorNoLanguage": "Wählen Sie die Zielsprache der Übersetzung.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Befehl",
     "actionCommandPlaceholder": "z. B. notify-send Tyco {placeholder}",
     "actionInsertScript": "Skriptdatei einfügen…",
-    "actionInsertText": "{placeholder} einfügen",
     "actionLogOutput": "Ausgabe protokollieren",
     "actionLogOutputInfo": "Schreibt die Ausgabe in actions.log im Protokollordner der App (Einstellungen → Speicher → Protokolle). Fehler werden immer protokolliert. Der Eingabetext wird nicht protokolliert.",
     "actionPage": "Seite {page}",
     "actionPageTakesText": "Ausgewählten Text annehmen",
     "actionPageTakesTextInfo": "Wenn deaktiviert, wird beim Öffnen dieser Seite kein ausgewählter Text aus anderen Anwendungen kopiert.",
-    "actionWebhookAuthInfo": "Der Authorization-Header, z. B. „Bearer …“. Er wird im sicheren Speicher abgelegt und nur an die Adresse des Webhooks gesendet.",
-    "actionWebhookAuthLabel": "Autorisierung",
-    "actionWebhookAuthPlaceholder": "z. B. Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Gespeichert. Geben Sie einen neuen Wert ein, um ihn zu ersetzen",
     "actionWebhookBodyInfo": "In JSON-Vorlagen wird {placeholder} innerhalb von Strings durch JSON-maskierten Text ersetzt, ohne Anführungszeichen durch einen JSON-String. In reinen Textvorlagen wird es durch den Originaltext ersetzt, ohne zusätzliche Anführungszeichen oder Maskierung.",
     "actionWebhookBodyLabel": "Anfragetext",
     "actionWebhookHeaderDuplicate": "Header mit wiederholtem Namen werden ignoriert",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Leeren",
     "profileMemoryResetCoreConfirm": "Die Hauptgedächtnisdatei core.md leeren? Ihr Inhalt wird durch eine leere Vorlage ersetzt.",
     "profileMemoryCompactConfirmTitle": "Gedächtnis verdichten?",
-    "profileMemoryCompactConfirm": "Das Modell schreibt {file} kürzer neu und entfernt Wiederholungen und Veraltetes. Die Anfrage verbraucht Tokens. Vor dem Speichern sehen Sie die Änderungen und können sie verwerfen."
+    "profileMemoryCompactConfirm": "Das Modell schreibt {file} kürzer neu und entfernt Wiederholungen und Veraltetes. Die Anfrage verbraucht Tokens. Vor dem Speichern sehen Sie die Änderungen und können sie verwerfen.",
+    "actionWebhookHeaderReplacePlaceholder": "Gespeichert. Geben Sie einen neuen Wert ein, um ihn zu ersetzen",
+    "actionWebhookHeadersInfo": "Header-Werte werden im sicheren Speicher abgelegt und nur an die Adresse des Webhooks gesendet. Für ein Token z. B. Authorization: Bearer … hinzufügen"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

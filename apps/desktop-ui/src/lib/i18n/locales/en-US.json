@@ -198,6 +198,11 @@
       "groupHint": "Search the web and read web pages using Jina AI.",
       "searchLabel": "Web search"
     },
+    "system": {
+      "group": "System",
+      "groupHint": "The exact time and the operating system. The date, time zone and system name are always in the instructions.",
+      "infoLabel": "System info"
+    },
     "commands": {
       "group": "Commands",
       "groupHint": "Let the model run your commands. Only commands with a description for the AI are offered. \"Ask\" makes each run wait for your confirmation.",
@@ -272,7 +277,6 @@
     "editCommand": "Edit the command",
     "empty": "No commands yet.",
     "enable": "Enable command",
-    "errorAuthHeaderOverridden": "The Authorization header is replaced by the stored key while authorization is on.",
     "errorInvalidUrl": "Enter a valid http(s) URL.",
     "errorNoCommand": "Enter the command to run.",
     "errorNoLanguage": "Choose the language to translate into.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Command",
     "actionCommandPlaceholder": "e.g. notify-send Tyco {placeholder}",
     "actionInsertScript": "Insert a script file…",
-    "actionInsertText": "Insert {placeholder}",
     "actionLogOutput": "Log the output",
     "actionLogOutputInfo": "Writes the output to actions.log in the app log folder (Settings → Storage → Logs). Failures are always logged. The input text is not logged.",
     "actionPage": "Page {page}",
     "actionPageTakesText": "Accept selected text",
     "actionPageTakesTextInfo": "When disabled, opening this page does not copy selected text from other applications.",
-    "actionWebhookAuthInfo": "The Authorization header, e.g. “Bearer …”. It is kept in the secure store and sent only to the webhook’s address.",
-    "actionWebhookAuthLabel": "Authorization",
-    "actionWebhookAuthPlaceholder": "e.g. Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Saved. Enter a new value to replace it",
     "actionWebhookBodyInfo": "In JSON templates, {placeholder} is replaced with JSON-escaped text inside strings, or a JSON string when used without quotes. In plain text templates it is replaced with the original text, without added quotes or escaping.",
     "actionWebhookBodyLabel": "Request body",
     "actionWebhookHeaderDuplicate": "Headers with a repeated name are ignored",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Clear",
     "profileMemoryResetCoreConfirm": "Clear the main memory file core.md? Its content is replaced with an empty template.",
     "profileMemoryCompactConfirmTitle": "Compact the memory?",
-    "profileMemoryCompactConfirm": "The model rewrites {file} shorter, removing repetitions and outdated items. The request uses tokens. You see the changes before they are saved and can reject them."
+    "profileMemoryCompactConfirm": "The model rewrites {file} shorter, removing repetitions and outdated items. The request uses tokens. You see the changes before they are saved and can reject them.",
+    "actionWebhookHeaderReplacePlaceholder": "Saved. Enter a new value to replace it",
+    "actionWebhookHeadersInfo": "Header values are kept in the secure store and sent only to the webhook’s address. For a token, add e.g. Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

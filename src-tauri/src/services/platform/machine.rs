@@ -18,14 +18,26 @@ fn read_machine_id() -> Option<String> {
 
 #[cfg(target_os = "windows")]
 fn read_machine_id() -> Option<String> {
+    hklm_string("SOFTWARE\\Microsoft\\Cryptography", "MachineGuid")
+}
+
+/// A value of `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion`, e.g.
+/// `CurrentBuildNumber`.
+#[cfg(target_os = "windows")]
+pub(super) fn windows_version_value(name: &str) -> Option<String> {
+    hklm_string("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", name)
+}
+
+#[cfg(target_os = "windows")]
+fn hklm_string(subkey: &str, name: &str) -> Option<String> {
     use windows_sys::Win32::Foundation::ERROR_SUCCESS;
     use windows_sys::Win32::System::Registry::{
         RegGetValueW, HKEY_LOCAL_MACHINE, RRF_RT_REG_SZ, RRF_SUBKEY_WOW6464KEY,
     };
 
     let wide = |text: &str| text.encode_utf16().chain([0]).collect::<Vec<u16>>();
-    let subkey = wide("SOFTWARE\\Microsoft\\Cryptography");
-    let value = wide("MachineGuid");
+    let subkey = wide(subkey);
+    let value = wide(name);
     let mut buffer = [0u16; 128];
     let mut size_bytes = std::mem::size_of_val(&buffer) as u32;
     // SAFETY: the strings are NUL-terminated and outlive the call; the

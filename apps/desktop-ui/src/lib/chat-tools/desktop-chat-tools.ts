@@ -37,6 +37,8 @@ import {
   createPluginChatToolProvider,
   type PluginChatToolsDependencies,
 } from './plugin-chat-tools'
+import type { SystemContext } from '../system-context/system-context'
+import { createSystemToolProvider } from './system-tools'
 import type { ToolScope } from './tool-catalog'
 import { createWebToolProvider } from './web-tools'
 
@@ -196,6 +198,8 @@ export interface DesktopChatToolsDependencies {
   environment?: () => CommandEnvironment
   /** `commandRunTimeoutSec`, the limit shared by all command runs */
   commandRunLimitSec?: () => number | undefined
+  /** For `get_system_info`; the tool is not offered without it */
+  systemContext?: Pick<SystemContext, 'details'>
 }
 
 /**
@@ -270,6 +274,9 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
     warn: deps.warn,
   })
   const webToolProvider = createDesktopWebToolProvider(deps)
+  const systemToolProvider = deps.systemContext
+    ? createSystemToolProvider(deps.systemContext)
+    : undefined
   const commandToolProvider =
     deps.commands && deps.operations
       ? createCommandToolProvider({
@@ -291,6 +298,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
       fileToolProvider,
       memoryToolProvider,
       webToolProvider,
+      ...(systemToolProvider ? [systemToolProvider] : []),
       ...(commandToolProvider ? [commandToolProvider] : []),
       ...(pluginToolProvider ? [pluginToolProvider] : []),
       ...(checkDebug() ? [debugToolProvider] : []),

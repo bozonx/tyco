@@ -198,6 +198,11 @@
       "groupHint": "Cerca sul web e leggi pagine con Jina AI.",
       "searchLabel": "Ricerca web"
     },
+    "system": {
+      "group": "Sistema",
+      "groupHint": "L’ora esatta e il sistema operativo. Data, fuso orario e nome del sistema sono sempre nelle istruzioni.",
+      "infoLabel": "Info di sistema"
+    },
     "commands": {
       "group": "Comandi",
       "groupHint": "Il modello può eseguire i tuoi comandi. Sono offerti solo i comandi con una descrizione per l’IA. «Chiedi» fa attendere ogni esecuzione la tua conferma.",
@@ -272,7 +277,6 @@
     "editCommand": "Modifica il comando",
     "empty": "Ancora nessun comando.",
     "enable": "Attiva il comando",
-    "errorAuthHeaderOverridden": "Finché l’autorizzazione è attiva, l’intestazione Authorization viene sostituita dalla chiave salvata.",
     "errorInvalidUrl": "Inserisci un URL http(s) valido.",
     "errorNoCommand": "Inserisci il comando da eseguire.",
     "errorNoLanguage": "Scegli la lingua in cui tradurre.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Comando",
     "actionCommandPlaceholder": "es. notify-send Tyco {placeholder}",
     "actionInsertScript": "Inserisci un file di script…",
-    "actionInsertText": "Inserisci {placeholder}",
     "actionLogOutput": "Registra l’output",
     "actionLogOutputInfo": "Scrive l’output in actions.log nella cartella dei registri dell’app (Impostazioni → Archiviazione → Registri). Gli errori vengono sempre registrati. Il testo di input non viene registrato.",
     "actionPage": "Pagina {page}",
     "actionPageTakesText": "Accetta testo selezionato",
     "actionPageTakesTextInfo": "Se disabilitato, l'apertura di questa pagina non copia il testo selezionato da altre applicazioni.",
-    "actionWebhookAuthInfo": "L’intestazione Authorization, ad es. «Bearer …». Viene conservata nell’archivio sicuro e inviata solo all’indirizzo del webhook.",
-    "actionWebhookAuthLabel": "Autorizzazione",
-    "actionWebhookAuthPlaceholder": "es. Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Salvato. Inserisci un nuovo valore per sostituirlo",
     "actionWebhookBodyInfo": "Nei modelli JSON, {placeholder} viene sostituito con testo escapato per JSON all’interno delle stringhe, oppure con una stringa JSON se usato senza virgolette. Nei modelli di testo semplice viene sostituito con il testo originale, senza virgolette o escape aggiunti.",
     "actionWebhookBodyLabel": "Corpo della richiesta",
     "actionWebhookHeaderDuplicate": "Le intestazioni con nome ripetuto vengono ignorate",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Svuota",
     "profileMemoryResetCoreConfirm": "Svuotare il file di memoria principale core.md? Il contenuto sarà sostituito da un modello vuoto.",
     "profileMemoryCompactConfirmTitle": "Compattare la memoria?",
-    "profileMemoryCompactConfirm": "Il modello riscrive {file} in forma più breve, togliendo ripetizioni e voci superate. La richiesta consuma token. Vedrai le modifiche prima del salvataggio e potrai rifiutarle."
+    "profileMemoryCompactConfirm": "Il modello riscrive {file} in forma più breve, togliendo ripetizioni e voci superate. La richiesta consuma token. Vedrai le modifiche prima del salvataggio e potrai rifiutarle.",
+    "actionWebhookHeaderReplacePlaceholder": "Salvato. Inserisci un nuovo valore per sostituirlo",
+    "actionWebhookHeadersInfo": "I valori delle intestazioni sono conservati nell’archivio sicuro e inviati solo all’indirizzo del webhook. Per un token aggiungi ad es. Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {

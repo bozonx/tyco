@@ -33,6 +33,15 @@ something new.
 
 - The files and screenshots you attach to the conversation.
 - The web (search and reading pages), unless you turn it off in the profile.
+- Today's date with the day of the week, your time zone and the name of your
+  system (for example `Linux (Fedora Linux 44)` or `Windows 11`). Every
+  assistant gets these — Ask AI, profiles and AI commands — with no setting.
+  The time of day is not included.
+- The **System** tool: the exact time, the processor architecture and, on
+  Linux, the window system and the desktop. A profile has it unless you switch
+  it off or make it ask; an AI command gets it only when you add it to its
+  list; Ask AI does not have it. It never tells your user name, the name of
+  the computer, your folders or your network.
 
 Nothing else. To give an assistant a folder on your computer, add it to the
 workspace as an external project; there is no other way.
@@ -61,11 +70,11 @@ commands you select.
 
 ## Where tools are available
 
-| Where          | Tools                                                      | Asks?                                                 |
-| -------------- | ---------------------------------------------------------- | ----------------------------------------------------- |
-| Ask AI         | the web (switch in Settings → Ask AI), your attachments    | asks about new destinations after reading attachments |
-| AI command     | only what you put on its list: commands, web, plugin tools | the whitelist grants by default                       |
-| A profile chat | as set in the profile                                      | by each tool's setting                                |
+| Where          | Tools                                                              | Asks?                                                 |
+| -------------- | ------------------------------------------------------------------ | ----------------------------------------------------- |
+| Ask AI         | the web (switch in Settings → Ask AI), your attachments            | asks about new destinations after reading attachments |
+| AI command     | only what you put on its list: commands, web, system, plugin tools | the whitelist grants by default                       |
+| A profile chat | as set in the profile                                              | by each tool's setting                                |
 
 "Ask AI" is meant for quick answers and checking facts: pick a fast model for
 it. It never sees your files, memory or commands. An AI command often runs with

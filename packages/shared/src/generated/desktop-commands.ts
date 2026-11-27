@@ -66,6 +66,7 @@ import type {
   SubtitlesAction,
   SubtitlesSnapshot,
   SubtitlesView,
+  SystemInfo,
   TextInsertionStatus,
   ToolCallContext,
   UserDataRelocationMode,
@@ -230,6 +231,7 @@ export interface DesktopCommands {
   get_secret_vault_state: { args: undefined; result: VaultState }
   get_storage_info: { args: undefined; result: StorageInfo }
   get_subtitles: { args: undefined; result: SubtitlesSnapshot }
+  get_system_info: { args: undefined; result: SystemInfo }
   get_text_insertion_status: { args: undefined; result: TextInsertionStatus }
   hide_quick_window_on_blur: { args: { activationId: number }; result: void }
   hide_subtitles: { args: undefined; result: WindowGeometry | null }

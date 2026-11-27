@@ -198,6 +198,11 @@
       "groupHint": "Jina AI арқылы интернеттен іздеу және беттерді оқу.",
       "searchLabel": "Интернеттен іздеу"
     },
+    "system": {
+      "group": "Жүйе",
+      "groupHint": "Нақты уақыт және операциялық жүйе. Күн, уақыт белдеуі және жүйе атауы нұсқауларда әрқашан бар.",
+      "infoLabel": "Жүйе туралы мәлімет"
+    },
     "commands": {
       "group": "Пәрмендер",
       "groupHint": "Модель сіздің командаларыңызды іске қоса алады. Тек ЖИ үшін сипаттамасы бар командалар қолжетімді. «Сұрау» — әр іске қосу сіздің растауыңызды күтеді.",
@@ -272,7 +277,6 @@
     "editCommand": "Команданы өңдеу",
     "empty": "Әзірге командалар жоқ.",
     "enable": "Команданы қосу",
-    "errorAuthHeaderOverridden": "Авторизация қосулы тұрғанда Authorization тақырыбы сақталған кілтпен ауыстырылады.",
     "errorInvalidUrl": "Жарамды http(s) URL мекенжайын енгізіңіз.",
     "errorNoCommand": "Орындалатын команданы енгізіңіз.",
     "errorNoLanguage": "Аударма тілін таңдаңыз.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Команда",
     "actionCommandPlaceholder": "мысалы, notify-send Tyco {placeholder}",
     "actionInsertScript": "Скрипт файлын кірістіру…",
-    "actionInsertText": "{placeholder} кірістіру",
     "actionLogOutput": "Шығысты журналға жазу",
     "actionLogOutputInfo": "Шығысты қолданбаның журналдар қалтасындағы actions.log файлына жазады (Параметрлер → Сақтау орны → Журналдар). Қателер әрқашан жазылады. Кіріс мәтін жазылмайды.",
     "actionPage": "Бет {page}",
     "actionPageTakesText": "Таңдалған мәтінді қабылдау",
     "actionPageTakesTextInfo": "Өшірілген кезде, бұл бетті ашу басқа қолданбалардан таңдалған мәтінді көшірмейді.",
-    "actionWebhookAuthInfo": "Authorization тақырыбы, мысалы, «Bearer …». Қорғалған қоймада сақталады және тек вебхук мекенжайына жіберіледі.",
-    "actionWebhookAuthLabel": "Авторизация",
-    "actionWebhookAuthPlaceholder": "мысалы, Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Сақталды. Ауыстыру үшін жаңа мән енгізіңіз",
     "actionWebhookBodyInfo": "JSON үлгілерінде {placeholder} жолдар ішінде JSON үшін экрандалған мәтінмен, тырнақшасыз қолданылса — JSON жолымен ауыстырылады. Қарапайым мәтін үлгілерінде ол бастапқы мәтінмен, қосымша тырнақша мен экрандаусыз ауыстырылады.",
     "actionWebhookBodyLabel": "Сұрау денесі",
     "actionWebhookHeaderDuplicate": "Аты қайталанатын тақырыптар еленбейді",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Тазалау",
     "profileMemoryResetCoreConfirm": "core.md негізгі жад файлын тазалау керек пе? Оның мазмұны бос үлгімен ауыстырылады.",
     "profileMemoryCompactConfirmTitle": "Жадты ықшамдау керек пе?",
-    "profileMemoryCompactConfirm": "Модель {file} файлын қысқартып қайта жазады: қайталаулар мен ескіргенін алып тастайды. Сұрау токендерді жұмсайды. Сақтамас бұрын өзгерістерді көріп, бас тарта аласыз."
+    "profileMemoryCompactConfirm": "Модель {file} файлын қысқартып қайта жазады: қайталаулар мен ескіргенін алып тастайды. Сұрау токендерді жұмсайды. Сақтамас бұрын өзгерістерді көріп, бас тарта аласыз.",
+    "actionWebhookHeaderReplacePlaceholder": "Сақталды. Ауыстыру үшін жаңа мән енгізіңіз",
+    "actionWebhookHeadersInfo": "Тақырып мәндері қорғалған қоймада сақталады және тек вебхук мекенжайына жіберіледі. Токен үшін, мысалы, Authorization: Bearer … қосыңыз"
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {

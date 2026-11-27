@@ -233,19 +233,6 @@ export function validateCommand(
     } else if (!httpOrigin(sampleUrlTemplate(config.url))) {
       issues.push({ field: 'url', messageKey: 'commands.errorInvalidUrl' })
     }
-    // the stored key takes the place of a header of the same name
-    if (
-      config.isAuthEnabled &&
-      Object.keys(config.headers).some(
-        (name) => name.trim().toLowerCase() === 'authorization'
-      )
-    ) {
-      issues.push({
-        field: 'headers',
-        messageKey: 'commands.errorAuthHeaderOverridden',
-        isWarning: true,
-      })
-    }
   } else if (
     command.operationId === 'core.aiTask' ||
     command.operationId === 'core.transformation' ||

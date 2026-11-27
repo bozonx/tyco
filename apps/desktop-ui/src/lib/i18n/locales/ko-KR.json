@@ -198,6 +198,11 @@
       "groupHint": "Jina AI로 웹을 검색하고 페이지를 읽습니다.",
       "searchLabel": "웹 검색"
     },
+    "system": {
+      "group": "시스템",
+      "groupHint": "정확한 시간과 운영 체제. 날짜, 시간대, 시스템 이름은 항상 지침에 포함됩니다.",
+      "infoLabel": "시스템 정보"
+    },
     "commands": {
       "group": "명령어",
       "groupHint": "모델이 사용자의 명령을 실행할 수 있습니다. AI용 설명이 있는 명령만 제공됩니다. \"확인\"을 선택하면 실행할 때마다 확인을 기다립니다.",
@@ -272,7 +277,6 @@
     "editCommand": "명령 편집",
     "empty": "아직 명령이 없습니다.",
     "enable": "명령 활성화",
-    "errorAuthHeaderOverridden": "인증이 켜져 있는 동안 Authorization 헤더는 저장된 키로 대체됩니다.",
     "errorInvalidUrl": "올바른 http(s) URL을 입력하세요.",
     "errorNoCommand": "실행할 명령을 입력하세요.",
     "errorNoLanguage": "번역할 대상 언어를 선택하세요.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "명령",
     "actionCommandPlaceholder": "예: notify-send Tyco {placeholder}",
     "actionInsertScript": "스크립트 파일 삽입…",
-    "actionInsertText": "{placeholder} 삽입",
     "actionLogOutput": "출력 로깅",
     "actionLogOutputInfo": "앱 로그 폴더(설정 → 저장소 → 로그)의 actions.log에 출력을 기록합니다. 실패는 항상 기록됩니다. 입력 텍스트는 기록되지 않습니다.",
     "actionPage": "페이지 {page}",
     "actionPageTakesText": "선택한 텍스트 수락",
     "actionPageTakesTextInfo": "비활성화하면 이 페이지를 열 때 다른 애플리케이션에서 선택한 텍스트를 복사하지 않습니다.",
-    "actionWebhookAuthInfo": "Authorization 헤더(예: “Bearer …”)입니다. 보안 저장소에 보관되며 웹후크 주소로만 전송됩니다.",
-    "actionWebhookAuthLabel": "인증",
-    "actionWebhookAuthPlaceholder": "예: Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "저장됨. 교체할 새 값을 입력하세요",
     "actionWebhookBodyInfo": "JSON 템플릿에서 {placeholder}는 문자열 내부의 JSON 이스케이프된 텍스트로 치환되거나, 따옴표 없이 사용할 경우 JSON 문자열로 치환됩니다. 일반 텍스트 템플릿에서는 따옴표나 이스케이프 없이 원본 텍스트로 치환됩니다.",
     "actionWebhookBodyLabel": "요청 본문",
     "actionWebhookHeaderDuplicate": "이름이 중복된 헤더는 무시됩니다",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "비우기",
     "profileMemoryResetCoreConfirm": "주 기억 파일 core.md를 비울까요? 내용이 빈 템플릿으로 바뀝니다.",
     "profileMemoryCompactConfirmTitle": "기억을 압축할까요?",
-    "profileMemoryCompactConfirm": "모델이 {file}을(를) 반복과 오래된 내용을 빼고 더 짧게 다시 씁니다. 요청에는 토큰이 사용됩니다. 저장하기 전에 변경 사항을 보고 거부할 수 있습니다."
+    "profileMemoryCompactConfirm": "모델이 {file}을(를) 반복과 오래된 내용을 빼고 더 짧게 다시 씁니다. 요청에는 토큰이 사용됩니다. 저장하기 전에 변경 사항을 보고 거부할 수 있습니다.",
+    "actionWebhookHeaderReplacePlaceholder": "저장됨. 교체할 새 값을 입력하세요",
+    "actionWebhookHeadersInfo": "헤더 값은 보안 저장소에 보관되며 웹훅 주소로만 전송됩니다. 토큰은 예를 들어 Authorization: Bearer … 를 추가하세요"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

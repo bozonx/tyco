@@ -198,6 +198,11 @@
       "groupHint": "Căutare pe web și citirea paginilor cu Jina AI.",
       "searchLabel": "Căutare web"
     },
+    "system": {
+      "group": "Sistem",
+      "groupHint": "Ora exactă și sistemul de operare. Data, fusul orar și numele sistemului sunt mereu în instrucțiuni.",
+      "infoLabel": "Informații despre sistem"
+    },
     "commands": {
       "group": "Comenzi",
       "groupHint": "Modelul poate rula comenzile tale. Sunt oferite doar comenzile cu o descriere pentru IA. „Întreabă” face ca fiecare rulare să aștepte confirmarea ta.",
@@ -272,7 +277,6 @@
     "editCommand": "Editează comanda",
     "empty": "Încă nu există comenzi.",
     "enable": "Activează comanda",
-    "errorAuthHeaderOverridden": "Cât timp autorizarea este activată, antetul Authorization este înlocuit cu cheia salvată.",
     "errorInvalidUrl": "Introdu un URL http(s) valid.",
     "errorNoCommand": "Introduceți comanda de rulat.",
     "errorNoLanguage": "Alegeți limba în care să se traducă.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Comandă",
     "actionCommandPlaceholder": "de ex.: notify-send Tyco {placeholder}",
     "actionInsertScript": "Inserează un fișier script…",
-    "actionInsertText": "Inserează {placeholder}",
     "actionLogOutput": "Înregistrează ieșirea în jurnal",
     "actionLogOutputInfo": "Scrie ieșirea în actions.log din dosarul de jurnale al aplicației (Setări → Stocare → Jurnale). Erorile sunt întotdeauna înregistrate. Textul de intrare nu este înregistrat.",
     "actionPage": "Pagina {page}",
     "actionPageTakesText": "Acceptă textul selectat",
     "actionPageTakesTextInfo": "Când este dezactivat, deschiderea acestei pagini nu copiază textul selectat din alte aplicații.",
-    "actionWebhookAuthInfo": "Antetul Authorization, de ex. „Bearer …”. Este păstrat în stocarea securizată și trimis doar la adresa webhookului.",
-    "actionWebhookAuthLabel": "Autorizare",
-    "actionWebhookAuthPlaceholder": "de ex.: Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Salvat. Introduceți o valoare nouă pentru a o înlocui",
     "actionWebhookBodyInfo": "În șabloanele JSON, {placeholder} este înlocuit cu text escapat pentru JSON în interiorul șirurilor sau cu un șir JSON când este folosit fără ghilimele. În șabloanele de text simplu este înlocuit cu textul original, fără ghilimele sau escapare adăugate.",
     "actionWebhookBodyLabel": "Corpul cererii",
     "actionWebhookHeaderDuplicate": "Antetele cu nume repetat sunt ignorate",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Golește",
     "profileMemoryResetCoreConfirm": "Golești fișierul principal de memorie core.md? Conținutul va fi înlocuit cu un șablon gol.",
     "profileMemoryCompactConfirmTitle": "Compactezi memoria?",
-    "profileMemoryCompactConfirm": "Modelul rescrie {file} mai scurt, eliminând repetările și ce e depășit. Cererea consumă tokeni. Vei vedea modificările înainte de salvare și le poți respinge."
+    "profileMemoryCompactConfirm": "Modelul rescrie {file} mai scurt, eliminând repetările și ce e depășit. Cererea consumă tokeni. Vei vedea modificările înainte de salvare și le poți respinge.",
+    "actionWebhookHeaderReplacePlaceholder": "Salvat. Introduceți o valoare nouă pentru a o înlocui",
+    "actionWebhookHeadersInfo": "Valorile antetelor sunt păstrate în spațiul de stocare securizat și trimise doar la adresa webhook-ului. Pentru un token, adăugați de ex. Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

@@ -25,6 +25,7 @@ import { describeError } from '../errors/describe-error'
 import { formatLlmError } from '../llm/llm-errors'
 import type { AppRoutePath } from '../navigation/routes'
 import type { OperationLookup } from '../operations/operation-types'
+import type { SystemContext } from '../system-context/system-context'
 import type { CommandEnvironment } from '../variables/command-variables'
 import {
   createChatController,
@@ -107,6 +108,8 @@ export interface ChatStoreRuntimeDependencies {
   operations?: OperationLookup
   /** The platform and variable values of this device */
   environment?: () => CommandEnvironment
+  /** The date, time zone and system the assistant is told */
+  systemContext?: Pick<SystemContext, 'load' | 'text' | 'details'>
   /** Waits before each retry of a failed chat write */
   saveRetryDelaysMs?: readonly number[]
   /** Hears every change of a chat history, from any window */
@@ -194,6 +197,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     getProfileTools: () => profile.value?.tools,
     getToolCatalog: () => deps.getUserConfig()?.tools,
     pluginTools: deps.pluginTools,
+    systemContext: deps.systemContext,
     getHasPersonalData: () =>
       model.messages.value.some((message) =>
         Boolean(message.attachments?.length || message.images?.length)
@@ -254,7 +258,13 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     toastText(`${translate('toast.desktopCommandFailed')}${detail}`, 'error')
 
   const createAskAiScope = (): ChatScope => ({
-    instructions: () => APP_CONFIG.aiInstructions[LlmInstructionKind.CHAT],
+    instructions: () =>
+      [
+        APP_CONFIG.aiInstructions[LlmInstructionKind.CHAT].trim(),
+        deps.systemContext?.text(),
+      ]
+        .filter(Boolean)
+        .join('\n\n'),
     rules: () => deps.getUserConfig()?.llm?.tasks.chat.rule,
     turnOptions: async (modelId, toolOutputBudgetCharacters) => ({
       ...(await chatTools.turnTools(modelId, toolOutputBudgetCharacters)),
@@ -275,7 +285,11 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   let turnProfile: AiProfile | undefined
   const createProfileScope = (id: string): ChatScope => ({
     instructions: () =>
-      ['Current environment: chat.', fullInstructions.value]
+      [
+        'Current environment: chat.',
+        deps.systemContext?.text(),
+        fullInstructions.value,
+      ]
         .filter(Boolean)
         .join('\n\n'),
     rules: () => undefined,
@@ -359,6 +373,8 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
         options.modelId,
         toolOutputBudgetCharacters
       )
+      // the first turn of the window waits for the system to be known
+      await deps.systemContext?.load()
       return deps.llmActions.sendChatMessage(
         message,
         prevMessages,

@@ -198,6 +198,11 @@
       "groupHint": "Rechercher sur le web et lire des pages avec Jina AI.",
       "searchLabel": "Recherche Web"
     },
+    "system": {
+      "group": "Système",
+      "groupHint": "L’heure exacte et le système d’exploitation. La date, le fuseau horaire et le nom du système figurent toujours dans les instructions.",
+      "infoLabel": "Infos système"
+    },
     "commands": {
       "group": "Commandes",
       "groupHint": "Le modèle peut lancer vos commandes. Seules les commandes avec une description pour l’IA sont proposées. « Demander » fait attendre chaque lancement votre confirmation.",
@@ -272,7 +277,6 @@
     "editCommand": "Modifier la commande",
     "empty": "Aucune commande pour l’instant.",
     "enable": "Activer la commande",
-    "errorAuthHeaderOverridden": "Tant que l’autorisation est activée, l’en-tête Authorization est remplacé par la clé enregistrée.",
     "errorInvalidUrl": "Saisissez une URL http(s) valide.",
     "errorNoCommand": "Saisissez la commande à exécuter.",
     "errorNoLanguage": "Choisissez la langue cible.",
@@ -715,16 +719,11 @@
     "actionCommandLabel": "Commande",
     "actionCommandPlaceholder": "ex. : notify-send Tyco {placeholder}",
     "actionInsertScript": "Insérer un fichier de script…",
-    "actionInsertText": "Insérer {placeholder}",
     "actionLogOutput": "Journaliser la sortie",
     "actionLogOutputInfo": "Écrit la sortie dans actions.log, dans le dossier des journaux de l’application (Paramètres → Stockage → Journaux). Les échecs sont toujours journalisés. Le texte d’entrée n’est pas journalisé.",
     "actionPage": "Page {page}",
     "actionPageTakesText": "Accepter le texte sélectionné",
     "actionPageTakesTextInfo": "Si cette option est désactivée, l'ouverture de cette page ne copie pas le texte sélectionné depuis d'autres applications.",
-    "actionWebhookAuthInfo": "L’en-tête Authorization, par ex. « Bearer … ». Il est conservé dans le stockage sécurisé et envoyé uniquement à l’adresse du webhook.",
-    "actionWebhookAuthLabel": "Autorisation",
-    "actionWebhookAuthPlaceholder": "ex. : Bearer abc123",
-    "actionWebhookAuthReplacePlaceholder": "Enregistré. Saisissez une nouvelle valeur pour la remplacer",
     "actionWebhookBodyInfo": "Dans les modèles JSON, {placeholder} est remplacé par le texte échappé pour JSON à l’intérieur des chaînes, ou par une chaîne JSON s’il est utilisé sans guillemets. Dans les modèles de texte brut, il est remplacé par le texte original, sans guillemets ni échappement ajoutés.",
     "actionWebhookBodyLabel": "Corps de la requête",
     "actionWebhookHeaderDuplicate": "Les en-têtes au nom répété sont ignorés",
@@ -1417,7 +1416,9 @@
     "profileMemoryResetCore": "Vider",
     "profileMemoryResetCoreConfirm": "Vider le fichier de mémoire principal core.md ? Son contenu sera remplacé par un modèle vide.",
     "profileMemoryCompactConfirmTitle": "Compacter la mémoire ?",
-    "profileMemoryCompactConfirm": "Le modèle réécrit {file} plus court en supprimant les répétitions et ce qui est dépassé. La requête consomme des jetons. Vous verrez les changements avant l’enregistrement et pourrez les refuser."
+    "profileMemoryCompactConfirm": "Le modèle réécrit {file} plus court en supprimant les répétitions et ce qui est dépassé. La requête consomme des jetons. Vous verrez les changements avant l’enregistrement et pourrez les refuser.",
+    "actionWebhookHeaderReplacePlaceholder": "Enregistré. Saisissez une nouvelle valeur pour la remplacer",
+    "actionWebhookHeadersInfo": "Les valeurs des en-têtes sont conservées dans le stockage sécurisé et envoyées uniquement à l’adresse du webhook. Pour un jeton, ajoutez p. ex. Authorization: Bearer …"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

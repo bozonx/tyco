@@ -4,8 +4,8 @@ import { secretIdFromRef } from '../net/secrets'
 import { webhookOperationConfig } from './command-config'
 
 /**
- * The secrets a command refers to: the Authorization secret of a webhook and
- * the secret references among its headers
+ * The secrets a command refers to: the secret references among the headers of a
+ * webhook
  */
 export function commandSecretIds(command: CommandConfig): string[] {
   if (command.operationId !== 'webhook') return []
@@ -16,7 +16,6 @@ export function commandSecretIds(command: CommandConfig): string[] {
       return id ? [id] : []
     })
   )
-  if (tool.authSecretId) ids.add(tool.authSecretId)
   return [...ids]
 }
 
