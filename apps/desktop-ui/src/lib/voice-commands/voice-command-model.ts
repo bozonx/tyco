@@ -466,24 +466,37 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     stage.value = 'review'
     const result = resolveVoice(routes.value, text)
     let candidate: VoiceCandidate | undefined
-    if (
-      result.kind === 'match' &&
-      (!pinnedCommandId.value ||
-        pinnedCommandId.value === result.candidates[0]!.commandId)
-    ) {
+    if (result.kind === 'match') {
       const match = result.candidates[0]!
-      candidate = {
-        ...match,
-        parameters: { ...match.parameters, ...pinnedParameters.value },
+      if (pinnedCommandId.value && pinnedCommandId.value !== match.commandId) {
+        candidate = {
+          commandId: pinnedCommandId.value,
+          text,
+          parameters: { ...pinnedParameters.value },
+          consumedWordCount: 0,
+          textOffset: 0,
+          commandOffset: 0,
+        }
+      } else {
+        candidate = {
+          ...match,
+          parameters: { ...match.parameters, ...pinnedParameters.value },
+        }
       }
-    } else if (pinnedCommandId.value) {
-      candidate = {
-        commandId: pinnedCommandId.value,
-        text,
-        parameters: { ...pinnedParameters.value },
-        consumedWordCount: 0,
-        textOffset: 0,
-        commandOffset: 0,
+    } else {
+      const targetCommandId = pinnedCommandId.value ?? expected?.commandId
+      if (targetCommandId) {
+        candidate = {
+          commandId: targetCommandId,
+          text,
+          parameters: {
+            ...(expected?.parameters ?? {}),
+            ...pinnedParameters.value,
+          },
+          consumedWordCount: 0,
+          textOffset: 0,
+          commandOffset: 0,
+        }
       }
     }
 
@@ -510,7 +523,18 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   const finish = async (intent: VoiceCommandFinishIntent = 'run') => {
     if (stage.value !== 'recording') return
     // what the user asked to run, as shown when they asked
-    const expected = canRunLive.value ? activeCandidate.value : undefined
+    const expected =
+      activeCandidate.value ??
+      (activeCommand.value
+        ? {
+            commandId: activeCommand.value.id,
+            text: '',
+            parameters: { ...activeParameters.value },
+            consumedWordCount: 0,
+            textOffset: 0,
+            commandOffset: 0,
+          }
+        : undefined)
     voiceSession.stopTimer()
     stage.value = 'finishing'
     const current = generation

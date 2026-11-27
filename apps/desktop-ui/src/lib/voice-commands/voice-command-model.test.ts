@@ -464,6 +464,24 @@ it('runs a pinned command with parameters and dictated text when finished to run
   )
 })
 
+it('runs a command when finished to run before live transcript arrived if final dictation produced text', async () => {
+  const { model, deps } = setup()
+  deps.finishDictation = vi.fn(async () => 'Guten Morgen')
+  await model.start()
+  model.pinCommand('translate')
+  model.pinParameter('language', 'de-DE')
+  expect(model.canRunLive.value).toBe(false)
+  await model.finish('run')
+  expect(deps.run).toHaveBeenCalledOnce()
+  expect(deps.run).toHaveBeenCalledWith(
+    expect.objectContaining({ id: 'translate' }),
+    'Guten Morgen',
+    expect.any(AbortSignal),
+    undefined,
+    { language: 'de-DE' }
+  )
+})
+
 it('waits in review for a pinned command with parameters when finished for review', async () => {
   const { model, deps, partial } = setup()
   deps.finishDictation = vi.fn(async () => 'Guten Morgen')

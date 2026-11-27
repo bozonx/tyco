@@ -223,6 +223,14 @@ describe('separate voice command overlay', () => {
 
     voice.activeCommand = translation
     voice.hasMatchedCommand = true
+    voice.canRunLive = false
+    await flushPromises()
+    // during text capture phase with activeCommand and no activeParameter, canSubmitLive is true
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
+    expect(mocks.finish).toHaveBeenLastCalledWith('run')
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+    expect(mocks.finish).toHaveBeenLastCalledWith('run')
+
     voice.canRunLive = true
     await flushPromises()
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))

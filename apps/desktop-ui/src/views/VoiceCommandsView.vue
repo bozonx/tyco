@@ -243,7 +243,7 @@
             v-if="isListening"
             :keys="withHotkey(['Space', 'Enter'])"
             variant="primary"
-            :disabled="!canRunLive || voice.stage === 'finishing'"
+            :disabled="!canSubmitLive || voice.stage === 'finishing'"
             @click="void voice.finish('run')"
           >
             {{
@@ -444,6 +444,11 @@ const paramPickerRef = ref<{
 const isCapturingTextPhase = computed(
   () =>
     isListening.value && Boolean(voice.activeCommand) && !voice.activeParameter
+)
+
+/** During live speech, submission can finish on speech or on the text entry step */
+const canSubmitLive = computed(
+  () => canRunLive.value || isCapturingTextPhase.value
 )
 
 /** The text is spoken now: it can be stopped to correct it by hand */
@@ -672,9 +677,9 @@ const onKeyDown = (event: KeyboardEvent) => {
       event.preventDefault()
       editText()
       return
-    } else if (event.code === 'Space' || event.code === 'Enter') {
+    } else if (event.code === 'Space' || event.key === 'Enter') {
       event.preventDefault()
-      if (canRunLive.value) {
+      if (canSubmitLive.value) {
         void voice.finish('run')
       }
       return
