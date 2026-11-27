@@ -1,7 +1,5 @@
 <template>
-  <SettingsSection
-    :title="`${t('settings.sectionEditorHistory')} (${t('settings.editorHistoryCount', { count: entryCount })})`"
-  >
+  <SettingsSection :title="sectionTitle">
     <template #actions>
       <SettingsHistoryClear
         :is-empty="entryCount === 0"
@@ -80,6 +78,11 @@ const history = computed(() => userConfig.value.editor.history)
  * tells that there is something to clear
  */
 const entryCount = computed(() => historyStore.editorHistory.length)
+
+const sectionTitle = computed(
+  () =>
+    `${t('settings.sectionEditorHistory')} (${t('settings.editorHistoryCount', { count: entryCount.value })})`
+)
 
 const loadEntries = async () => {
   try {

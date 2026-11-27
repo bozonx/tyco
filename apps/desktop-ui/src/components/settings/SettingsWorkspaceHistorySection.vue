@@ -1,6 +1,6 @@
 <template>
   <SettingsSection
-    :title="`${t('settings.workspaceHistory.title')} (${t('settings.chatCount', { count: chatCount })})`"
+    :title="sectionTitle"
     :info="t('settings.workspaceHistory.hint')"
   >
     <template #actions>
@@ -181,6 +181,11 @@ function confirmPending() {
 }
 
 const chatCount = ref(0)
+
+const sectionTitle = computed(
+  () =>
+    `${t('settings.workspaceHistory.title')} (${t('settings.chatCount', { count: chatCount.value })})`
+)
 let countRequest = 0
 async function refreshCount() {
   const request = ++countRequest

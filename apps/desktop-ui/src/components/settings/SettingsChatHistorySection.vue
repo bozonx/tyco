@@ -1,8 +1,5 @@
 <template>
-  <SettingsSection
-    :title="`${t('settings.sectionChatHistory')} (${t('settings.chatCount', { count: chatCount })})`"
-    :info="t('settings.chatHistoryHint')"
-  >
+  <SettingsSection :title="sectionTitle" :info="t('settings.chatHistoryHint')">
     <template #actions>
       <SettingsHistoryClear
         :is-empty="chatCount === 0"
@@ -82,6 +79,11 @@ onMounted(() => {
   chats.load().catch(() => {})
 })
 const chatCount = computed(() => chats.count.value)
+
+const sectionTitle = computed(
+  () =>
+    `${t('settings.sectionChatHistory')} (${t('settings.chatCount', { count: chatCount.value })})`
+)
 
 function setQuickRequestSaving(isEnabled: boolean) {
   if (isEnabled) delete history.value.isQuickRequestSavingEnabled

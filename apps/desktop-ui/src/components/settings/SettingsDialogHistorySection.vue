@@ -1,6 +1,6 @@
 <template>
   <SettingsSection
-    :title="`${t('settings.sectionDialogHistory')} (${t('settings.dialogCount', { count: dialogCount })})`"
+    :title="sectionTitle"
     :info="t('settings.dialogHistoryHint')"
   >
     <template #actions>
@@ -80,6 +80,11 @@ onMounted(() => {
 })
 
 const dialogCount = computed(() => dialogHistoryStore.dialogs.length)
+
+const sectionTitle = computed(
+  () =>
+    `${t('settings.sectionDialogHistory')} (${t('settings.dialogCount', { count: dialogCount.value })})`
+)
 
 async function clearAllDialogs() {
   await dialogHistoryStore.clearDialogs()
