@@ -244,6 +244,7 @@ pub fn move_profile_to_vault(
             },
         ))
     })?;
+    crate::services::storage::move_session_chats(app, &from_ref, Some(&moved.id));
     // after the vault locks are released: a settings save takes vault access
     // itself. The profile is moved already, so a failure here is only logged
     // and leaves the settings naming a profile that is gone.

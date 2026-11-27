@@ -11,7 +11,6 @@ import { translate } from '../lib/i18n/index'
 import { resultOrThrow } from '../lib/ipc/ipc-model'
 import { clientLogger } from '../lib/logger'
 import { useDesktopStore } from './desktop'
-import { useHistoryStore } from './history'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useIpcStore } from './ipc'
 import { useOperationsStore } from './operations'
@@ -25,7 +24,6 @@ import { useVisibleWorkStore } from './visible-work'
 export const useCommandRunStore = defineStore('commandRun', () => {
   const ipcStore = useIpcStore()
   const desktopStore = useDesktopStore()
-  const historyStore = useHistoryStore()
   const operationsStore = useOperationsStore()
   const { toastKey } = useToastStore()
   const runnerDeps = useInvocationRunnerDependencies()
@@ -41,6 +39,11 @@ export const useCommandRunStore = defineStore('commandRun', () => {
       )
     },
     finish: jobs.finishJob,
+    supplyInput: async (id, text) => {
+      resultOrThrow(
+        await ipcStore.call('supply_command_run_input', { id, text })
+      )
+    },
     cancelJob: async (id) => {
       resultOrThrow(await ipcStore.call('cancel_external_job', { id }))
     },
@@ -69,9 +72,6 @@ export const useCommandRunStore = defineStore('commandRun', () => {
       desktopStore.setExecutionConfig(userConfig),
     logRun: async (record) => {
       resultOrThrow(await ipcStore.call('log_command_run', { record }))
-    },
-    saveOutput: async (text) => {
-      await historyStore.saveOutput(text)
     },
     reportError,
     t: (key, params) => translate(key, params),

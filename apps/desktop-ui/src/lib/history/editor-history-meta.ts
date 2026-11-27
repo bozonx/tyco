@@ -46,6 +46,15 @@ export function getEditorHistoryMeta(
   item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result'> &
     Partial<Pick<EditorHistoryItem, 'origin' | 'instruction'>>
 ): EditorHistoryMeta {
+  if (item.origin === 'externalRun' || item.origin === 'commandRun')
+    return {
+      icon: 'mdi:play-circle-outline',
+      labelKey:
+        item.origin === 'externalRun'
+          ? 'history.filterExternalRun'
+          : 'history.filterCommandRun',
+    }
+
   if (item.kind === 'output') {
     // the conversation itself is kept with the chats
     return item.origin === 'quickAiRequest'
@@ -125,12 +134,12 @@ const FAILURE_LABELS: Record<EditorHistoryFailureKind, string> = {
  */
 export function getEditorHistoryNote(
   item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result'> &
-    Partial<Pick<EditorHistoryItem, 'isResultApplied' | 'failure'>>
+    Partial<Pick<EditorHistoryItem, 'isResultApplied' | 'failure' | 'origin'>>
 ): EditorHistoryNote | undefined {
   if (item.kind === 'output') return undefined
 
   // a failed operation stays marked even when its text was used as it was
-  if (item.kind === 'source' && !item.result && item.failure) {
+  if (item.kind === 'source' && item.failure) {
     return {
       labelKey: FAILURE_LABELS[item.failure.kind],
       tone: 'error',
@@ -142,7 +151,12 @@ export function getEditorHistoryNote(
     }
   }
 
-  if (item.isResultApplied) return undefined
+  if (
+    item.isResultApplied ||
+    item.origin === 'commandRun' ||
+    item.origin === 'externalRun'
+  )
+    return undefined
 
   if (item.kind === 'draft') {
     return {

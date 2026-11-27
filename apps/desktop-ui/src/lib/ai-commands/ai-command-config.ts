@@ -34,7 +34,7 @@ export function maxStepsOf(value: unknown): number | undefined {
 /** A whitelist entry as stored, or undefined for one that is not */
 function toolRefOf(value: unknown): ToolRef | undefined {
   if (!isRecord(value)) return undefined
-  const { sourceKind, sourceId, toolName } = value
+  const { sourceKind, sourceId, toolName, policy } = value
   if (
     typeof sourceKind !== 'string' ||
     !(TOOL_SOURCE_KINDS as readonly string[]).includes(sourceKind) ||
@@ -48,6 +48,7 @@ function toolRefOf(value: unknown): ToolRef | undefined {
     sourceKind: sourceKind as ToolSourceKind,
     sourceId,
     ...(toolName === undefined ? {} : { toolName }),
+    ...(policy === 'ask' ? { policy } : {}),
   }
 }
 

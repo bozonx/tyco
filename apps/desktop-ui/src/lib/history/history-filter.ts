@@ -21,6 +21,8 @@ export const HISTORY_FILTERS: readonly HistoryFilter[] = [
   'quickAiRequest',
   'translation',
   'aiTask',
+  'externalRun',
+  'commandRun',
   'problems',
 ]
 
@@ -39,8 +41,13 @@ export function isVoiceCommandHistoryItem(
  * copied
  */
 export function isProblemHistoryItem(
-  item: Pick<EditorHistoryItem, 'kind' | 'isResultApplied'>
+  item: Pick<
+    EditorHistoryItem,
+    'kind' | 'isResultApplied' | 'origin' | 'failure'
+  >
 ): boolean {
+  if (item.origin === 'externalRun' || item.origin === 'commandRun')
+    return Boolean(item.failure)
   return (
     item.kind === 'draft' || (item.kind === 'source' && !item.isResultApplied)
   )
@@ -49,7 +56,12 @@ export function isProblemHistoryItem(
 export function filterEditorHistory<
   T extends Pick<
     EditorHistoryItem,
-    'kind' | 'isResultApplied' | 'origin' | 'operation' | 'instruction'
+    | 'kind'
+    | 'isResultApplied'
+    | 'origin'
+    | 'operation'
+    | 'instruction'
+    | 'failure'
   >,
 >(items: readonly T[], filter: HistoryFilter): T[] {
   switch (filter) {

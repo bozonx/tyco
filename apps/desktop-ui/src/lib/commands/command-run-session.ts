@@ -64,6 +64,7 @@ export interface CommandRunSessionDependencies {
     outcome: InvocationOutcome
   ) => Promise<InvocationOutcome | void>
   cancelJob: (jobId: string) => Promise<void>
+  supplyInput?: (id: string, text: string) => Promise<void>
   run: (
     command: CommandConfig,
     text: string,
@@ -77,8 +78,6 @@ export interface CommandRunSessionDependencies {
   /** The run brings the current config: the quick window misses its changes */
   applyUserConfig?: (userConfig: UserConfig) => void
   logRun?: (record: CommandRunRecord) => Promise<void> | void
-  /** Records a text that leaves the app with a command */
-  saveOutput?: (text: string) => Promise<void>
   reportError?: (error: unknown) => void
   t: (key: string, params?: Record<string, string>) => string
 }
@@ -189,12 +188,6 @@ export function createCommandRunSession(deps: CommandRunSessionDependencies) {
     if (shownResult && outcome.success && outcome.output === undefined)
       outcome = { ...outcome, output: shownResult.text }
     const final = await finishJob(run, outcome)
-    // the text left the app only if the command ran: a refused, failed or
-    // cancelled run does not put it into the history
-    if (text !== null && final.success)
-      void Promise.resolve()
-        .then(() => deps.saveOutput?.(text))
-        .catch(reportError)
     if (!final.cancelled || final.code === TIMED_OUT_CODE)
       logCommandRun(
         deps,
@@ -351,6 +344,14 @@ export function createCommandRunSession(deps: CommandRunSessionDependencies) {
   const submitText = async (text: string) => {
     const run = active
     if (!run || state.value.phase !== 'input') return
+    update(run, { phase: 'running' })
+    try {
+      await deps.supplyInput?.(run.request.jobId, text)
+    } catch (error) {
+      reportError(error)
+      await fail(run, errorMessage(error))
+      return
+    }
     await execute(run, text)
   }
 

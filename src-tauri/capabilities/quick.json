@@ -11,6 +11,8 @@
     "allow-answer-external-access",
     "allow-cancel-external-job",
     "allow-claim-external-job",
+    "allow-supply-command-run-input",
+    "allow-get-quiet-run-status",
     "allow-open-transferred-chat",
     "allow-add-screenshot",
     "allow-remove-screenshot",

@@ -8,11 +8,10 @@ export type { HistoryApi } from './history-call'
 
 export function createHistoryModel(
   historyApi: HistoryApi,
-  reportError: (error: unknown) => void,
-  canRecordEditorHistory?: () => boolean
+  reportError: (error: unknown) => void
 ) {
   const inputFlushes = new Set<() => Promise<unknown>>()
-  const editor = createEditorHistoryModel(historyApi, canRecordEditorHistory)
+  const editor = createEditorHistoryModel(historyApi)
   const sessions = new Set<ReturnType<typeof createInputHistorySession>>()
   return {
     createInputSession: (

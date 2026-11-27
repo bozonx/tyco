@@ -199,6 +199,7 @@ export function createOperationInvoker(deps: OperationInvokerDependencies) {
         ...outputRequest(resolveSink(invocation, options) !== 'none'),
         ...(options.onProgress ? { onProgress: options.onProgress } : {}),
         ...(options.context ? { context: options.context } : {}),
+        ...(options.isQuiet ? { isQuiet: true } : {}),
         ...(options.callerCommandIds
           ? { callerCommandIds: options.callerCommandIds }
           : {}),

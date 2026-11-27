@@ -62,6 +62,8 @@ fn main() {
             "cancel_net_task",
             "cancel_script_action",
             "claim_external_job",
+            "get_quiet_run_status",
+            "supply_command_run_input",
             "clear_ai_profile_memory",
             "clear_chats",
             "clear_dialogs",

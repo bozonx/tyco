@@ -25,6 +25,8 @@ export interface ToolRef {
   sourceId: string
   /** The whole source when absent */
   toolName?: string
+  /** An explicit override of the whitelist grant for an AI command */
+  policy?: ToolPolicy
 }
 
 /**

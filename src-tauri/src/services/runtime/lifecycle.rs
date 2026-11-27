@@ -81,7 +81,14 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
         snapshot.window.can_move_overlay = super::can_move_overlay(supported);
     });
     spawn_listen_probe(app.handle().clone())?;
+    #[cfg(target_os = "linux")]
+    if let Err(error) = setup_tray(app) {
+        log::warn!("Could not register the tray icon: {error}");
+    }
+    #[cfg(not(target_os = "linux"))]
     setup_tray(app)?;
+    #[cfg(target_os = "linux")]
+    crate::services::status_overlay::quiet::probe_tray_host(app.handle());
     spawn_quick_warmup(app.handle().clone())?;
     Ok(())
 }
@@ -163,6 +170,7 @@ pub fn shutdown(app: &AppHandle) {
     let services = app.try_state::<crate::services::background::BackgroundServices>();
     let deadline = std::time::Instant::now() + SHUTDOWN_TIMEOUT;
     log::info!("Initiating application graceful shutdown");
+    crate::services::external::api::cancel_quiet_on_shutdown(app);
     if let Some(services) = services.as_ref() {
         let cleanup_app = app.clone();
         if let Err(error) = services.spawn_thread("selection-shutdown", move |_| {

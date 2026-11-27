@@ -74,6 +74,12 @@ fn lookup_error(error: CommandLookupError) -> Response {
 }
 
 pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResult<()> {
+    if request.quiet && (request.selection || request.replace) {
+        return Err(Box::new(Response::coded_error(
+            ErrorCode::InvalidInput,
+            "Quiet runs cannot capture or replace the selection",
+        )));
+    }
     if request.target.trim().is_empty()
         || (request.text.is_some() && request.input.is_some())
         || (request.selection && (request.text.is_some() || request.input.is_some()))
@@ -111,7 +117,13 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
             "This command requires structured input",
         )));
     }
-    // a text command without input asks for the text in the overlay
+    if request.quiet && command.can_take_text && request.text.is_none() && request.input.is_none() {
+        return Err(Box::new(Response::coded_error(
+            ErrorCode::InputRequired,
+            "This command requires input for a quiet run",
+        )));
+    }
+    // a visible text command without input asks for text in the overlay
     Ok(())
 }
 
@@ -181,6 +193,33 @@ mod tests {
         request.text = None;
         let error = validate_run(&command, &request).unwrap_err();
         assert_eq!(error.code.as_deref(), Some("InputRequired"));
+    }
+
+    #[test]
+    fn quiet_runs_require_explicit_input_and_never_use_selection() {
+        let mut request = RunRequest {
+            target: "test".into(),
+            quiet: true,
+            ..Default::default()
+        };
+        let command = command();
+        assert_eq!(
+            validate_run(&command, &request)
+                .unwrap_err()
+                .code
+                .as_deref(),
+            Some("InputRequired")
+        );
+        request.text = Some("text".into());
+        assert!(validate_run(&command, &request).is_ok());
+        request.selection = true;
+        assert_eq!(
+            validate_run(&command, &request)
+                .unwrap_err()
+                .code
+                .as_deref(),
+            Some("InvalidInput")
+        );
     }
 
     #[test]

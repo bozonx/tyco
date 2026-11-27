@@ -49,6 +49,8 @@ import type {
   ProfileMemorySearchResult,
   ProfileMemoryTopic,
   ProfileSoul,
+  QuietRunEvent,
+  QuietRunLabels,
   ScriptActionRequest,
   ScriptExecutionResult,
   SecretStatus,
@@ -216,6 +218,7 @@ export interface DesktopCommands {
   get_dialog: { args: { id: string }; result: Dialog | null }
   get_editor_history: { args: undefined; result: Array<EditorHistoryItem> }
   get_hotkey_provider_info: { args: undefined; result: HotkeyProviderInfo }
+  get_quiet_run_status: { args: undefined; result: QuietRunEvent | null }
   get_secret_statuses: { args: undefined; result: Record<string, SecretStatus> }
   get_secret_vault_state: { args: undefined; result: VaultState }
   get_storage_info: { args: undefined; result: StorageInfo }
@@ -506,7 +509,12 @@ export interface DesktopCommands {
     result: void
   }
   set_tray_menu_labels: {
-    args: { showLabel: string; quitLabel: string; tooltipLabel?: string | null }
+    args: {
+      showLabel: string
+      quitLabel: string
+      tooltipLabel?: string | null
+      quietRunLabels?: QuietRunLabels | null
+    }
     result: void
   }
   set_tray_recording: {
@@ -555,6 +563,7 @@ export interface DesktopCommands {
     args: { id: number; value: string }
     result: void
   }
+  supply_command_run_input: { args: { id: string; text: string }; result: void }
   suspend_hotkeys: { args: { suspended: boolean }; result: void }
   switch_capture_source: {
     args: { sessionId: number; source: CaptureSource }

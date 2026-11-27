@@ -58,13 +58,14 @@ and plugin tools are picked per profile in its settings.
 | Where          | Tools                                                      | Asks?                                                 |
 | -------------- | ---------------------------------------------------------- | ----------------------------------------------------- |
 | Ask AI         | the web (switch in Settings → Ask AI), your attachments    | asks about new destinations after reading attachments |
-| AI command     | only what you put on its list: commands, web, plugin tools | never, all of it allowed                              |
+| AI command     | only what you put on its list: commands, web, plugin tools | the whitelist grants by default                       |
 | A profile chat | as set in the profile                                      | by each tool's setting                                |
 
 "Ask AI" is meant for quick answers and checking facts: pick a fast model for
 it. It never sees your files, memory or commands. An AI command often runs with
-no window to ask in, so everything on its list runs without asking, and it has
-no files or memory.
+no window to ask in. Its whitelist grants access by default, and it has no
+files or memory. A [quiet external run](external-control.md#quiet-runs-and-scheduling)
+fails if it needs tool confirmation.
 
 ## When an assistant asks
 
@@ -85,7 +86,7 @@ asks once in every new chat, even when it is set to "Allow".
 Accepted limits:
 
 - The text of a web search query is not checked.
-- An AI command runs everything on its list freely, the web included. A chat
+- An AI command can access its whitelisted tools, including the web. A chat
   that calls an AI command with the web on its list asks as for a tool that
   acts outside.
 

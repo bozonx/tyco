@@ -76,6 +76,7 @@
     </nav>
     <div class="flex-1" />
     <div class="flex flex-row gap-1 items-center">
+      <QuietRunChip @open-history="openExternalHistory" />
       <Button
         v-if="navPanelStore.navPanelState.onEscape"
         size="sm"
@@ -125,17 +126,20 @@ import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useChatStore, useProfileChatStore } from '../../stores/chat'
 import { useDesktopStore } from '../../stores/desktop'
 import { useDialogStatusStore } from '../../stores/dialog-status'
+import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useNavPanelStore } from '../../stores/nav-panel'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import IconButton from '../common/IconButton.vue'
+import QuietRunChip from './QuietRunChip.vue'
 
 const editorNavigation = useEditorNavigation()
 const chatStore = useChatStore()
 const aiProfilesStore = useAiProfilesStore()
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
+const ipcStore = useIpcStore()
 const { t } = useI18n()
 
 const desktopStore = useDesktopStore()
@@ -233,6 +237,14 @@ function openProfileChat(profileId: string) {
 function openDialog() {
   menuModalsStore.closeAll()
   void appNavigation.goToDialog()
+}
+
+function openExternalHistory() {
+  menuModalsStore.closeAll()
+  void ipcStore.callOrNotify('activate_mode', {
+    mode: 'history',
+    historyOrigin: 'externalRun',
+  })
 }
 
 function openHistory() {

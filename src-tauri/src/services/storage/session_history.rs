@@ -57,6 +57,15 @@ impl SessionChats {
         self.chats.remove(scope).unwrap_or_default()
     }
 
+    pub fn rekey(&mut self, from: &str, to: Option<&str>) {
+        let chats = self.take(from);
+        if let Some(to) = to {
+            for chat in chats {
+                self.save(to, chat);
+            }
+        }
+    }
+
     pub fn scopes(&self) -> Vec<String> {
         self.chats.keys().cloned().collect()
     }

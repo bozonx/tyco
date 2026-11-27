@@ -47,6 +47,7 @@ impl EditorHistoryPolicy {
     pub(super) fn redact_item(&self, item: &mut EditorHistoryItem) {
         if self.should_redact_secrets {
             item.text = redact_secrets(&item.text);
+            item.command_name = item.command_name.take().map(|name| redact_secrets(&name));
             item.result = item.result.take().map(|result| redact_secrets(&result));
             if let Some(instruction) = &mut item.instruction {
                 instruction.text = redact_secrets(&instruction.text);
@@ -101,6 +102,7 @@ mod tests {
             origin: None,
             instruction: None,
             profile_id: None,
+            command_name: None,
             created_at_ms: 1,
             result: None,
             is_result_applied: false,

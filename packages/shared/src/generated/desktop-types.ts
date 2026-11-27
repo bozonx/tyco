@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: c099c006fc809abdfa74e75a9055ba7007aefc7025a08f85d03ea66dd641e78f
+// Source hash: 121414c19ac227b4f38346eda248b5c276e3b2a967333f670eca6ef41a0e5846
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -690,6 +690,7 @@ export type EditorHistoryItem = {
   instruction?: EditorHistoryInstruction
   /** Profile this operation ran under, if any. */
   profileId?: string
+  commandName?: string
   /** Unix time in milliseconds. */
   createdAt: number
   /** What the AI turned a `Source` entry into. */
@@ -712,7 +713,12 @@ export type EditorHistoryOperation =
  * request whose answer was inserted or copied.
  */
 export type EditorHistoryOrigin =
-  'quickInput' | 'voice' | 'quickAiRequest' | 'listen'
+  | 'quickInput'
+  | 'voice'
+  | 'quickAiRequest'
+  | 'listen'
+  | 'commandRun'
+  | 'externalRun'
 
 /** A text handed over to the editor of the main window. */
 export type EditorTransfer = {
@@ -914,6 +920,19 @@ export type ProjectPermission = {
   write: ProjectAccessMode
   /** Never freer than `write`: the stricter of the two applies. */
   delete: ProjectAccessMode
+}
+
+export type QuietRunEvent = {
+  jobId: string
+  commandName: string
+  state: ExternalJobState
+}
+
+export type QuietRunLabels = {
+  running: string
+  succeeded: string
+  failed: string
+  cancelled: string
 }
 
 export type ScreenshotAreaSelection = {
@@ -1379,6 +1398,7 @@ export interface DesktopEventPayloads {
   'app://selection-run': SelectionRunEvent
   'app://selection-cancel': SelectionCancelEvent
   'app://command-run-rejected': CommandRunRejectedEvent
+  'app://quiet-run-changed': QuietRunEvent
   'app://external-job-cancel': string
   'app://end-visible-work': number
   'app://subtitles-changed': SubtitlesView

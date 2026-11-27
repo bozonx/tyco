@@ -25,6 +25,7 @@ import {
   useProfileChatInputStore,
 } from '../stores/chat-input'
 import { useEditorInputStore } from '../stores/editor-input'
+import { useQuietRunStore } from '../stores/quiet-run'
 import { useCommandRunStore } from '../stores/command-run'
 import { useVisibleWorkStore } from '../stores/visible-work'
 import { useDesktopStore } from '../stores/desktop'
@@ -178,6 +179,12 @@ export function useAppRuntime() {
             showLabel: t('tray.show'),
             quitLabel: t('tray.quit'),
             tooltipLabel: t('tray.tooltip'),
+            quietRunLabels: {
+              running: t('commandRun.quietRunning', { name: '{name}' }),
+              succeeded: t('commandRun.quietSucceeded', { name: '{name}' }),
+              failed: t('commandRun.quietFailed', { name: '{name}' }),
+              cancelled: t('commandRun.quietCancelled', { name: '{name}' }),
+            },
           })
           .catch((error: unknown) =>
             clientLogger.error(
@@ -213,7 +220,11 @@ export function useAppRuntime() {
   stateSync.start()
   onScopeDispose(stateSync.stop)
 
+  const quietRun = useQuietRunStore()
+  if (isQuickWindow) quietRun.startExecutor()
   const controller = createAppWindowController({
+    quietRunChanged: quietRun.update,
+    refreshQuietRun: quietRun.refresh,
     isQuickWindow,
     listen: desktopClient.listen,
     reportError: (error) =>

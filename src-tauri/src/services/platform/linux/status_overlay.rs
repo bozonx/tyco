@@ -30,6 +30,7 @@ const CSS: &str = "
 ";
 
 thread_local! {
+    static QUIET_OVERLAY: RefCell<Option<Overlay>> = const { RefCell::new(None) };
     static OVERLAY: RefCell<Option<Overlay>> = const { RefCell::new(None) };
 }
 
@@ -46,17 +47,31 @@ struct Overlay {
 
 /// Without layer-shell a Wayland compositor would place and focus the
 /// bubble like any window, so it is left to desktop notifications there.
-fn can_show() -> bool {
+pub(crate) fn can_show() -> bool {
     crate::services::platform::linux::layer_shell::is_supported()
         || crate::services::platform::session::current().is_x11()
 }
 
 pub fn update(request: Option<StatusOverlayRequest>) {
+    update_overlay(&OVERLAY, request);
+}
+
+pub(crate) fn update_quiet(request: Option<StatusOverlayRequest>) {
+    update_overlay(&QUIET_OVERLAY, request);
+}
+
+fn update_overlay(
+    overlay_cell: &'static std::thread::LocalKey<RefCell<Option<Overlay>>>,
+    request: Option<StatusOverlayRequest>,
+) {
     if !can_show() {
         return;
     }
-    OVERLAY.with(|cell| {
+    overlay_cell.with(|cell| {
         let mut cell = cell.borrow_mut();
+        if request.is_none() && cell.is_none() {
+            return;
+        }
         let overlay = cell.get_or_insert_with(Overlay::new);
         overlay.generation += 1;
         let generation = overlay.generation;
@@ -79,14 +94,14 @@ pub fn update(request: Option<StatusOverlayRequest>) {
             overlay.present();
         } else {
             glib::timeout_add_local_once(Duration::from_millis(delay), move || {
-                with_generation(generation, Overlay::present);
+                with_generation(overlay_cell, generation, Overlay::present);
             });
         }
         if let Some(hide_after) = request.hide_after_ms {
             glib::timeout_add_local_once(
                 Duration::from_millis(delay.saturating_add(hide_after).min(MAX_TIMER_MS)),
                 move || {
-                    with_generation(generation, Overlay::hide);
+                    with_generation(overlay_cell, generation, Overlay::hide);
                 },
             );
         }
@@ -95,8 +110,12 @@ pub fn update(request: Option<StatusOverlayRequest>) {
 
 /// Runs `action` unless a newer request has replaced the one that
 /// scheduled it.
-fn with_generation(generation: u64, action: fn(&mut Overlay)) {
-    OVERLAY.with(|cell| {
+fn with_generation(
+    overlay_cell: &'static std::thread::LocalKey<RefCell<Option<Overlay>>>,
+    generation: u64,
+    action: fn(&mut Overlay),
+) {
+    overlay_cell.with(|cell| {
         if let Some(overlay) = cell.borrow_mut().as_mut() {
             if overlay.generation == generation {
                 action(overlay);

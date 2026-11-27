@@ -137,8 +137,8 @@ export interface AiCommandOperationConfig {
   prompt: string
   /**
    * The whitelist of the agent: commands (never the command itself), the web,
-   * plugin tools, MCP tools. All of them run without asking; empty for an agent
-   * without tools
+   * plugin tools, MCP tools. Entries grant access by default; an empty list
+   * gives the agent no tools.
    */
   tools: ToolRef[]
 }

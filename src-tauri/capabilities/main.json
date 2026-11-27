@@ -5,6 +5,8 @@
   "windows": ["main"],
   "permissions": [
     "allow-apply-hotkey",
+    "allow-get-quiet-run-status",
+    "allow-cancel-external-job",
     "allow-open-system-hotkey-settings",
     "allow-add-ai-profile-memory-fact",
     "allow-clear-ai-profile-memory",

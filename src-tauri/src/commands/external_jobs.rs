@@ -1,4 +1,5 @@
 use super::run_blocking;
+use crate::services::external::jobs::ExternalJobs;
 use crate::{
     errors::AppError,
     services::external::{
@@ -34,6 +35,24 @@ pub async fn claim_external_job(
 ) -> Result<Option<CommandRunPayload>, AppError> {
     let label = window.label().to_owned();
     run_blocking(move || api::claim_for_window(&app, &label, &id)).await
+}
+
+#[tauri::command]
+pub fn supply_command_run_input(
+    state: State<'_, ExternalJobs>,
+    window: tauri::WebviewWindow,
+    id: String,
+    text: String,
+) -> Result<(), AppError> {
+    api::supply_input_for_window(&state, window.label(), &id, text)
+}
+
+/// Restores the indicator after the main webview reloads.
+#[tauri::command]
+pub fn get_quiet_run_status(
+    state: State<'_, ExternalJobs>,
+) -> Option<crate::events::QuietRunEvent> {
+    state.active_quiet_status()
 }
 
 /// Runs a library command in the command overlay, for a hotkey or the

@@ -3,9 +3,8 @@
 Tyco exposes a deliberately limited API for local desktop integration. It does
 not expose arbitrary Tauri functions, secret management, plugin installation,
 or configuration writes. The CLI and D-Bus share one Rust authorization and
-execution dispatcher. The current external API version is 4; version 3 shows
-every command run in the Tyco overlay, one at a time, and removes
-`--interactive`; version 4 removes `jobs list`.
+execution dispatcher. External API version 5 adds quiet command runs and a
+dedicated exit code for an occupied run slot. Version 4 removed `jobs list`.
 
 ## Prerequisites and transports
 
@@ -94,13 +93,16 @@ busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
 Selection capture requires **Allow external selection capture and replacement**.
 Executing an external library command requires that command's individual
 grant; there is no global command-execution grant. Supplied text is visible in process
-arguments; use `tyco-ctl run --stdin` for private scripted input.
+arguments. Use `tyco-ctl run --stdin` to keep input out of process arguments.
+The editor history keeps the input, including stdin, according to its storage
+settings. On-disk history may sync through the data folder.
 
 ## Permissions
 
 Each library command is allowed on its own: the terminal icon in its row in
 Settings → Commands, or **Available from outside** in its settings. The command
-must also be enabled. A newly created command is not granted external access.
+must also be enabled. This grant covers both overlay and quiet runs. A newly
+created command is not granted external access.
 
 The **External access** section below the list holds one capability that is
 independent of the command grants:
@@ -137,7 +139,7 @@ The corresponding user configuration is:
 
 A command's external grant does not bypass its operation's availability or permission
 checks. Permission and command configuration are checked again when the
-command overlay starts a job. A command changed after submission is rejected
+command executor claims a job. A command changed after submission is rejected
 with `ConfigurationChanged` instead of executing a stale configuration.
 
 ## CLI
@@ -148,7 +150,7 @@ with `ConfigurationChanged` instead of executing a stale configuration.
  tyco-ctl commands list [--json]
  tyco-ctl commands describe <id | --name NAME>
  tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
-              [--replace] [--wait] [--json] [--timeout SECONDS]
+              [--replace] [--quiet] [--wait] [--json] [--timeout SECONDS]
  tyco-ctl replace correction
  tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
 ```
@@ -237,6 +239,7 @@ For example, a text command description can look like:
   "input": "text",
   "textAccepted": true,
   "canReplaceSelection": true,
+  "canRunQuietly": true,
   "output": "return",
   "inputSchema": null
 }
@@ -251,6 +254,9 @@ For example, a text command description can look like:
   used. It is true for a text command and also for a script or webhook that
   takes no text but uses `{{SELECTION}}`. It describes command compatibility,
   not the current selection permission or platform support.
+- `canRunQuietly` indicates whether the command's whitelist permits a run
+  without confirmation. Supply any required inputs and check for runtime
+  errors as usual.
 - `output: "return"` means external runs return tool output instead of applying
   the library command's configured `afterRun` action.
 - `inputSchema` is the effective schema after command-specific overrides,
@@ -277,21 +283,20 @@ tyco-ctl run my-backup --wait
 tyco-ctl run my-reminder --input-json '{"at":"18:00","message":"Call"}' --wait
 ```
 
-These commands require individual external grants. Every run is shown in the
-Tyco command overlay: it shows the run, its result or its error, and Esc
-cancels it. A command that takes text and gets none asks for the text in the
+These commands require individual external grants. By default the Tyco
+command overlay shows the run and its result or error. Esc cancels it. A command that takes text and gets none asks for the text in the
 overlay; a command that takes only structured input fails with
 `InputRequired` without `--input-json` and with `InvalidInput` when given text. A run never captures a selection
 implicitly, and it does not perform the command's configured after-run action:
 the output goes back to the caller.
 
-One command runs at a time, whoever started it: an external call, a hotkey or
-the action menu. A run requested while another one runs, including one that
+The overlay has one slot shared by external calls, hotkeys, and the action
+menu. A run requested while another one runs, including one that
 is still replacing its selection, fails with `Busy`, and the running overlay
 tells the user which command was not started. There is no queue. A finished
 run whose result is still shown does not count: the new run replaces it.
 
-Before a run starts or an `open` shows its window, Tyco ends what is visible
+Before a visible run starts or an `open` shows its window, Tyco ends what is visible
 gracefully: a voice dictation or the dialog stops recording and saves its
 result to the history, and a run of another command is cancelled. What the main
 window keeps while it is hidden, such as the editor or a chat, stays.
@@ -305,7 +310,7 @@ JSON is useful for structured tools that cannot parse ordinary text.
 Input sources are mutually exclusive. Supplying input to a command with no
 input is an error. Explicitly empty text remains an input; the operation decides
 whether it is valid. The CLI does not trim, normalize, or silently drop it.
-Use stdin for private text; command-line arguments may appear in process lists.
+Stdin keeps text out of process lists. The history storage policy still applies.
 
 Tool content is always returned in the job's `output`. `--wait` writes that
 content to stdout exactly, without adding a newline. `--wait --json` instead
@@ -315,6 +320,81 @@ returned output does not undo or disable those effects. For custom scripts and
 webhooks, Tyco substitutes `{{TEXT}}` with the provided input text (`TYCO_TEXT`
 environment variable in scripts) and `{{SELECTION}}` with the selection captured
 by `--selection` (`TYCO_SELECTION` in scripts); without one it is empty.
+
+### Quiet runs and scheduling
+
+`tyco-ctl run <id> --quiet --wait` runs without opening a Tyco window or
+changing focus. It has an independent slot, so it can run alongside dictation,
+dialog recording, or a command in the overlay. Opening Tyco or using a hotkey
+does not interrupt a quiet run. A second quiet run returns `Busy` with exit
+status 8 and stays out of the UI. There is no queue.
+
+Pass required input explicitly. `--selection` and `--replace` are incompatible
+with `--quiet` (`InvalidInput`). Missing input gives `InputRequired`. An
+explicit `ask` policy in the command's tool whitelist gives
+`ConfirmationRequired` before execution. A confirmation requested during
+execution also fails the job with that code. The CLI reports when an older
+Tyco instance lacks API 5.
+
+While running, the tray shows an activity indicator and the command name.
+The main window shows a chip with elapsed time and **Stop**. On Linux, a
+short status bubble appears where the desktop can show it without taking
+focus. Windows uses a completion notification. You can also stop the job
+with `tyco-ctl jobs cancel <job-id>`.
+
+The editor history records input, result or failure, and command name.
+Use **External runs** to find entries from the CLI or D-Bus and **Problems**
+to find failures, cancellations, and timeouts. Choose **While TyCo is
+running** in history settings to keep new history in memory for this session.
+
+For a Linux desktop session managed by systemd, put the following files in
+`~/.config/systemd/user/`. Replace the binary path and command ID as needed.
+
+```ini
+# tyco-daily.service
+[Unit]
+Description=Run the Tyco daily command
+
+[Service]
+Type=oneshot
+ExecStart=%h/.cargo/bin/tyco-ctl run daily --quiet --wait
+```
+
+```ini
+# tyco-daily.timer
+[Unit]
+Description=Run the Tyco daily command each morning
+
+[Timer]
+OnCalendar=*-*-* 08:00:00
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable it with `systemctl --user enable --now tyco-daily.timer`. The desktop
+instance must already be running. If it is absent, the client reports
+`Unavailable` with exit status 4 and leaves startup to the desktop session.
+
+When the caller should retry an occupied slot, test explicitly for status 8.
+This shell example retries twice and returns any other failure immediately.
+
+```sh
+attempt=1
+while :; do
+  tyco-ctl run daily --quiet --wait && exit 0
+  status=$?
+  [ "$status" -eq 8 ] && [ "$attempt" -lt 3 ] || exit "$status"
+  attempt=$((attempt + 1))
+  sleep 10
+done
+```
+
+Cron can call the same script with an absolute binary path. Its environment
+may lack `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`. Set them to the
+logged-in user's runtime directory and session-bus address when the
+desktop setup requires them, for example `/run/user/1000` and
+`unix:path=/run/user/1000/bus` on a typical systemd session.
 
 ### Selection
 
@@ -436,9 +516,10 @@ snapshot. Esc or the close button of the overlay cancels the job the same way;
 a click elsewhere does not, even when the quick window hides on focus loss. An operation may already have performed irreversible side effects; cancel
 is not rollback.
 
-Jobs are in-memory and disappear when Tyco exits. One job is active at a time;
-at most 128 are retained, evicting the oldest terminal jobs first. A reload of
-the overlay fails the active job with `Unavailable`. Two limits end a job with
+Jobs are in-memory and disappear when Tyco exits. One visible and one quiet
+job can be active at once. At most 128 jobs are retained, evicting the oldest
+terminal jobs first. If the command webview reloads, its active jobs fail
+with `Unavailable`. Two limits end a job with
 `TimedOut`:
 
 - **Start**: a job must start within 300 seconds of the call. This covers the
@@ -468,11 +549,12 @@ do not block the listener; connections are bounded.
 | ---- | ------------------------------------------------------- |
 | 0    | Request accepted, or successful completion when waiting |
 | 2    | Invalid arguments/input, missing input, ambiguous name  |
-| 3    | Permission denied                                       |
-| 4    | Service/command unavailable, disabled, busy, not found  |
+| 3    | Permission denied or confirmation required              |
+| 4    | Service/command unavailable, disabled, not found        |
 | 5    | Execution or other API failure                          |
 | 6    | Timeout                                                 |
 | 7    | Cancellation                                            |
+| 8    | Run slot occupied (`Busy`)                              |
 
 Use `--wait` when the calling script needs the operation's success or failure.
 Machine error codes are stable identifiers separate from human-readable text.
@@ -490,9 +572,17 @@ authorization dispatcher, so the same grants and capabilities apply.
 | `OpenWithText`            | `s` mode, `s` text  | Opens it with the text as input                                  |
 | `OpenWithSelection`       | `s` mode            | Opens it with the selection of the focused window                |
 | `OpenWithActivationToken` | `s` mode, `s` token | Opens it with an `xdg-activation-v1` token, so it gets the focus |
+| `Run`                     | `s` JSON request    | Returns the accepted job as JSON and accepts `quiet`             |
 | `RunCommand`              | `s` command ID      | Runs the command in the command overlay                          |
 | `ReplaceSelection`        | `s` command ID      | Replaces the selection with the command's output                 |
 | `CorrectSelection`        |                     | Corrects the selection in place                                  |
+
+Pass the same fields as a local IPC run payload to `Run`, for example:
+
+```sh
+busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
+  Run s '{"target":"daily","quiet":true}'
+```
 
 Modes are those of `tyco-ctl open`. `RunCommand` behaves like
 `tyco-ctl run <id>`: a command that takes text asks for it in the overlay.

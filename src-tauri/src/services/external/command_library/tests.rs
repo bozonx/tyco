@@ -483,3 +483,21 @@ fn legacy_translate_commands_are_not_callable() {
         Err(CommandLookupError::NotFound(_))
     ));
 }
+
+#[test]
+fn quiet_runs_refuse_confirmation_in_reachable_command_whitelists() {
+    let mut config = json!({
+        "commands": [
+            {"id": "parent", "operationId": "core.aiTask", "operationConfig": {"tools": [
+                {"sourceKind": "commands", "sourceId": "commands", "toolName": "child"}
+            ]}},
+            {"id": "child", "operationId": "core.aiTask", "operationConfig": {"tools": [
+                {"sourceKind": "commands", "sourceId": "commands", "toolName": "parent"},
+                {"sourceKind": "plugin", "sourceId": "fixture", "toolName": "run", "policy": "ask"}
+            ]}}
+        ]
+    });
+    assert!(!can_run_quietly(&config, "parent"));
+    config["commands"][1]["operationConfig"]["tools"][1]["policy"] = json!("allow");
+    assert!(can_run_quietly(&config, "parent"));
+}

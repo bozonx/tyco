@@ -301,6 +301,16 @@ fn enforce_chat_history_policies(
     stored.and(ask_ai).and(profiles)
 }
 
+/// Hands the session chats of the profile `from`, a reference `[vaultId:]id`,
+/// to `to` when the profile moves, or drops them when it is deleted: they
+/// must not bring back the folder of a profile that is gone.
+pub fn move_session_chats(app: &AppHandle, from: &str, to: Option<&str>) {
+    let state = app.state::<AppState>();
+    let mut session = state.history.session_chats.locked();
+    session.rekey(from, to);
+    hold_session_files(app, &session);
+}
+
 /// Stores on disk the session chats of the scopes that keep their chats there
 /// now; a chat that cannot be stored stays in memory.
 fn store_session_chats(app: &AppHandle) -> Result<(), AppError> {
@@ -310,7 +320,11 @@ fn store_session_chats(app: &AppHandle) -> Result<(), AppError> {
     let mut result = Ok(());
     for key in session.scopes() {
         let scope = ChatScope::from_key(&key);
-        let stored = scope_policy(app, &scope, &config).and_then(|policy| {
+        // a vault not attached now keeps its session chats until it is
+        let Ok(policy) = scope_policy(app, &scope, &config) else {
+            continue;
+        };
+        let stored = (|| {
             if policy.is_session {
                 return Ok(false);
             }
@@ -328,7 +342,7 @@ fn store_session_chats(app: &AppHandle) -> Result<(), AppError> {
                 }
             }
             Ok(true)
-        });
+        })();
         match stored {
             Ok(true) => notify_chats_changed(app, &scope, Vec::new(), false),
             Ok(false) => {}
@@ -611,6 +625,17 @@ pub fn add_editor_history_item(
 ) -> Result<Option<String>, AppError> {
     change_editor(app, |config, memory| {
         editor::add_editor_history_item(app, config, memory, entry)
+    })
+}
+
+pub fn add_command_run_history(
+    app: &AppHandle,
+    entry: EditorHistoryEntry,
+    command_name: String,
+    outcome: Result<Option<String>, EditorHistoryFailure>,
+) -> Result<Option<String>, AppError> {
+    change_editor(app, |config, memory| {
+        editor::add_command_run_history(app, config, memory, entry, command_name, outcome)
     })
 }
 
@@ -1129,6 +1154,7 @@ mod tests {
                         origin: None,
                         instruction: None,
                         profile_id: None,
+                        command_name: None,
                         created_at_ms: 1,
                         result: None,
                         is_result_applied: false,

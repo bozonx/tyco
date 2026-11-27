@@ -22,6 +22,7 @@ import {
 } from './ai-command-config'
 import {
   createAiCommandRunner,
+  QuietRunConfirmationError,
   type AiCommandAgentTool,
   type AiCommandRunnerDependencies,
 } from './ai-command-runner'
@@ -46,6 +47,7 @@ export interface AiCommandOperationDependencies extends AiCommandRunnerDependenc
       source: CommandRunSource
       /** The AI commands that led to the run, the running one last */
       callerCommandIds: readonly string[]
+      isQuiet?: boolean
     }
   ) => Promise<OperationResult>
   /** Why the agent cannot run, as an i18n key */
@@ -95,7 +97,8 @@ export function createAiCommandOperation(
     allowedCommandIds: readonly string[],
     chain: readonly string[],
     runSignal: AbortSignal,
-    source: CommandRunSource
+    source: CommandRunSource,
+    isQuiet?: boolean
   ): AiCommandAgentTool[] => {
     if (chain.length >= AI_COMMAND_MAX_DEPTH) return []
     const commands = deps.commands()
@@ -131,6 +134,7 @@ export function createAiCommandOperation(
                 signal: controller.signal,
                 source,
                 callerCommandIds: chain,
+                ...(isQuiet ? { isQuiet } : {}),
               })
             } finally {
               signal.removeEventListener('abort', abort)
@@ -185,10 +189,12 @@ export function createAiCommandOperation(
           whitelistedCommandIds(config.tools),
           chain,
           call.signal,
-          call.source
+          call.source,
+          call.isQuiet
         )
         const content = await run(config, text, tools, {
           signal: call.signal,
+          isQuiet: call.isQuiet,
           ...(call.command ? { commandId: call.command.id } : {}),
           providers: deps.toolProviders?.() ?? [],
           catalog: deps.toolCatalog?.(),
@@ -219,6 +225,12 @@ export function createAiCommandOperation(
         return { ok: true, content, message: notice(content) }
       } catch (error) {
         if (call.signal.aborted) return cancelled
+        if (error instanceof QuietRunConfirmationError)
+          return {
+            ok: false,
+            code: 'ConfirmationRequired',
+            message: error.message,
+          }
         return { ok: false, message: deps.describeError(error) }
       }
     },

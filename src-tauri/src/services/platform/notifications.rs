@@ -1,11 +1,11 @@
 //! Desktop notifications retain their sender until application shutdown.
 
 use crate::errors::AppError;
+#[cfg(any(target_os = "linux", test))]
 use crate::locks::{CondvarExt, MutexExt};
 use crate::services::background::StoppableService;
 use std::time::Instant;
 
-#[cfg(any(target_os = "linux", test))]
 #[cfg(any(target_os = "linux", test))]
 use std::sync::{Condvar, Mutex};
 
@@ -138,7 +138,32 @@ impl NotificationService {
         )
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "windows")]
+    pub fn notify(&self, summary: &str, body: &str) -> Result<(), AppError> {
+        use windows::core::HSTRING;
+        use windows::Data::Xml::Dom::XmlDocument;
+        use windows::UI::Notifications::{ToastNotification, ToastNotificationManager};
+
+        let notify = || -> windows::core::Result<()> {
+            let document = XmlDocument::new()?;
+            let escape = |text: &str| {
+                text.replace('&', "&amp;")
+                    .replace('<', "&lt;")
+                    .replace('>', "&gt;")
+            };
+            document.LoadXml(&HSTRING::from(format!(
+                "<toast><visual><binding template=\"ToastGeneric\"><text>{}</text><text>{}</text></binding></visual></toast>",
+                escape(summary), escape(body)
+            )))?;
+            let toast = ToastNotification::CreateToastNotification(&document)?;
+            ToastNotificationManager::CreateToastNotifierWithId(&HSTRING::from("com.tyco.app"))?
+                .Show(&toast)
+        };
+        notify()
+            .map_err(|error| AppError::Failed(format!("Could not show a notification: {error}")))
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
     pub fn notify(&self, _summary: &str, _body: &str) -> Result<(), AppError> {
         Ok(())
     }

@@ -43,6 +43,8 @@ pub enum EditorHistoryOrigin {
     QuickAiRequest,
     /// A transcript of the sound the computer played.
     Listen,
+    CommandRun,
+    ExternalRun,
 }
 
 /// The input modality of an AI prompt.
@@ -105,6 +107,9 @@ pub struct EditorHistoryItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub profile_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub command_name: Option<String>,
     /// Unix time in milliseconds.
     #[serde(rename = "createdAt")]
     pub created_at_ms: u64,

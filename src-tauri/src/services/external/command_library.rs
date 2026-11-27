@@ -451,6 +451,39 @@ pub fn list(user_config: &Value, catalog: Option<&OperationCatalog>) -> Value {
     serde_json::to_value(listed).unwrap_or_else(|_| Value::Array(Vec::new()))
 }
 
+/// AI command whitelists normally grant tools directly. An explicit ask
+/// anywhere in the reachable command chain requires a visible run.
+pub fn can_run_quietly(config: &Value, command_id: &str) -> bool {
+    let mut pending = vec![command_id.to_owned()];
+    let mut seen = std::collections::HashSet::new();
+    while let Some(id) = pending.pop() {
+        if !seen.insert(id.clone()) {
+            continue;
+        }
+        let Some(command) = commands_of(config).find(|command| id_of(command) == id) else {
+            continue;
+        };
+        if !is_enabled(command) || str_field(command, "operationId").trim() != "core.aiTask" {
+            continue;
+        }
+        for tool in command["operationConfig"]["tools"]
+            .as_array()
+            .into_iter()
+            .flatten()
+        {
+            if tool["policy"] == "ask" {
+                return false;
+            }
+            if tool["sourceKind"] == "commands" {
+                if let Some(id) = tool["toolName"].as_str() {
+                    pending.push(id.to_owned());
+                }
+            }
+        }
+    }
+    true
+}
+
 /// Describe the same effective input used by the execution registry.
 pub fn describe(
     user_config: &Value,
@@ -476,6 +509,7 @@ pub fn describe(
         "name": raw.map_or(command.id.as_str(), display_name),
         "input": if command.has_structured_input { "structured" } else if command.can_take_text { "text" } else { "none" },
         "textAccepted": command.can_take_text,
+        "canRunQuietly": can_run_quietly(user_config, &command.id),
         "canReplaceSelection": command.accepts_selection(),
         "output": "return",
         "inputSchema": schema,

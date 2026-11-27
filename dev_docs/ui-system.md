@@ -448,7 +448,7 @@ on another drag or disposal.
 
 ## Command run overlay
 
-Every run of a library command is shown by `views/CommandRunView.vue` in the
+Visible runs of library commands are shown by `views/CommandRunView.vue` in the
 `commandRun` mode of the quick window, whoever started it. The state machine is
 `lib/commands/command-run-session.ts` (`access → input → running → result |
 failed | cancelled`), wired by `stores/command-run.ts`, which follows the
@@ -460,6 +460,9 @@ in the overlay, with the action menu one button away; a copy or an insertion
 hides the overlay. A run refused while another one runs is told by a toast in
 the running overlay. Features register how they end their visible work with
 `stores/visible-work.ts`, which answers the backend's `EndVisibleWork` request.
+
+Quiet external runs use the tray and the status chip next to History. The
+chip can cancel a running job and link to the history after completion.
 
 ## Quick window reveal
 

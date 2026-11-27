@@ -56,6 +56,7 @@ export interface AiCommandRunnerDependencies {
 }
 
 export interface AiCommandRunOptions {
+  isQuiet?: boolean
   signal: AbortSignal
   /** The AI command that runs, whose whitelist Rust checks its calls by */
   commandId?: string
@@ -107,6 +108,12 @@ function answerText(state: ChatToolLoopState): string {
     .join('')
 }
 
+export class QuietRunConfirmationError extends Error {
+  constructor() {
+    super('A tool in this command requires confirmation')
+  }
+}
+
 /**
  * Runs the agent of an AI command on `text`: the model follows the prompt and
  * may run the given commands as its tools, through the same loop and tool
@@ -124,6 +131,21 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
     options: AiCommandRunOptions
   ): Promise<string> => {
     const maxSteps = deps.defaultMaxSteps()
+    const confirmationAbort = options.isQuiet
+      ? new AbortController()
+      : undefined
+    const signal = confirmationAbort
+      ? AbortSignal.any([options.signal, confirmationAbort.signal])
+      : options.signal
+    const requiresConfirmation = () => {
+      const error = new QuietRunConfirmationError()
+      confirmationAbort?.abort(error)
+      return error
+    }
+    const checkConfirmation = () => {
+      if (confirmationAbort?.signal.aborted)
+        confirmationAbort.signal.throwIfAborted()
+    }
     let callsUsed = 0
     /** What the last command that ran returned */
     let lastResult = ''
@@ -151,6 +173,8 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
             isRecord(input) ? input : {},
             signal
           )
+          if (options.isQuiet && outcome.code === 'ConfirmationRequired')
+            throw requiresConfirmation()
           const result = toolResultForModel(outcome)
           // only a text the command returned may stand for the answer, never
           // a status such as `Done` or an i18n key
@@ -175,9 +199,9 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
         }),
     })
 
-    // The user put the tools on the whitelist, and an AI command often runs
-    // with no window to ask in: they run without asking
-    const policy = createChatToolPolicy({ canAsk: false })
+    // Whitelisted tools usually run directly. Quiet jobs surface any request
+    // for confirmation as a terminal error.
+    const policy = createChatToolPolicy({ canAsk: options.isQuiet === true })
     const scope: ToolScope = {
       kind: 'aiCommand',
       commandId: options.commandId ?? '',
@@ -212,7 +236,10 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
       {
         stream: (prompt, streamOptions) =>
           deps.stream('aiTask', prompt, streamOptions),
-        requestApproval: () => Promise.resolve('deny'),
+        requestApproval: async () => {
+          if (options.isQuiet) throw requiresConfirmation()
+          return 'deny'
+        },
         policy,
       },
       {
@@ -230,7 +257,7 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
         tools: toolSet,
         // the calls the command allows, then the answer
         maxStepCount: maxSteps + 1,
-        signal: options.signal,
+        signal,
         onUpdate: (update) => {
           const calls = update.parts.filter((part) => part.type === 'tool-call')
           for (const call of calls.slice(reportedCalls)) {
@@ -240,7 +267,11 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
           reportedCalls = calls.length
         },
       }
-    )
+    ).catch((error: unknown) => {
+      checkConfirmation()
+      throw error
+    })
+    checkConfirmation()
     const final = cleanLlmOutput(answerText(state), text)
     // commands ran but the model said nothing after them: their output is the answer
     return final.trim() ? final : lastResult

@@ -416,6 +416,8 @@ export class FakeDesktopBackend {
     this.handle('capture_chat_screenshot', () => null)
     this.handle('set_operation_catalog', noop)
     this.handle('set_tray_menu_labels', noop)
+    this.handle('get_quiet_run_status', () => null)
+    this.handle('supply_command_run_input', noop)
     this.handle('set_tray_recording', noop)
     this.handle('activate_mode', noop)
     this.handle('exit_app', noop)

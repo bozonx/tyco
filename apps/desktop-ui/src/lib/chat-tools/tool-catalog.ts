@@ -390,7 +390,7 @@ export type ToolScope =
       settings: ProfileToolSettings | undefined
       catalog: ToolCatalogSettings | undefined
     }
-  /** An AI command: its whitelist, all of it allowed */
+  /** An AI command: its whitelist and any explicit tool policies */
   | {
       kind: 'aiCommand'
       commandId: string
@@ -399,8 +399,8 @@ export type ToolScope =
     }
 
 /**
- * The state of a tool where it is offered: "Ask AI" and AI commands never ask,
- * a profile follows its settings
+ * The state of a tool where it is offered. Each caller decides how it handles a
+ * tool that requests confirmation.
  */
 export function toolStateIn(scope: ToolScope, tool: CatalogTool): ToolState {
   switch (scope.kind) {
@@ -415,10 +415,15 @@ export function toolStateIn(scope: ToolScope, tool: CatalogTool): ToolState {
       if (isAlwaysOnSource(tool.source)) return tool.defaultPolicy ?? 'allow'
       return effectiveToolState(scope.catalog, scope.settings, tool)
     case 'aiCommand':
-      return isToolAvailable(scope.catalog, tool) &&
-        whitelistHas(scope.tools, tool.source, tool.name)
-        ? 'allow'
-        : 'off'
+      if (!isToolAvailable(scope.catalog, tool)) return 'off'
+      if (
+        scope.tools.some(
+          (ref) =>
+            ref.policy === 'ask' && whitelistHas([ref], tool.source, tool.name)
+        )
+      )
+        return 'ask'
+      return whitelistHas(scope.tools, tool.source, tool.name) ? 'allow' : 'off'
   }
 }
 

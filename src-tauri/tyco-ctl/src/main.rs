@@ -12,7 +12,7 @@ const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl commands list [--json]
        tyco-ctl commands describe <id | --name NAME>
        tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
-                    [--replace] [--wait] [--json] [--timeout SECONDS]
+                    [--replace] [--quiet] [--wait] [--json] [--timeout SECONDS]
        tyco-ctl replace correction
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
 
@@ -152,6 +152,7 @@ fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
             let mut input_set = false;
             while index < args.len() {
                 match args[index].as_str() {
+                    "--quiet" => request.quiet = true,
                     "--replace" => request.replace = true,
                     "--wait" => command.wait = true,
                     "--timeout" => {
@@ -184,6 +185,9 @@ fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
                     _ => return Err(USAGE.into()),
                 }
                 index += 1;
+            }
+            if request.quiet && (request.selection || request.replace) {
+                return Err("--quiet cannot be used with --selection or --replace".into());
             }
             if request.replace && !request.selection {
                 return Err("--replace requires --selection".into());
@@ -318,7 +322,7 @@ fn help(args: &[String]) -> Option<&'static str> {
         ["commands"] => "Usage: tyco-ctl commands <list [--json] | describe <id | --name NAME>>\nDiscover callable commands and inspect their accepted input without executing them.",
         ["commands", "list"] => "Usage: tyco-ctl commands list [--json]\nPrint callable commands as id<TAB>name lines, or JSON with --json.",
         ["commands", "describe"] => "Usage: tyco-ctl commands describe <id | --name NAME>\nPrint the command's effective input schema and capabilities as JSON.",
-        ["run"] => "Usage: tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]\n       [--replace] [--wait] [--json] [--timeout SECONDS]\nRun a library command in the Tyco overlay; a run while another runs fails with Busy. Without --wait, returns a job. With --wait, returns output.\n--json formats results and stderr errors as JSON. --timeout (1-3600 s) only bounds waiting;
+        ["run"] => "Usage: tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]\n       [--replace] [--wait] [--json] [--timeout SECONDS]\nRun a library command in the Tyco overlay or without opening a window with --quiet. A run fails with Busy (exit 8) when its slot is occupied. Without --wait, returns a job. With --wait, returns output.\n--json formats results and stderr errors as JSON. --timeout (1-3600 s) only bounds waiting;
 without it --wait lasts until Tyco ends the job, within its start and run limits.\nInput sources are exclusive; --replace requires --selection. Use --stdin for private text.",
         ["replace"] | ["replace", "correction"] => "Usage: tyco-ctl replace correction\nRequest correction of the current selection without waiting; requires selection permission.",
         ["jobs"] => "Usage: tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]\nInspect retained invocations, cancel work, or collect results. Only wait accepts --timeout.",
@@ -386,6 +390,19 @@ fn run() -> Result<(), CliError> {
         }
         if let Request::Run { request } = &mut command.request {
             request.text = Some(text);
+        }
+    }
+    if matches!(&command.request, Request::Run { request } if request.quiet) {
+        let status = send(&Request::Status)?;
+        let version = status
+            .result
+            .as_ref()
+            .and_then(|status| status["apiVersion"].as_u64());
+        if version.unwrap_or_default() < 5 {
+            return Err(CliError::new(
+                ErrorCode::Unavailable,
+                "--quiet requires TyCo external API 5 or later",
+            ));
         }
     }
     let response = send(&command.request)?;
@@ -585,7 +602,7 @@ mod tests {
             ensure_success_response(Response::coded_error(ErrorCode::Busy, "busy"))
                 .unwrap_err()
                 .exit_code,
-            4
+            8
         );
     }
 }

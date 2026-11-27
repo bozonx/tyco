@@ -189,6 +189,9 @@ pub async fn delete_ai_profile(app: AppHandle, id: String) -> Result<(), AppErro
                     id,
                 )
             })?;
+            let profile_ref =
+                ai_vault::join_ref(&ai_vault::canonical_vault_ref(&app, vault_id, vault), id);
+            storage::move_session_chats(&app, &profile_ref, None);
             if let Err(error) = storage::remove_profile_index(&app, &vault.id, id) {
                 log::warn!("Could not remove the chat index of the profile {id}: {error}");
             }

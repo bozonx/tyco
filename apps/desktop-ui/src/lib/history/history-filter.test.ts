@@ -81,6 +81,30 @@ describe('history filter', () => {
     expect(ids(filterEditorHistory(items, 'aiTask'))).toEqual(['aiResult'])
   })
 
+  it('shows external outcomes together and only failed command runs in problems', () => {
+    const runs = [
+      item('done', { kind: 'source', origin: 'externalRun', result: 'Done' }),
+      item('stopped', {
+        kind: 'source',
+        origin: 'externalRun',
+        failure: { kind: 'cancelled' },
+      }),
+      item('timeout', {
+        kind: 'source',
+        origin: 'commandRun',
+        failure: { kind: 'timeout' },
+      }),
+    ]
+    expect(ids(filterEditorHistory(runs, 'externalRun'))).toEqual([
+      'done',
+      'stopped',
+    ])
+    expect(ids(filterEditorHistory(runs, 'problems'))).toEqual([
+      'stopped',
+      'timeout',
+    ])
+  })
+
   it('keeps drafts, failed operations and results that never left the app', () => {
     expect(ids(filterEditorHistory(items, 'problems'))).toEqual([
       'typed',

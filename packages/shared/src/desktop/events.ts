@@ -41,6 +41,7 @@ export const DESKTOP_EVENTS = {
   SELECTION_CANCEL: 'app://selection-cancel',
   /** A run was refused while another command runs; to the quick window */
   COMMAND_RUN_REJECTED: 'app://command-run-rejected',
+  QUIET_RUN_CHANGED: 'app://quiet-run-changed',
   /** Carries the id of the job to stop */
   EXTERNAL_JOB_CANCEL: 'app://external-job-cancel',
   /** End what the window shows before an external request; carries its id */

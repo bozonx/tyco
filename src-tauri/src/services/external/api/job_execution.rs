@@ -15,8 +15,8 @@ use crate::events;
 use crate::services::activation::{
     Activation, ActivationMode, ActivationSource, CommandRunRequest,
 };
-use crate::services::external::access;
 use crate::services::external::jobs::{CreateJobError, ExternalJobs, NewJob};
+use crate::services::external::{access, command_library};
 use crate::services::{runtime, selection_replace, visible_work};
 use crate::state::AppState;
 
@@ -59,9 +59,13 @@ pub struct CommandRunPayload {
 /// overlay of the running one.
 fn reserve(app: &AppHandle, new_job: NewJob) -> Result<Job, CreateJobError> {
     let command_name = new_job.command_name.clone();
+    let quiet = new_job.request.quiet;
     app.state::<ExternalJobs>()
         .create(new_job)
         .inspect_err(|error| {
+            if quiet {
+                return;
+            }
             if let CreateJobError::Busy {
                 running_command_name,
             } = error
@@ -89,7 +93,28 @@ pub(super) fn start(
     // `NotReady` while it is loading; a script or a webhook does not wait
     let command = lookup(app, &request.target, request.by_name)?;
     validate_run(&command, &request)?;
-    let config = app.state::<AppState>().user_config();
+    let state = app.state::<AppState>();
+    if state.is_quitting() {
+        return Err(Box::new(Response::coded_error(
+            ErrorCode::Unavailable,
+            "TyCo is quitting",
+        )));
+    }
+    let config = state.user_config();
+    if request.quiet
+        && app
+            .state::<command_library::OperationCatalogState>()
+            .get()
+            .is_none()
+    {
+        return Err(Box::new(Response::coded_error(
+            ErrorCode::NotReady,
+            "The command executor is still loading",
+        )));
+    }
+    if request.quiet && !command_library::can_run_quietly(&config, &command.id) {
+        return Err(Box::new(confirmation_required()));
+    }
     let name = command_name(&config, &command.id);
     let jobs = app.state::<ExternalJobs>();
     let job = reserve(
@@ -99,11 +124,13 @@ pub(super) fn start(
             command_name: name.clone(),
             request: request.clone(),
             is_internal: false,
+            command_snapshot: raw_command(&config, &command.id).cloned(),
         },
     )
     .map_err(|error| Box::new(Response::coded_error(ErrorCode::Busy, error.message())))?;
-    if let Some(raw) = raw_command(&config, &command.id) {
-        jobs.remember_command(&job.id, raw.clone());
+    if request.quiet {
+        quiet_status(app, &job, name);
+        return Ok(job);
     }
     visible_work::end(app);
     if request.selection {
@@ -164,13 +191,10 @@ pub fn start_internal(
                 ..Default::default()
             },
             is_internal: true,
+            command_snapshot: raw_command(&config, command_id).cloned(),
         },
     )
     .map_err(|error| AppError::Busy(error.message()))?;
-    let jobs = app.state::<ExternalJobs>();
-    if let Some(raw) = raw_command(&config, command_id) {
-        jobs.remember_command(&job.id, raw.clone());
-    }
     // the output goes where the menu or the hotkey was opened from
     let target = app
         .state::<AppState>()
@@ -253,9 +277,13 @@ pub fn deny_selection(app: &AppHandle, job_id: &str) {
     );
 }
 
-/// Ends the run of a webview that reloaded or went away: nothing runs it now.
+/// Ends the jobs of a quick webview that reloaded or went away.
 pub fn abandon_active(app: &AppHandle) {
-    if let Some(id) = app.state::<ExternalJobs>().active_id() {
+    let jobs = app.state::<ExternalJobs>();
+    for id in [jobs.active_id(), jobs.active_id_for(true)]
+        .into_iter()
+        .flatten()
+    {
         access::withdraw(app, &id);
         fail(
             app,
@@ -292,9 +320,19 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
             None
         }
     });
-    if let Some((job, Some(run_id))) =
-        jobs.finish(id, state, completion.output, completion.message, code)
-    {
+    let Some((job, selection_run_id, history)) =
+        jobs.finish_with_history(id, state, completion.output, completion.message, code)
+    else {
+        return;
+    };
+    if completion.is_cancelled {
+        let _ = events::emit_to::<events::ExternalJobCancel, _>(
+            app,
+            runtime::QUICK_WINDOW_LABEL,
+            id.to_owned(),
+        );
+    }
+    if let Some(run_id) = selection_run_id {
         // The original target is retained even while the command launcher is open.
         let replace = job.state == JobState::Succeeded && jobs_request_replace(app, id);
         let output = job.output.clone().filter(|text| !text.trim().is_empty());
@@ -324,7 +362,13 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
             }
             _ => None,
         };
-        jobs.complete_selection_replacement(id, error);
+        finish_replacement(app, id, error);
+    } else if let Some(history) = history {
+        let quiet_name = history.quiet.then(|| history.command_name.clone());
+        record_history(app, &job, history);
+        if let Some(name) = quiet_name {
+            quiet_status(app, &job, name);
+        }
     }
 }
 
@@ -380,9 +424,6 @@ pub(super) fn cancel(app: &AppHandle, id: &str, code: ErrorCode) -> Response {
                 code: Some(code.into()),
             },
         );
-        if let Some(window) = app.get_webview_window(runtime::QUICK_WINDOW_LABEL) {
-            let _ = events::emit::<events::ExternalJobCancel, _>(&window, id.to_owned());
-        }
     }
     Response::json(&jobs.get(id))
 }
@@ -415,6 +456,10 @@ pub fn claim(app: &AppHandle, id: &str) -> Option<CommandRunPayload> {
         );
         return None;
     }
+    if request.quiet && !command_library::can_run_quietly(&config, &command_id) {
+        fail_with(app, id, confirmation_required());
+        return None;
+    }
     Some(CommandRunPayload {
         command_id,
         selection_text: request.selection.then(|| request.text.clone()).flatten(),
@@ -424,12 +469,125 @@ pub fn claim(app: &AppHandle, id: &str) -> Option<CommandRunPayload> {
     })
 }
 
-/// Ends a job whose selection replacement never reported back
-fn selection_replace_timed_out(app: &AppHandle, id: &str) {
-    app.state::<ExternalJobs>().complete_selection_replacement(
-        id,
-        Some("The selection replacement did not finish in time".into()),
-    );
+fn confirmation_required() -> Response {
+    Response::coded_error(
+        ErrorCode::ConfirmationRequired,
+        "A tool in this command requires confirmation",
+    )
+}
+
+fn record_history(app: &AppHandle, job: &Job, history: super::super::jobs::RunHistory) {
+    use crate::models::{
+        EditorHistoryEntry, EditorHistoryFailure, EditorHistoryFailureKind, EditorHistoryKind,
+        EditorHistoryOrigin,
+    };
+    use crate::services::storage;
+
+    let result = if job.state == JobState::Succeeded {
+        Ok(job.output.clone())
+    } else {
+        Err(EditorHistoryFailure {
+            kind: if job.code.as_deref() == Some(ErrorCode::TimedOut.as_str()) {
+                EditorHistoryFailureKind::Timeout
+            } else if job.state == JobState::Cancelled {
+                EditorHistoryFailureKind::Cancelled
+            } else {
+                EditorHistoryFailureKind::Error
+            },
+            message: job.error.clone(),
+        })
+    };
+    let entry = EditorHistoryEntry {
+        id: None,
+        text: history.input.unwrap_or_default(),
+        kind: EditorHistoryKind::Source,
+        operation: None,
+        origin: Some(if history.is_internal {
+            EditorHistoryOrigin::CommandRun
+        } else {
+            EditorHistoryOrigin::ExternalRun
+        }),
+        instruction: None,
+        profile_id: None,
+    };
+    if let Err(error) = storage::add_command_run_history(app, entry, history.command_name, result) {
+        log::warn!("Could not save command run history: {error}");
+    }
+}
+
+fn quiet_status(app: &AppHandle, job: &Job, command_name: String) {
+    let handle = app.clone();
+    let event = events::QuietRunEvent {
+        job_id: job.id.clone(),
+        command_name,
+        state: if job.code.as_deref() == Some(ErrorCode::TimedOut.as_str()) {
+            JobState::Failed
+        } else {
+            job.state.clone()
+        },
+    };
+    let _ = app.run_on_main_thread(move || {
+        let active = handle.state::<ExternalJobs>().active_id_for(true);
+        let is_running = !event.state.is_terminal();
+        if (is_running && active.as_deref() != Some(event.job_id.as_str()))
+            || (!is_running && active.is_some())
+        {
+            return;
+        }
+        for label in [runtime::QUICK_WINDOW_LABEL, runtime::MAIN_WINDOW_LABEL] {
+            let _ = events::emit_to::<events::QuietRunChanged, _>(&handle, label, event.clone());
+        }
+        if handle.state::<AppState>().is_quitting() {
+            return;
+        }
+        let text = runtime::quiet_run_label(&handle, &event.state, &event.command_name);
+        if let Err(error) = runtime::set_tray_quiet_run(&handle, is_running.then(|| text.clone())) {
+            log::warn!("Could not update quiet run tray status: {error}");
+        }
+        #[cfg(target_os = "linux")]
+        {
+            use crate::services::status_overlay::{quiet, StatusOverlayKind};
+            let kind = match event.state {
+                JobState::Succeeded => StatusOverlayKind::Success,
+                JobState::Failed => StatusOverlayKind::Error,
+                JobState::Cancelled => StatusOverlayKind::Info,
+                _ => StatusOverlayKind::Pending,
+            };
+            quiet::show(&handle, kind, text);
+        }
+        #[cfg(target_os = "windows")]
+        if !is_running
+            && !handle
+                .get_webview_window(runtime::MAIN_WINDOW_LABEL)
+                .is_some_and(|window| window.is_focused().unwrap_or(false))
+        {
+            use crate::services::platform::notifications::NotificationService;
+            if let Err(error) = handle
+                .state::<std::sync::Arc<NotificationService>>()
+                .notify(&text, "")
+            {
+                log::warn!("Could not show quiet run notification: {error}");
+            }
+        }
+    });
+}
+
+fn finish_replacement(app: &AppHandle, id: &str, error: Option<String>) {
+    if let Some((job, history)) = app
+        .state::<ExternalJobs>()
+        .complete_selection_replacement(id, error)
+    {
+        record_history(app, &job, history);
+    }
+}
+
+pub fn cancel_quiet_on_shutdown(app: &AppHandle) {
+    if let Some(id) = app
+        .try_state::<ExternalJobs>()
+        .and_then(|jobs| jobs.active_id_for(true))
+    {
+        cancel(app, &id, ErrorCode::Cancelled);
+    }
 }
 
 /// Cancels jobs that waited too long to start and runs over their limit,
@@ -442,7 +600,17 @@ pub fn spawn_reaper(app: AppHandle) -> Result<(), AppError> {
         loop {
             tokio::time::sleep(Duration::from_secs(1)).await;
             for id in app.state::<ExternalJobs>().stale_replacement_ids() {
-                selection_replace_timed_out(&app, &id);
+                let handle = app.clone();
+                let _ = app
+                    .state::<crate::services::background::BackgroundServices>()
+                    .run_blocking(move || {
+                        finish_replacement(
+                            &handle,
+                            &id,
+                            Some("The selection replacement did not finish in time".into()),
+                        )
+                    })
+                    .await;
             }
             let ids = app.state::<ExternalJobs>().expired_job_ids();
             for id in ids {

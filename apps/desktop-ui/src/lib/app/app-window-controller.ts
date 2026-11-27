@@ -37,6 +37,10 @@ export interface AppWindowControllerDependencies {
   rejectCommandRun: (
     payload: EventPayload<typeof DESKTOP_EVENTS.COMMAND_RUN_REJECTED>
   ) => void
+  refreshQuietRun?: () => Promise<void>
+  quietRunChanged?: (
+    payload: EventPayload<typeof DESKTOP_EVENTS.QUIET_RUN_CHANGED>
+  ) => void
   cancelCommand: (id: string) => void
   /** Ends what the window shows before an external request; resolves when done */
   endVisibleWork: (requestId: number) => Promise<void>
@@ -181,6 +185,9 @@ export function createAppWindowController(
       subscribe(DESKTOP_EVENTS.QUIT_CANCELLED, deps.shutdown.cancel),
       subscribe(DESKTOP_EVENTS.PLUGINS_CHANGED, deps.refreshPlugins),
       subscribe(DESKTOP_EVENTS.END_VISIBLE_WORK, deps.endVisibleWork),
+      subscribe(DESKTOP_EVENTS.QUIET_RUN_CHANGED, (event) =>
+        deps.quietRunChanged?.(event)
+      ),
       ...(deps.isQuickWindow
         ? [
             subscribe(DESKTOP_EVENTS.SCREENSHOT_FAILED, () =>
@@ -230,7 +237,7 @@ export function createAppWindowController(
       deps.startBootstrap(),
       ...(deps.isQuickWindow ? [deps.startMetrics()] : []),
     ])
-      .then(() => undefined)
+      .then(() => deps.refreshQuietRun?.())
       .catch(deps.reportError)
     return starting
   }

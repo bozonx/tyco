@@ -11,6 +11,10 @@ fn server_fixture() {
     }
     tyco_activation_protocol::transport::serve(|request| match request {
         Request::Status => Response::json(&serde_json::json!({"apiVersion":API_VERSION})),
+        Request::Run { request } if request.quiet && request.target == "busy" =>
+            Response::coded_error(ErrorCode::Busy, "Quiet slot occupied"),
+        Request::Run { request } if request.quiet && request.target == "ask" =>
+            Response::coded_error(ErrorCode::ConfirmationRequired, "Confirmation required"),
         Request::Run { request } => Response::json(&serde_json::json!({"id":"test-job","commandId":request.target,"state":"succeeded","output":request.text})),
         Request::JobStatus { .. } => Response::json(&serde_json::json!({"id":"test-job","commandId":"test","state":"failed","error":"Test failure","code":"ExecutionFailed"})),
         _ => Response::coded_error(ErrorCode::AccessDenied, "Test denial"),
@@ -104,7 +108,7 @@ fn cli_round_trip_and_failures() {
         assert!(client().arg("status").output().unwrap().status.success());
     }
     let mut process = client()
-        .args(["run", "test", "--stdin", "--wait"])
+        .args(["run", "test", "--quiet", "--stdin", "--wait"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -142,6 +146,16 @@ fn cli_round_trip_and_failures() {
     assert_eq!(job["state"], "failed");
     let error: serde_json::Value = serde_json::from_slice(&failure.stderr).unwrap();
     assert_eq!(error["code"], "ExecutionFailed");
+    for (args, code) in [
+        (["run", "busy", "--quiet", "--wait"], 8),
+        (["run", "ask", "--quiet", "--wait"], 3),
+        (["run", "test", "--quiet", "--selection"], 2),
+    ] {
+        assert_eq!(
+            client().args(args).output().unwrap().status.code(),
+            Some(code)
+        );
+    }
     let denial = client()
         .args(["run", "test", "--replace", "--json"])
         .output()

@@ -68,7 +68,6 @@ function setup(
     hide: vi.fn(),
     applyUserConfig: vi.fn(),
     logRun: vi.fn(),
-    saveOutput: vi.fn(async () => {}),
     reportError: vi.fn(),
     t: (key: string, params?: Record<string, string>) =>
       params ? `${key} ${JSON.stringify(params)}` : key,
@@ -86,7 +85,6 @@ describe('createCommandRunSession', () => {
     await session.open(request())
     expect(deps.claim).toHaveBeenCalledWith('job')
     expect(deps.applyUserConfig).toHaveBeenCalled()
-    expect(deps.saveOutput).toHaveBeenCalledWith('source')
     expect(runMock.mock.calls[0]?.[1]).toBe('source')
     expect(runMock.mock.calls[0]?.[3]).toMatchObject({ source: 'external' })
     expect(deps.finish).toHaveBeenCalledWith('job', {
@@ -104,26 +102,26 @@ describe('createCommandRunSession', () => {
     expect(session.isActive()).toBe(false)
   })
 
-  it('does not put the text of a failed run into the history', async () => {
-    const { deps, session } = setup(async () => ({
-      success: false,
-      message: 'boom',
-    }))
+  it('shows a failed execution', async () => {
+    const { session } = setup(async () => ({ success: false, message: 'boom' }))
     await session.open(request())
     await flush()
-    expect(deps.saveOutput).not.toHaveBeenCalled()
     expect(session.state.value.phase).toBe('failed')
   })
 
   it('asks for the text a command takes when the run brought none', async () => {
+    const supplyInput = vi.fn(async () => {})
     const { runMock, session } = setup(undefined, {
       claim: vi.fn(async () => payload({ text: undefined })),
+      supplyInput,
     })
     void session.open(request({ isExternal: false }))
     await flush()
     expect(session.state.value.phase).toBe('input')
     expect(runMock).not.toHaveBeenCalled()
     await session.submitText('typed')
+    expect(supplyInput).toHaveBeenCalledExactlyOnceWith('job', 'typed')
+    expect(supplyInput).toHaveBeenCalledBefore(runMock)
     expect(runMock.mock.calls[0]?.[1]).toBe('typed')
     expect(runMock.mock.calls[0]?.[3]).toMatchObject({ source: 'menu' })
     expect(session.state.value.phase).toBe('result')

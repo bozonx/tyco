@@ -1,5 +1,4 @@
-//! Bounded, in-memory lifecycle of command runs. One run is active at a
-//! time, whoever started it: an external call, a hotkey or the action menu.
+//! Bounded, in-memory lifecycle of visible and quiet command runs.
 use crate::locks::MutexExt;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -27,7 +26,7 @@ struct ExternalJobEntry {
     created_at: Instant,
     selection_run_id: Option<u64>,
     command_snapshot: Option<serde_json::Value>,
-    pending_completion: Option<Job>,
+    pending_completion: Option<(Job, RunHistory)>,
     /// The user allowed this call to use the selection, see `services::external::access`.
     is_selection_approved: bool,
     /// How long the run may take once started, the limit of its command;
@@ -64,6 +63,14 @@ pub struct NewJob {
     pub command_name: String,
     pub request: RunRequest,
     pub is_internal: bool,
+    pub command_snapshot: Option<serde_json::Value>,
+}
+
+pub struct RunHistory {
+    pub input: Option<String>,
+    pub command_name: String,
+    pub is_internal: bool,
+    pub quiet: bool,
 }
 
 #[derive(Default)]
@@ -77,18 +84,16 @@ impl ExternalJobs {
         self.entries.locked()
     }
 
-    /// Reserves the one run slot: fails with `Busy` while another job is not
-    /// over, a pending selection replacement included.
+    /// Reserves the requested slot until the run and any replacement finish.
     pub fn create(&self, new_job: NewJob) -> Result<Job, CreateJobError> {
         self.create_at(new_job, Instant::now())
     }
 
     fn create_at(&self, new_job: NewJob, now: Instant) -> Result<Job, CreateJobError> {
         let mut entries = self.lock_entries();
-        if let Some(running) = entries
-            .values()
-            .find(|entry| !entry.job.state.is_terminal())
-        {
+        if let Some(running) = entries.values().find(|entry| {
+            !entry.job.state.is_terminal() && entry.request.quiet == new_job.request.quiet
+        }) {
             return Err(CreateJobError::Busy {
                 running_command_name: running.command_name.clone(),
             });
@@ -129,7 +134,7 @@ impl ExternalJobs {
                 request: new_job.request,
                 created_at: now,
                 selection_run_id: None,
-                command_snapshot: None,
+                command_snapshot: new_job.command_snapshot,
                 pending_completion: None,
                 is_selection_approved: false,
                 run_limit: None,
@@ -148,12 +153,33 @@ impl ExternalJobs {
         }
     }
 
-    /// The job that holds the run slot, if any.
+    /// The job that holds the visible run slot, if any.
     pub fn active_id(&self) -> Option<String> {
+        self.active_id_for(false)
+    }
+
+    pub fn active_id_for(&self, quiet: bool) -> Option<String> {
         self.lock_entries()
             .iter()
-            .find(|(_, entry)| !entry.job.state.is_terminal())
+            .find(|(_, entry)| !entry.job.state.is_terminal() && entry.request.quiet == quiet)
             .map(|(id, _)| id.clone())
+    }
+
+    pub fn active_quiet_status(&self) -> Option<crate::events::QuietRunEvent> {
+        self.lock_entries()
+            .values()
+            .find(|entry| entry.request.quiet && !entry.job.state.is_terminal())
+            .map(|entry| crate::events::QuietRunEvent {
+                job_id: entry.job.id.clone(),
+                command_name: entry.command_name.clone(),
+                state: entry.job.state.clone(),
+            })
+    }
+
+    pub fn is_quiet(&self, id: &str) -> bool {
+        self.lock_entries()
+            .get(id)
+            .is_some_and(|entry| entry.request.quiet)
     }
 
     /// The run is over and its output is replacing the selection: it can no
@@ -168,12 +194,6 @@ impl ExternalJobs {
         self.lock_entries()
             .get(id)
             .is_some_and(|entry| entry.is_internal)
-    }
-
-    pub fn remember_command(&self, id: &str, command: serde_json::Value) {
-        if let Some(entry) = self.lock_entries().get_mut(id) {
-            entry.command_snapshot = Some(command);
-        }
     }
 
     pub fn is_command_unchanged(&self, id: &str, command: Option<&serde_json::Value>) -> bool {
@@ -237,6 +257,7 @@ impl ExternalJobs {
         Some((entry.job.command_id.clone(), entry.request.clone()))
     }
 
+    #[cfg(test)]
     pub fn finish(
         &self,
         id: &str,
@@ -248,6 +269,18 @@ impl ExternalJobs {
         self.finish_at(id, state, output, error, code, Instant::now())
     }
 
+    pub fn finish_with_history(
+        &self,
+        id: &str,
+        state: JobState,
+        output: Option<String>,
+        error: Option<String>,
+        code: Option<String>,
+    ) -> Option<(Job, Option<u64>, Option<RunHistory>)> {
+        self.finish_entry(id, state, output, error, code, Instant::now())
+    }
+
+    #[cfg(test)]
     fn finish_at(
         &self,
         id: &str,
@@ -257,6 +290,19 @@ impl ExternalJobs {
         code: Option<String>,
         now: Instant,
     ) -> Option<(Job, Option<u64>)> {
+        self.finish_entry(id, state, output, error, code, now)
+            .map(|(job, selection, _)| (job, selection))
+    }
+
+    fn finish_entry(
+        &self,
+        id: &str,
+        state: JobState,
+        output: Option<String>,
+        error: Option<String>,
+        code: Option<String>,
+        now: Instant,
+    ) -> Option<(Job, Option<u64>, Option<RunHistory>)> {
         let mut entries = self.lock_entries();
         let entry = entries.get_mut(id)?;
         if entry.job.state.is_terminal() || entry.pending_completion.is_some() {
@@ -291,28 +337,59 @@ impl ExternalJobs {
         }
         let job = entry.job.clone();
         let selection_run_id = entry.selection_run_id.take();
-        if selection_run_id.is_some() {
-            entry.pending_completion = Some(job.clone());
-            entry.pending_since = Some(now);
-            entry.job.state = JobState::Running;
-        }
+        let history = RunHistory {
+            input: entry.request.text.take().or_else(|| {
+                entry
+                    .request
+                    .input
+                    .take()
+                    .map(|input| serde_json::Value::Object(input).to_string())
+            }),
+            command_name: entry.command_name.clone(),
+            is_internal: entry.is_internal,
+            quiet: entry.request.quiet,
+        };
         entry.request.text = None;
         entry.request.input = None;
         entry.command_snapshot = None;
-        Some((job, selection_run_id))
+        let history = if selection_run_id.is_some() {
+            entry.pending_completion = Some((job.clone(), history));
+            entry.pending_since = Some(now);
+            entry.job.state = JobState::Running;
+            None
+        } else {
+            Some(history)
+        };
+        Some((job, selection_run_id, history))
     }
 
-    pub fn complete_selection_replacement(&self, id: &str, error: Option<String>) {
+    pub fn complete_selection_replacement(
+        &self,
+        id: &str,
+        error: Option<String>,
+    ) -> Option<(Job, RunHistory)> {
         let mut entries = self.lock_entries();
-        if let Some(entry) = entries.get_mut(id) {
-            entry.pending_since = None;
-            if let Some(mut job) = entry.pending_completion.take() {
-                if let Some(error) = error {
-                    job.state = JobState::Failed;
-                    job.code = Some(ErrorCode::SelectionFailed.into());
-                    job.error = Some(error);
-                }
-                entry.job = job;
+        let entry = entries.get_mut(id)?;
+        let (mut job, history) = entry.pending_completion.take()?;
+        entry.pending_since = None;
+        if let Some(error) = error {
+            job.state = JobState::Failed;
+            job.code = Some(ErrorCode::SelectionFailed.into());
+            job.error = Some(error);
+        }
+        entry.job = job.clone();
+        Some((job, history))
+    }
+
+    pub fn supply_input(&self, id: &str, text: String) {
+        if let Some(entry) = self.lock_entries().get_mut(id) {
+            if entry.job.state == JobState::Running
+                && !entry.request.quiet
+                && entry.request.input.is_none()
+                && entry.request.text.is_none()
+                && entry.pending_completion.is_none()
+            {
+                entry.request.text = Some(text);
             }
         }
     }
@@ -385,6 +462,7 @@ mod tests {
             command_name: name.into(),
             request: RunRequest::default(),
             is_internal: false,
+            command_snapshot: None,
         }
     }
 
@@ -422,6 +500,25 @@ mod tests {
         succeed(&jobs, &first.id);
         assert!(jobs.active_id().is_none());
         assert!(jobs.create(new_job("Fan")).is_ok());
+    }
+
+    #[test]
+    fn quiet_and_visible_runs_reserve_independent_slots() {
+        let jobs = ExternalJobs::default();
+        let visible = jobs.create(new_job("visible")).unwrap();
+        let mut quiet = new_job("quiet");
+        quiet.request.quiet = true;
+        let quiet = jobs.create(quiet).unwrap();
+        assert_eq!(jobs.active_id().as_deref(), Some(visible.id.as_str()));
+        assert_eq!(jobs.active_quiet_status().unwrap().job_id, quiet.id);
+        let mut another = new_job("another");
+        another.request.quiet = true;
+        assert!(matches!(
+            jobs.create(another),
+            Err(CreateJobError::Busy { .. })
+        ));
+        succeed(&jobs, &visible.id);
+        assert_eq!(jobs.active_id_for(true).as_deref(), Some(quiet.id.as_str()));
     }
 
     #[test]

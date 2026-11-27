@@ -107,6 +107,7 @@ desktop_events! {
     /// which tells it in the running overlay.
     CommandRunRejected = "app://command-run-rejected" => CommandRunRejectedEvent;
     /// Carries the id of the job to stop.
+    QuietRunChanged = "app://quiet-run-changed" => QuietRunEvent;
     ExternalJobCancel = "app://external-job-cancel" => String;
     /// Asks every window to end what it shows gracefully before an external
     /// request; carries the request id to answer with `visible_work_ended`.
@@ -158,4 +159,12 @@ pub struct CommandRunRejectedEvent {
     pub command_name: String,
     /// The command that runs.
     pub running_command_name: String,
+}
+
+#[derive(Clone, Debug, serde::Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct QuietRunEvent {
+    pub job_id: String,
+    pub command_name: String,
+    pub state: tyco_activation_protocol::JobState,
 }

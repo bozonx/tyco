@@ -4,8 +4,8 @@ mod job_execution;
 mod validation;
 
 pub use job_execution::{
-    abandon_active, claim, complete, deny_selection, spawn_reaper, start_internal,
-    CommandRunPayload, JobCompletion,
+    abandon_active, cancel_quiet_on_shutdown, claim, complete, deny_selection, spawn_reaper,
+    start_internal, CommandRunPayload, JobCompletion,
 };
 
 use self::job_execution::{cancel, start};
@@ -109,13 +109,26 @@ pub fn claim_for_window(
     }
 }
 
+pub fn supply_input_for_window(
+    jobs: &ExternalJobs,
+    window_label: &str,
+    id: &str,
+    text: String,
+) -> Result<(), crate::errors::AppError> {
+    ensure_job_window(window_label, "provides command run input")?;
+    jobs.supply_input(id, text);
+    Ok(())
+}
+
 /// Cancels the run of the window, as Esc in its overlay does.
 pub fn cancel_for_window(
     app: &AppHandle,
     window_label: &str,
     id: &str,
 ) -> Result<(), crate::errors::AppError> {
-    ensure_job_window(window_label, "cancels command runs")?;
+    if window_label != runtime::MAIN_WINDOW_LABEL || !app.state::<ExternalJobs>().is_quiet(id) {
+        ensure_job_window(window_label, "cancels command runs")?;
+    }
     cancel(app, id, ErrorCode::Cancelled);
     Ok(())
 }

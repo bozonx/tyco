@@ -2,7 +2,9 @@
 use super::target_focus::has_focused_window;
 use super::{hide_active_window, show_application};
 use crate::errors::AppError;
+use crate::locks::MutexExt;
 use crate::state::AppState;
+use std::sync::Mutex;
 use tauri::menu::{MenuBuilder, MenuItem, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{App, Manager};
@@ -26,13 +28,60 @@ fn tray_click_action(is_window_shown: bool, is_window_focused: bool) -> TrayClic
     }
 }
 
+#[derive(Default)]
+struct TrayActivity {
+    quiet_label: Option<String>,
+    default_tooltip: String,
+    recording_tooltip: Option<String>,
+    is_recording: bool,
+    quiet_labels: QuietRunLabels,
+}
+
+#[derive(Default, serde::Deserialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct QuietRunLabels {
+    running: String,
+    succeeded: String,
+    failed: String,
+    cancelled: String,
+}
+
 struct TrayState {
     show_item: MenuItem<tauri::Wry>,
     quit_item: MenuItem<tauri::Wry>,
-    default_icon: std::sync::Mutex<Option<tauri::image::Image<'static>>>,
-    recording_icon: Option<tauri::image::Image<'static>>,
-    default_tooltip: std::sync::Mutex<Option<String>>,
-    is_recording: std::sync::atomic::AtomicBool,
+    quiet_item: MenuItem<tauri::Wry>,
+    default_icon: tauri::image::Image<'static>,
+    recording_icon: tauri::image::Image<'static>,
+    quiet_icon: tauri::image::Image<'static>,
+    quiet_recording_icon: tauri::image::Image<'static>,
+    activity: Mutex<TrayActivity>,
+}
+
+impl TrayState {
+    fn refresh(&self, app: &tauri::AppHandle) -> Result<(), AppError> {
+        let (quiet, icon, tooltip) = {
+            let activity = self.activity.locked();
+            let quiet = activity.quiet_label.clone();
+            let icon = match (quiet.is_some(), activity.is_recording) {
+                (true, true) => &self.quiet_recording_icon,
+                (true, false) => &self.quiet_icon,
+                (false, true) => &self.recording_icon,
+                (false, false) => &self.default_icon,
+            };
+            let tooltip = quiet
+                .clone()
+                .or_else(|| activity.recording_tooltip.clone())
+                .unwrap_or_else(|| activity.default_tooltip.clone());
+            (quiet, icon.clone(), tooltip)
+        };
+        self.quiet_item
+            .set_text(quiet.as_deref().unwrap_or("TyCo"))?;
+        if let Some(tray) = app.tray_by_id("main-tray") {
+            tray.set_icon(Some(icon))?;
+            let _ = tray.set_tooltip(Some(tooltip));
+        }
+        Ok(())
+    }
 }
 
 pub fn set_tray_menu_labels(
@@ -40,23 +89,21 @@ pub fn set_tray_menu_labels(
     show_label: &str,
     quit_label: &str,
     tooltip: Option<&str>,
+    labels: Option<QuietRunLabels>,
 ) -> Result<(), AppError> {
     if let Some(state) = app.try_state::<TrayState>() {
         state.show_item.set_text(show_label)?;
         state.quit_item.set_text(quit_label)?;
-        if let Some(tooltip) = tooltip {
-            if let Ok(mut guard) = state.default_tooltip.lock() {
-                *guard = Some(tooltip.to_string());
+        {
+            let mut activity = state.activity.locked();
+            if let Some(tooltip) = tooltip {
+                activity.default_tooltip = tooltip.to_owned();
             }
-            if !state
-                .is_recording
-                .load(std::sync::atomic::Ordering::Relaxed)
-            {
-                if let Some(tray) = app.tray_by_id("main-tray") {
-                    let _ = tray.set_tooltip(Some(tooltip));
-                }
+            if let Some(labels) = labels {
+                activity.quiet_labels = labels;
             }
         }
+        state.refresh(app)?;
     }
     Ok(())
 }
@@ -67,34 +114,74 @@ pub fn set_tray_recording(
     tooltip_label: Option<&str>,
 ) -> Result<(), AppError> {
     if let Some(state) = app.try_state::<TrayState>() {
-        state
-            .is_recording
-            .store(is_recording, std::sync::atomic::Ordering::Relaxed);
-        if let Some(tray) = app.tray_by_id("main-tray") {
-            if is_recording {
-                if let Some(ref icon) = state.recording_icon {
-                    let _ = tray.set_icon(Some(icon.clone()));
-                }
-                if let Some(tooltip) = tooltip_label {
-                    let _ = tray.set_tooltip(Some(tooltip));
-                }
-            } else {
-                if let Ok(guard) = state.default_icon.lock() {
-                    if let Some(ref icon) = *guard {
-                        let _ = tray.set_icon(Some(icon.clone()));
-                    }
-                }
-                if let Some(tooltip) = tooltip_label {
-                    let _ = tray.set_tooltip(Some(tooltip));
-                } else if let Ok(guard) = state.default_tooltip.lock() {
-                    if let Some(ref tooltip) = *guard {
-                        let _ = tray.set_tooltip(Some(tooltip.as_str()));
-                    }
-                }
-            }
+        {
+            let mut activity = state.activity.locked();
+            activity.is_recording = is_recording;
+            activity.recording_tooltip = tooltip_label.map(str::to_owned);
         }
+        state.refresh(app)?;
     }
     Ok(())
+}
+
+pub(crate) fn quiet_run_label(
+    app: &tauri::AppHandle,
+    state: &tyco_activation_protocol::JobState,
+    name: &str,
+) -> String {
+    use tyco_activation_protocol::JobState;
+    let tray = app.try_state::<TrayState>();
+    let activity = tray.as_ref().map(|tray| tray.activity.locked());
+    let label = activity.as_ref().map(|activity| match state {
+        JobState::Succeeded => &activity.quiet_labels.succeeded,
+        JobState::Failed => &activity.quiet_labels.failed,
+        JobState::Cancelled => &activity.quiet_labels.cancelled,
+        _ => &activity.quiet_labels.running,
+    });
+    label.filter(|label| !label.is_empty()).map_or_else(
+        || {
+            let prefix = match state {
+                JobState::Succeeded => "Done",
+                JobState::Failed => "Error",
+                JobState::Cancelled => "Stopped",
+                _ => "Running",
+            };
+            format!("{prefix}: {name}")
+        },
+        |label| label.replace("{name}", name),
+    )
+}
+
+pub(crate) fn set_tray_quiet_run(
+    app: &tauri::AppHandle,
+    label: Option<String>,
+) -> Result<(), AppError> {
+    if let Some(state) = app.try_state::<TrayState>() {
+        state.activity.locked().quiet_label = label;
+        state.refresh(app)?;
+    }
+    Ok(())
+}
+
+/// Adds a blue activity dot in the bottom-left corner, leaving the red
+/// recording dot in the opposite corner visible.
+fn command_activity_icon(icon: &tauri::image::Image<'_>) -> tauri::image::Image<'static> {
+    let width = icon.width();
+    let height = icon.height();
+    let mut rgba = icon.rgba().to_vec();
+    let radius = (width / 6) as i32;
+    for y in -radius..=radius {
+        for x in -radius..=radius {
+            if x * x + y * y > radius * radius {
+                continue;
+            }
+            let column = (x + radius) as u32;
+            let row = height - 1 - (y + radius) as u32;
+            let index = ((row * width + column) * 4) as usize;
+            rgba[index..index + 4].copy_from_slice(&[88, 166, 255, 255]);
+        }
+    }
+    tauri::image::Image::new_owned(rgba, width, height)
 }
 
 fn load_png_image(bytes: &[u8]) -> Result<tauri::image::Image<'static>, AppError> {
@@ -133,35 +220,36 @@ fn load_png_image(bytes: &[u8]) -> Result<tauri::image::Image<'static>, AppError
 pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
     let show_item = MenuItemBuilder::with_id(TRAY_SHOW_ID, "Show TyCo").build(app)?;
     let quit_item = MenuItemBuilder::with_id(TRAY_QUIT_ID, "Quit").build(app)?;
+    let quiet_item = MenuItemBuilder::with_id("quiet-run-status", "TyCo")
+        .enabled(false)
+        .build(app)?;
     let menu = MenuBuilder::new(app)
-        .items(&[&show_item])
+        .items(&[&quiet_item, &show_item])
         .separator()
         .items(&[&quit_item])
         .build()?;
 
-    let default_icon = Some(load_png_image(TRAY_ICON_BYTES)?);
-    let recording_icon = match load_png_image(RECORDING_ICON_BYTES) {
-        Ok(icon) => Some(icon),
-        Err(error) => {
-            log::warn!("Could not load recording tray icon: {error}");
-            None
-        }
-    };
+    let default_icon = load_png_image(TRAY_ICON_BYTES)?;
+    let recording_icon = load_png_image(RECORDING_ICON_BYTES).unwrap_or_else(|error| {
+        log::warn!("Could not load recording tray icon: {error}");
+        default_icon.clone()
+    });
 
     app.manage(TrayState {
         show_item,
         quit_item,
-        default_icon: std::sync::Mutex::new(default_icon.clone()),
+        quiet_item,
+        quiet_icon: command_activity_icon(&default_icon),
+        quiet_recording_icon: command_activity_icon(&recording_icon),
+        default_icon: default_icon.clone(),
         recording_icon,
-        default_tooltip: std::sync::Mutex::new(Some("TyCo — typing companion".to_string())),
-        is_recording: std::sync::atomic::AtomicBool::new(false),
+        activity: Mutex::new(TrayActivity {
+            default_tooltip: "TyCo — typing companion".to_owned(),
+            ..Default::default()
+        }),
     });
 
-    let mut builder = TrayIconBuilder::with_id("main-tray");
-
-    if let Some(icon) = default_icon {
-        builder = builder.icon(icon);
-    }
+    let builder = TrayIconBuilder::with_id("main-tray").icon(default_icon);
 
     builder
         .menu(&menu)

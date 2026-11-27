@@ -41,28 +41,3 @@ describe('editor history failure semantics', () => {
     expect(model.editorHistory.value).toHaveLength(1)
   })
 })
-
-it('does not record editor history or results when recording is disabled', async () => {
-  const call = vi
-    .fn<DesktopCall>()
-    .mockResolvedValue({ success: true, result: 'saved' })
-  let canRecord = false
-  const model = createEditorHistoryModel({ call }, () => canRecord)
-  expect(await model.saveOutput('Output')).toBeNull()
-  expect(await model.saveSource('Source', 'correction')).toBeNull()
-  await model.saveSourceResult('existing', 'Result')
-  await expect(
-    model.restoreEditorItem({
-      id: 'existing',
-      text: 'Text',
-      kind: 'draft',
-      createdAt: 1,
-    })
-  ).rejects.toThrow()
-  expect(call).not.toHaveBeenCalled()
-  canRecord = true
-  expect(await model.saveOutput('Output')).toBe('saved')
-  canRecord = false
-  await model.saveSourceResult('saved', 'Late result')
-  expect(call).toHaveBeenCalledTimes(1)
-})

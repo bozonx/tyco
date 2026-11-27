@@ -15,6 +15,7 @@ export interface HostOperationCall extends OperationCall {
    * The AI commands that led to this call, outermost first; absent for a call
    * made by the user
    */
+  isQuiet?: boolean
   callerCommandIds?: readonly string[]
 }
 

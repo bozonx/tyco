@@ -108,17 +108,30 @@ impl TycoDbus {
     /// Runs the library command `id` and returns the result to the caller. A
     /// command that takes text fails with `InputRequired`: this call has none.
     async fn run_command(&self, id: String) -> Result<(), ApiError> {
-        self.run(RunRequest {
+        self.dispatch_run(RunRequest {
             target: id,
             ..Default::default()
         })
         .await
     }
 
+    /// Runs a library command with the same JSON request as local IPC.
+    async fn run(&self, request_json: String) -> Result<String, ApiError> {
+        let request = serde_json::from_str(&request_json).map_err(|error| {
+            ApiError::from(Response::coded_error(
+                tyco_activation_protocol::ErrorCode::InvalidInput,
+                error.to_string(),
+            ))
+        })?;
+        self.dispatch_with_result(Request::Run { request })
+            .await
+            .map(|result| result.to_string())
+    }
+
     /// Replaces the selection of the focused window with the output of the
     /// library command `id`.
     async fn replace_selection(&self, id: String) -> Result<(), ApiError> {
-        self.run(RunRequest {
+        self.dispatch_run(RunRequest {
             target: id,
             selection: true,
             replace: true,
@@ -153,13 +166,17 @@ impl TycoDbus {
         .await
     }
 
-    async fn run(&self, request: RunRequest) -> Result<(), ApiError> {
+    async fn dispatch_run(&self, request: RunRequest) -> Result<(), ApiError> {
         self.dispatch(Request::Run { request }).await
     }
 
     /// Selection capture and window activation block, so they run off the
     /// bus thread: the KWin reports must keep coming in meanwhile.
     async fn dispatch(&self, request: Request) -> Result<(), ApiError> {
+        self.dispatch_with_result(request).await.map(|_| ())
+    }
+
+    async fn dispatch_with_result(&self, request: Request) -> Result<serde_json::Value, ApiError> {
         let app = self.app.clone();
         let services = self
             .app
@@ -169,7 +186,7 @@ impl TycoDbus {
             .await
             .unwrap_or_else(|error| Response::error(error.to_string()));
         if response.success {
-            Ok(())
+            Ok(response.result.unwrap_or_default())
         } else {
             Err(ApiError::from(response))
         }

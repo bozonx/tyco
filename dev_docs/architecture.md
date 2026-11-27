@@ -159,7 +159,7 @@ use their own whitelist without interactive confirmation.
 (`models/user_config.rs`); it depends on no service. `services/` is grouped by
 domain: `activation/` (coordinator, metrics, local socket), `settings/`
 (schema, three-way merge, version, defaults, session state), `external/`
-(the API shared by `tyco-ctl` and D-Bus, the command run slot, its jobs,
+(the API shared by `tyco-ctl` and D-Bus, the command run slots, their jobs,
 commands and access step),
 `secrets/` (store, webhook headers, history redaction) and `voice/`.
 `services/platform/` owns OS/session APIs, the D-Bus server and the status
@@ -204,33 +204,40 @@ and WebSocket operations, including request preparation. Cancellation releases
 capacity only when the operation lease is dropped. Shutdown closes admission,
 rejects late socket registration and waits for outstanding leases.
 
-Library command runs are visible and sequential. `ExternalJobs`
-(`services/external/jobs.rs`) holds one run slot, taken atomically at the start
-of a run, before any selection capture, and released when the job is terminal,
-a pending selection replacement included; a second run fails with `Busy` and
-`CommandRunRejected` tells the running overlay. External runs
-(`api::job_execution::start`) and internal ones (`start_command_run`, from a
-hotkey slot or the action menu) take the same slot and open
-`ActivationMode::CommandRun`, an internal mode outside `PUBLIC_MODES`, with a
-`CommandRunRequest` in the snapshot. The overlay claims the job
-(`claim_external_job` returns what it runs and starts the run limit,
-`commandRunTimeoutSec` of the config), asks for access or text when needed and
-finishes it; Esc cancels it through `cancel_external_job`. Before replacing a
-selection the backend hides the overlay and waits for the focus to leave it. A
-reload of the quick webview (`on_page_load`) fails the active job. The status
-bubble remains only for `replace correction` and the selection hotkeys.
+Library command jobs reserve one of two independent slots in `ExternalJobs`.
+Hotkeys, the action menu, and visible external runs share the overlay slot.
+The backend reserves it before selection capture and keeps it through any
+replacement. A conflicting visible run emits `CommandRunRejected`. The
+`CommandRun` activation carries the request and the overlay claims the job,
+collects missing input when needed, and handles normal result actions.
 
-`commandRunTimeoutSec` (0: unbounded) is the one run limit of all library
-commands. The backend applies it to overlay jobs; runs outside the overlay,
-voice commands and the commands a chat calls as tools, are bounded in the
-webview by `runWithinCommandLimit` (`lib/commands/command-run-limit.ts`).
+Quiet external runs reserve the quiet slot. They emit `QuietRunChanged`
+without activating a window. The already loaded quick webview claims the job
+through `claim_external_job` and executes it in a separate session with no
+overlay lifecycle subscriptions. Both windows can recover the active status
+with `get_quiet_run_status`. The tray shows ongoing activity, Linux displays
+short focus-aware status bubbles when supported, and Windows reports
+completion with a desktop notification. The main window chip can cancel the
+job through `cancel_external_job`. A quiet slot conflict returns `Busy`
+to the caller without emitting `CommandRunRejected`.
 
-Before an external `run` or `open` shows anything, `services/visible_work.rs`
-asks both webviews (`EndVisibleWork`) to end what they show gracefully: the
-voice dictation and the dialog stop recording and save their history, a command
-run is cancelled. Each window answers with `visible_work_ended`; the request
-waits for the answers for at most three seconds, off the main thread. A
-rejected run ends nothing.
+The backend starts `commandRunTimeoutSec` (0: unbounded) on claim for both
+slots. Reloading the quick webview fails its jobs. Cancellation aborts the
+operation signal, and the backend rejects late completion. Other contexts,
+such as voice commands and tools invoked from chat, use
+`runWithinCommandLimit` in the webview.
+
+An external visible run or `open` asks both webviews to end visible work.
+`visible_work.rs` waits up to three seconds for `visible_work_ended` off
+the main thread. Quiet jobs neither request nor subscribe to this barrier
+and can overlap dictation and dialog recording. They require explicit input
+when needed and refuse confirmation requests.
+
+Finalizing either slot records a single editor history entry with input,
+command name, and outcome according to the user's history policy. External
+runs have their own history origin, and failures, timeouts, and cancellations
+also appear under Problems. The visible executor shares manually entered
+input with the job before invoking the command so cancellation can preserve it.
 
 Activation policy lives in `services/activation/coordinator.rs`, with a supplied
 window host and generation checks that discard late context captures. Generation

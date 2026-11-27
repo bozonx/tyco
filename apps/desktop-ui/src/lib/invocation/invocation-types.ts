@@ -45,6 +45,7 @@ export interface InvocationOptions {
   /** The stages of a long run, see `OperationCall.onProgress` */
   onProgress?: (stage: string) => void
   /** The AI commands that led to this run, see `HostOperationCall` */
+  isQuiet?: boolean
   callerCommandIds?: readonly string[]
   /** Whether to report successful execution to the user (e.g. via toast) */
   notifySuccess?: boolean

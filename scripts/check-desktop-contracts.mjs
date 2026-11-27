@@ -82,7 +82,7 @@ for (const file of await readdir(resolve(root, 'src-tauri/capabilities'))) {
           'claim_external_job',
           'finish_external_job',
           'answer_external_access',
-          'cancel_external_job',
+          'supply_command_run_input',
         ].includes(command)
       )
         assert.deepEqual(capability.windows, ['quick'])

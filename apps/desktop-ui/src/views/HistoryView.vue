@@ -155,6 +155,8 @@ const FILTER_LABELS: Record<HistoryFilter, string> = {
   quickAiRequest: 'chat.quickAiRequests',
   translation: 'history.kindTranslate',
   aiTask: 'history.kindAiTask',
+  externalRun: 'history.filterExternalRun',
+  commandRun: 'history.filterCommandRun',
   problems: 'history.filterProblems',
 }
 const filterOptions = computed(() =>
@@ -184,7 +186,8 @@ watch(
 const editorItems = computed<HistoryListItem[]>(() =>
   filterEditorHistory(historyStore.editorHistory, filter.value).map((item) => {
     const view = getEditorHistoryView(item)
-    const label = t(view.labelKey)
+    const source = t(view.labelKey)
+    const label = item.commandName ? `${source} · ${item.commandName}` : source
     const note = getEditorHistoryNote(item)
 
     return {

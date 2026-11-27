@@ -336,6 +336,8 @@ pub fn run() {
             commands::external_jobs::answer_external_access,
             commands::external_jobs::cancel_external_job,
             commands::external_jobs::claim_external_job,
+            commands::external_jobs::get_quiet_run_status,
+            commands::external_jobs::supply_command_run_input,
             commands::external_jobs::finish_external_job,
             commands::external_jobs::set_operation_catalog,
             commands::external_jobs::start_command_run,

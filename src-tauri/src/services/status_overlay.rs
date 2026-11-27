@@ -77,3 +77,128 @@ mod tests {
         }
     }
 }
+
+#[cfg(target_os = "linux")]
+pub(crate) mod quiet {
+    use super::*;
+    use std::cell::RefCell;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::time::{Duration, Instant};
+    use tauri::Manager;
+
+    use crate::services::platform::linux::status_overlay;
+
+    struct Notice {
+        kind: StatusOverlayKind,
+        text: String,
+        expires_at: Option<Instant>,
+        was_focused: bool,
+    }
+
+    const START_NOTICE_DURATION: Duration = Duration::from_millis(3500);
+
+    static HAS_TRAY_HOST: AtomicBool = AtomicBool::new(true);
+
+    /// A missing StatusNotifier host is common on GNOME. Ignore an
+    /// inconclusive probe so other tray implementations keep short notices.
+    pub(crate) fn probe_tray_host(app: &AppHandle) {
+        use crate::services::background::BackgroundServices;
+        let _ = app
+            .state::<BackgroundServices>()
+            .spawn_thread("quiet-run-tray-probe", |_| {
+                use crate::services::platform::session::{current, Desktop};
+                if current().desktop != Desktop::Gnome {
+                    return;
+                }
+                let connection = zbus::blocking::connection::Builder::session()
+                    .and_then(|builder| builder.method_timeout(Duration::from_secs(1)).build());
+                if let Ok(connection) = connection {
+                    let host = zbus::blocking::Proxy::new(
+                        &connection,
+                        "org.kde.StatusNotifierWatcher",
+                        "/StatusNotifierWatcher",
+                        "org.kde.StatusNotifierWatcher",
+                    )
+                    .and_then(|proxy| proxy.get_property::<bool>("IsStatusNotifierHostRegistered"));
+                    HAS_TRAY_HOST.store(host.unwrap_or(false), Ordering::Relaxed);
+                }
+            });
+    }
+
+    thread_local! {
+        static NOTICE: RefCell<Option<Notice>> = const { RefCell::new(None) };
+    }
+
+    pub(crate) fn show(app: &AppHandle, kind: StatusOverlayKind, text: String) {
+        let duration = match kind {
+            StatusOverlayKind::Pending => START_NOTICE_DURATION,
+            StatusOverlayKind::Error => Duration::from_secs(8),
+            _ => Duration::from_secs(4),
+        };
+        let has_tray =
+            app.tray_by_id("main-tray").is_some() && HAS_TRAY_HOST.load(Ordering::Relaxed);
+        if !status_overlay::can_show() {
+            if (kind != StatusOverlayKind::Pending || !has_tray) && !focused(app) {
+                let service =
+                    app.state::<std::sync::Arc<
+                        crate::services::platform::notifications::NotificationService,
+                    >>();
+                let service = std::sync::Arc::clone(&service);
+                let _ = app
+                    .state::<crate::services::background::BackgroundServices>()
+                    .spawn_thread("quiet-run-notice", move |_| {
+                        if let Err(error) = service.notify(&text, "") {
+                            log::warn!("Could not show quiet run notification: {error}");
+                        }
+                    });
+            }
+            return;
+        }
+        NOTICE.with(|notice| {
+            *notice.borrow_mut() = Some(Notice {
+                kind,
+                text,
+                expires_at: (kind != StatusOverlayKind::Pending || has_tray)
+                    .then(|| Instant::now() + duration),
+                was_focused: false,
+            });
+        });
+        refresh(app);
+    }
+
+    fn focused(app: &AppHandle) -> bool {
+        app.webview_windows()
+            .values()
+            .any(|window| window.is_focused().unwrap_or(false))
+    }
+
+    pub(crate) fn refresh(app: &AppHandle) {
+        let focused = focused(app);
+        let request = NOTICE.with(|notice| {
+            let mut notice = notice.borrow_mut();
+            let notice = notice.as_mut()?;
+            if notice.kind == StatusOverlayKind::Pending
+                && notice.expires_at.is_some()
+                && notice.was_focused
+                && !focused
+            {
+                notice.expires_at = Some(Instant::now() + START_NOTICE_DURATION);
+            }
+            notice.was_focused = focused;
+            let remaining = notice
+                .expires_at
+                .map(|deadline| deadline.saturating_duration_since(Instant::now()));
+            if focused || remaining.is_some_and(|remaining| remaining.is_zero()) {
+                return None;
+            }
+            Some(StatusOverlayRequest {
+                kind: notice.kind,
+                text: notice.text.clone(),
+                delay_ms: 0,
+                hide_after_ms: remaining.map(|remaining| remaining.as_millis() as u64),
+                only_if_visible: false,
+            })
+        });
+        status_overlay::update_quiet(request);
+    }
+}

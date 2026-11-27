@@ -372,11 +372,36 @@ pub fn add_editor_history_item(
 
 fn save_editor_history_entry(
     history: &mut EditorHistorySession,
+    entry: EditorHistoryEntry,
+) -> Result<Option<String>, AppError> {
+    save_history_entry(history, entry, None, Ok(None))
+}
+
+pub fn add_command_run_history(
+    app: &AppHandle,
+    user_config: &Value,
+    memory: &mut Vec<EditorHistoryItem>,
+    entry: EditorHistoryEntry,
+    command_name: String,
+    outcome: Result<Option<String>, EditorHistoryFailure>,
+) -> Result<Option<String>, AppError> {
+    save_history_entry(
+        &mut EditorHistorySession::open(HistoryLocation::of_app(app)?, user_config, memory)?,
+        entry,
+        Some(command_name),
+        outcome,
+    )
+}
+
+fn save_history_entry(
+    history: &mut EditorHistorySession,
     mut entry: EditorHistoryEntry,
+    command_name: Option<String>,
+    outcome: Result<Option<String>, EditorHistoryFailure>,
 ) -> Result<Option<String>, AppError> {
     let policy = history.policy;
 
-    if entry.text.trim().is_empty() || policy.max_entries == 0 {
+    if (command_name.is_none() && entry.text.trim().is_empty()) || policy.max_entries == 0 {
         return Ok(None);
     }
     let is_checkpoint = entry.kind.is_checkpointed();
@@ -408,6 +433,15 @@ fn save_editor_history_entry(
         }
         None => new_history_id(created_at_ms),
     };
+    let (result, failure) = match outcome {
+        Ok(result) => (result.map(|result| policy.redact(result)), None),
+        Err(mut failure) => {
+            failure.message = failure
+                .message
+                .map(|message| policy.redact(truncate_failure_message(message)));
+            (None, Some(failure))
+        }
+    };
     let item = EditorHistoryItem {
         id,
         text: entry.text,
@@ -417,9 +451,10 @@ fn save_editor_history_entry(
         instruction: entry.instruction,
         profile_id: entry.profile_id,
         created_at_ms,
-        result: None,
+        command_name: command_name.map(|name| policy.redact(name)),
+        result,
         is_result_applied: false,
-        failure: None,
+        failure,
     };
 
     let id = if is_checkpoint {

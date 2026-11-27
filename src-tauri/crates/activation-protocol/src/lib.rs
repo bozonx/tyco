@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod transport;
 
-pub const API_VERSION: u32 = 4;
+pub const API_VERSION: u32 = 5;
 /// Room for the text of a command and the list of commands.
 pub const MAX_MESSAGE_BYTES: usize = 1024 * 1024;
 pub const START_MODES: &[&str] = &[
@@ -125,6 +125,7 @@ pub enum Request {
 /// and D-Bus error names (`org.tyco.Error.<code>`) depend on them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ErrorCode {
+    ConfirmationRequired,
     /// A request or its input the API cannot take.
     InvalidInput,
     /// The frame was not a request of this protocol.
@@ -152,7 +153,8 @@ pub enum ErrorCode {
 }
 
 impl ErrorCode {
-    pub const ALL: [Self; 17] = [
+    pub const ALL: [Self; 18] = [
+        Self::ConfirmationRequired,
         Self::InvalidInput,
         Self::InvalidRequest,
         Self::InputRequired,
@@ -174,6 +176,7 @@ impl ErrorCode {
 
     pub fn as_str(self) -> &'static str {
         match self {
+            Self::ConfirmationRequired => "ConfirmationRequired",
             Self::InvalidInput => "InvalidInput",
             Self::InvalidRequest => "InvalidRequest",
             Self::InputRequired => "InputRequired",
@@ -206,8 +209,9 @@ impl ErrorCode {
             | Self::InvalidRequest
             | Self::InputRequired
             | Self::AmbiguousName => 2,
-            Self::AccessDenied => 3,
-            Self::NotFound | Self::Unavailable | Self::NotReady | Self::Disabled | Self::Busy => 4,
+            Self::AccessDenied | Self::ConfirmationRequired => 3,
+            Self::Busy => 8,
+            Self::NotFound | Self::Unavailable | Self::NotReady | Self::Disabled => 4,
             Self::TimedOut => 6,
             Self::Cancelled => 7,
             Self::SelectionFailed
@@ -259,6 +263,8 @@ pub struct RunRequest {
     pub selection: bool,
     #[serde(default)]
     pub replace: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub quiet: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
