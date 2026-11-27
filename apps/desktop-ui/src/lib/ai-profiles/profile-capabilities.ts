@@ -1,13 +1,25 @@
 import type { AiProfile, ToolCatalogSettings } from '@tyco/shared'
 
 import {
+  COMMANDS_SOURCE,
   FILES_SOURCE,
   WEB_SOURCE,
   effectiveToolState,
+  isCommandPicked,
   isSourceAvailable,
   isSourceEnabledInProfile,
 } from '../chat-tools/tool-catalog'
-import { projectAccessLevelOf } from './project-access'
+import { effectiveProjectAccessLevel } from './project-access'
+
+/** What the profile may reach besides its settings */
+export interface ProfileCapabilityContext {
+  /** The plugins with chat tools */
+  pluginIds?: readonly string[]
+  /** The projects of the profile's workspace */
+  projectIds?: readonly string[]
+  /** The commands a chat may be offered */
+  commandIds?: readonly string[]
+}
 
 /** One part of what a profile's agent may do, for the chat header */
 export interface ProfileCapabilityPart {
@@ -22,18 +34,19 @@ export interface ProfileCapabilityPart {
 export function profileCapabilities(
   profile: Pick<AiProfile, 'tools' | 'projectPermissions'>,
   catalog: ToolCatalogSettings | undefined,
-  /** The plugins with chat tools */
-  pluginIds: readonly string[] = []
+  context: ProfileCapabilityContext = {}
 ): ProfileCapabilityPart[] {
+  const { pluginIds = [], projectIds = [], commandIds = [] } = context
   const parts: ProfileCapabilityPart[] = []
-  if (isSourceEnabledInProfile(profile.tools, FILES_SOURCE)) {
+  if (isSourceAvailable(catalog, FILES_SOURCE)) {
     parts.push({ key: 'toolPermissions.summaryWorkspace' })
-    const levels = Object.values(profile.projectPermissions ?? {}).flatMap(
-      (permission) => {
-        const level = projectAccessLevelOf(permission)
-        return level ? [level] : []
-      }
-    )
+    const levels = projectIds.flatMap((projectId) => {
+      const level = effectiveProjectAccessLevel(
+        profile.projectPermissions,
+        projectId
+      )
+      return level ? [level] : []
+    })
     if (levels.length)
       parts.push({
         key: levels.every((level) => level === 'read')
@@ -51,7 +64,11 @@ export function profileCapabilities(
       }) !== 'off'
   )
   if (hasWeb) parts.push({ key: 'toolPermissions.summaryWeb' })
-  const commandCount = profile.tools?.commandIds.length ?? 0
+  const commandCount =
+    isSourceAvailable(catalog, COMMANDS_SOURCE) &&
+    isSourceEnabledInProfile(profile.tools, COMMANDS_SOURCE)
+      ? commandIds.filter((id) => isCommandPicked(profile.tools, id)).length
+      : 0
   if (commandCount)
     parts.push({
       key: 'toolPermissions.summaryCommands',

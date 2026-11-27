@@ -2,6 +2,8 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import type { CommandConfig } from '@tyco/shared'
 
+import Button from '../common/Button.vue'
+import SegmentedControl from '../common/SegmentedControl.vue'
 import SettingsProfileCommandTools from './SettingsProfileCommandTools.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -38,92 +40,107 @@ const commandWithoutDesc: CommandConfig = {
   isEnabled: true,
 }
 
+const commandTwo: CommandConfig = {
+  ...commandWithDesc,
+  id: 'cmd-3',
+  name: 'Lint',
+  description: 'Lints the project',
+}
+
+const mountTools = (
+  pickedCommandIds?: string[],
+  commands: CommandConfig[] = [commandWithDesc, commandTwo]
+) =>
+  mount(SettingsProfileCommandTools, {
+    props: {
+      commands,
+      tools: { sources: {}, tools: {}, pickedCommandIds },
+      catalog: undefined,
+    },
+  })
+
+const lastUpdate = (wrapper: ReturnType<typeof mountTools>) =>
+  wrapper.emitted('update')?.at(-1)?.[0]
+
 describe('SettingsProfileCommandTools', () => {
   it('renders empty state when no commands configured', () => {
-    const wrapper = mount(SettingsProfileCommandTools, {
-      props: { commands: [], selectedIds: [] },
-    })
-
+    const wrapper = mountTools(undefined, [])
     expect(wrapper.text()).toContain('chatTools.commands.noCommands')
   })
 
-  it('renders supported commands with checkboxes and hides unsupported behind toggle', async () => {
-    const wrapper = mount(SettingsProfileCommandTools, {
-      props: {
-        commands: [commandWithDesc, commandWithoutDesc],
-        selectedIds: ['cmd-1'],
+  it('offers every command by default, without checkboxes', () => {
+    const wrapper = mountTools()
+    expect(wrapper.text()).toContain('Format Code')
+    expect(wrapper.text()).toContain('chatTools.commands.pickAllHint')
+    expect(wrapper.findAll('input[type="checkbox"]')).toHaveLength(0)
+    const [policy, mode] = wrapper.findAllComponents(SegmentedControl)
+    // running a command asks by default
+    expect(policy!.props('modelValue')).toBe('ask')
+    expect(mode!.props('modelValue')).toBe('all')
+  })
+
+  it('sets the policy of every command at once', () => {
+    const wrapper = mountTools()
+    wrapper
+      .findAllComponents(SegmentedControl)[0]!
+      .vm.$emit('update:modelValue', 'allow')
+    expect(lastUpdate(wrapper)).toEqual({
+      sources: {},
+      tools: {
+        'commands:commands:cmd-1': 'allow',
+        'commands:commands:cmd-3': 'allow',
       },
     })
+    wrapper
+      .findAllComponents(SegmentedControl)[0]!
+      .vm.$emit('update:modelValue', 'off')
+    expect(lastUpdate(wrapper)?.sources).toEqual({
+      'commands:commands': { isEnabled: false },
+    })
+  })
 
-    expect(wrapper.text()).toContain('Format Code')
-    expect(wrapper.text()).toContain('Formats selected code')
-    // Unsupported toggle is shown
-    expect(wrapper.text()).toContain('chatTools.commands.unsupportedCommands')
+  it('starts picking from every command and back to all', () => {
+    const wrapper = mountTools()
+    wrapper
+      .findAllComponents(SegmentedControl)[1]!
+      .vm.$emit('update:modelValue', 'some')
+    expect(lastUpdate(wrapper)?.pickedCommandIds).toEqual(['cmd-1', 'cmd-3'])
 
+    const picking = mountTools(['cmd-1'])
+    picking
+      .findAllComponents(SegmentedControl)[1]!
+      .vm.$emit('update:modelValue', 'all')
+    expect('pickedCommandIds' in lastUpdate(picking)!).toBe(false)
+  })
+
+  it('picks commands one by one and hides unsupported ones behind a toggle', async () => {
+    const wrapper = mountTools(['cmd-1'], [commandWithDesc, commandWithoutDesc])
     const checkboxes = wrapper.findAll('input[type="checkbox"]')
     expect(checkboxes).toHaveLength(1)
     expect((checkboxes[0]!.element as HTMLInputElement).checked).toBe(true)
-
-    // Toggling cmd-1 emits toggle event
     await checkboxes[0]!.setValue(false)
-    expect(wrapper.emitted('toggle')?.[0]).toEqual(['cmd-1', false])
+    expect(lastUpdate(wrapper)?.pickedCommandIds).toEqual([])
 
-    // Expanding unsupported commands section reveals cmd-2
     expect(wrapper.text()).not.toContain('chatTools.commands.needsDescription')
-    const toggleBtn = wrapper.find('.profile-command-unsupported-btn')
-    await toggleBtn.trigger('click')
-
+    await wrapper.find('.profile-command-unsupported-btn').trigger('click')
     expect(wrapper.text()).toContain('No Description')
     expect(wrapper.text()).toContain('chatTools.commands.needsDescription')
   })
 
-  it('selects and deselects all selectable commands', async () => {
-    const cmd3: CommandConfig = {
-      ...commandWithDesc,
-      id: 'cmd-3',
-      name: 'Lint Code',
-    }
-    const wrapper = mount(SettingsProfileCommandTools, {
-      props: {
-        commands: [commandWithDesc, commandWithoutDesc, cmd3],
-        selectedIds: ['cmd-1'],
-      },
-    })
+  it('selects and deselects all, dropping removed commands', async () => {
+    const wrapper = mountTools(['gone'])
+    const buttons = wrapper.findAllComponents(Button)
+    const selectAll = buttons.find((b) =>
+      b.text().includes('chatTools.commands.selectAll')
+    )!
+    await selectAll.trigger('click')
+    expect(lastUpdate(wrapper)?.pickedCommandIds).toEqual(['cmd-1', 'cmd-3'])
 
-    const actionButtons = wrapper.findAll(
-      '.profile-command-tools-actions button'
-    )
-    expect(actionButtons.length).toBe(2)
-
-    // Select all
-    await actionButtons[0]!.trigger('click')
-    expect(wrapper.emitted('updateSelected')?.[0]).toEqual([['cmd-1', 'cmd-3']])
-
-    // Deselect all
-    await actionButtons[1]!.trigger('click')
-    expect(wrapper.emitted('updateSelected')?.[1]).toEqual([[]])
-  })
-
-  it('places command for another platform into unsupported section with badge and notice', async () => {
-    const windowsCmd: CommandConfig = {
-      ...commandWithDesc,
-      id: 'cmd-win',
-      name: 'Windows Script',
-      platforms: ['windows'],
-    }
-    const wrapper = mount(SettingsProfileCommandTools, {
-      props: {
-        commands: [windowsCmd],
-        selectedIds: [],
-        currentPlatform: 'linux',
-      },
-    })
-
-    expect(wrapper.text()).toContain('chatTools.commands.unsupportedCommands')
-    const toggleBtn = wrapper.find('.profile-command-unsupported-btn')
-    await toggleBtn.trigger('click')
-
-    expect(wrapper.text()).toContain('Windows')
-    expect(wrapper.text()).toContain('commands.otherPlatform')
+    const all = mountTools(['cmd-1', 'cmd-3'])
+    const deselectAll = all
+      .findAllComponents(Button)
+      .find((b) => b.text().includes('chatTools.commands.deselectAll'))!
+    await deselectAll.trigger('click')
+    expect(lastUpdate(all)?.pickedCommandIds).toEqual([])
   })
 })

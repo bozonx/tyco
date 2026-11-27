@@ -10,22 +10,22 @@
         :icon="entry.icon"
         :title="sourceLabel(entry)"
         :info="sourceInfo(entry)"
-        :off="!isAvailable(entry) || !isEnabled(entry)"
+        :off="!isAvailable(entry) || stateOfSource(entry) === 'off'"
       >
         <template #actions>
           <Badge v-if="!isAvailable(entry)" tone="muted">
             {{ t('toolPermissions.sourceOffEverywhere') }}
           </Badge>
-          <FieldSwitch
-            :aria-label="sourceLabel(entry)"
-            :disabled="!isAvailable(entry)"
-            :model-value="isAvailable(entry) && isEnabled(entry)"
-            @update:model-value="
-              emit('update', withSourceEnabled(tools, entry.source, $event))
-            "
+          <SegmentedControl
+            v-else
+            size="sm"
+            :label="sourceLabel(entry)"
+            :model-value="stateOfSource(entry)"
+            :options="stateOptions"
+            @update:model-value="setSourceState(entry, $event as ToolState)"
           />
         </template>
-        <template v-if="isAvailable(entry) && isEnabled(entry)">
+        <template v-if="isAvailable(entry) && stateOfSource(entry) !== 'off'">
           <SettingsToolRow
             v-for="tool in entry.tools"
             :key="tool.name"
@@ -62,10 +62,10 @@ import {
   type CatalogTool,
   effectiveToolState,
   isSourceAvailable,
-  isSourceEnabledInProfile,
   isToolAvailable,
   sourceKey,
-  withSourceEnabled,
+  sourceState,
+  withSourceState,
   withToolState,
 } from '../../lib/chat-tools/tool-catalog'
 import type {
@@ -73,7 +73,6 @@ import type {
   CatalogToolEntry,
 } from '../../lib/chat-tools/tool-catalog-entries'
 import Badge from '../common/Badge.vue'
-import FieldSwitch from '../common/FieldSwitch.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsToolRow from './SettingsToolRow.vue'
@@ -91,7 +90,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ update: [tools: ProfileToolSettings] }>()
 defineSlots<{
-  /** The sources picked one by one: commands, MCP servers */
+  /** The sources picked one by one: MCP servers */
   default?: () => unknown
 }>()
 const { t } = useI18n()
@@ -116,8 +115,14 @@ const stateOptions = computed(() => [
 
 const isAvailable = (entry: CatalogSourceEntry) =>
   isSourceAvailable(props.catalog, entry.source)
-const isEnabled = (entry: CatalogSourceEntry) =>
-  isSourceEnabledInProfile(props.tools, entry.source)
+const stateOfSource = (entry: CatalogSourceEntry) =>
+  sourceState(props.catalog, props.tools, entry.tools)
+
+/** Sets every tool of the source at once; a tool may differ afterwards */
+function setSourceState(entry: CatalogSourceEntry, state: ToolState) {
+  const updated = withSourceState(props.tools, entry.tools, state)
+  if (updated) emit('update', updated)
+}
 const stateOf = (tool: CatalogTool) =>
   effectiveToolState(props.catalog, props.tools, tool)
 

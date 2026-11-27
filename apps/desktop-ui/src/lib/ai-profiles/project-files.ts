@@ -68,9 +68,9 @@ export function checkProjectTransfer(
 
 /**
  * Whether deleting the project loses nothing, so it needs no confirmation: no
- * description, no profile with access, and no files: an internal project holds
- * none (`fileCount`, unknown when it could not be counted), an external one has
- * no folder on this device.
+ * description, no access set by hand in a profile, and no files: an internal
+ * project holds none (`fileCount`, unknown when it could not be counted), an
+ * external one has no folder on this device.
  */
 export function isProjectEmpty(
   project: AiProject,

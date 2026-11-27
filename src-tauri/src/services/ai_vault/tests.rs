@@ -319,7 +319,7 @@ fn profile_tool_settings_round_trip() {
             ToolSourceSettings { is_enabled: false },
         )]),
         tools: HashMap::from([("core:files:write_file".to_string(), ToolState::Ask)]),
-        command_ids: vec!["notes".into()],
+        picked_command_ids: Some(vec!["notes".into()]),
     });
     save_profile(&vault_root, updated.clone(), None).unwrap();
     assert_eq!(
@@ -335,7 +335,7 @@ fn profile_tool_settings_round_trip() {
         serde_json::json!({
             "sources": {"core:web": {"isEnabled": false}},
             "tools": {"core:files:write_file": "ask"},
-            "commandIds": ["notes"]
+            "pickedCommandIds": ["notes"]
         })
     );
 }
@@ -844,15 +844,22 @@ fn memory_crud_add_replace_rewrite_and_search() {
         .unwrap();
     assert_eq!(health_topic.description.as_deref(), Some("Medical history"));
 
-    // 9. Clear memory
-    clear_profile_memory(&vault_root, &versions, "doc").unwrap();
-    let cleared_topics = list_profile_memory_topics(&vault_root, "doc").unwrap();
-    assert_eq!(cleared_topics.len(), 1);
-    assert_eq!(cleared_topics[0].file, "core.md");
+    // 9. Delete files one by one: a topic goes, core.md is reset
+    delete_profile_memory_file(&vault_root, &versions, "doc", "health.md").unwrap();
+    delete_profile_memory_file(&vault_root, &versions, "doc", "core.md").unwrap();
+    let left_files: Vec<_> = list_profile_memory_topics(&vault_root, "doc")
+        .unwrap()
+        .into_iter()
+        .map(|topic| topic.file)
+        .collect();
+    assert!(!left_files.contains(&"health.md".to_owned()));
+    assert!(left_files.contains(&"core.md".to_owned()));
     assert_eq!(
         read_profile_memory(&vault_root, &versions, "doc", None, "core.md").unwrap(),
         DEFAULT_MEMORY_CORE
     );
+    // deleting a file that is gone already is no error
+    delete_profile_memory_file(&vault_root, &versions, "doc", "health.md").unwrap();
 }
 
 #[test]

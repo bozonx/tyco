@@ -849,7 +849,7 @@ fn project(id: &str, created_at: u64) -> AiProject {
 }
 
 #[test]
-fn a_profile_reaches_its_workspace_and_permitted_projects() {
+fn a_profile_reaches_its_workspace_and_the_projects_it_was_not_denied() {
     let vault = TestDir::new("ai_files_profile");
     let device = crate::services::storage::device::DeviceStore::in_memory(Default::default());
     let paths = ai_vault::ProjectPaths {
@@ -876,12 +876,14 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
             )
         })
         .collect();
-    // deleting is never freer than writing
+    // deleting is never freer than writing; a project the profile sets
+    // nothing for has the default access
     assert_eq!(
         roots,
         [
             ("workspace", Allow, Allow, Allow),
-            ("projects/book", Allow, Ask, Ask)
+            ("projects/book", Allow, Ask, Ask),
+            ("projects/other", Allow, Ask, Ask)
         ]
     );
     assert_eq!(
@@ -915,7 +917,7 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
     )
     .is_ok());
 
-    // with its file source off a profile reaches its attachments only
+    // nor switches their source off: the project permissions decide
     let files_off = ProfileToolSettings {
         sources: HashMap::from([(
             "core:files".to_string(),
@@ -925,12 +927,7 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
     };
     ai_vault::save_profile(&vault, profile(Some(files_off)), None).unwrap();
     let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
-    assert!(files.roots().is_empty());
-    let error = message(run(
-        &files,
-        serde_json::json!({"operation": "readFile", "path": "workspace/a.md"}),
-    ));
-    assert!(error.contains("off"), "{error}");
+    assert_eq!(files.roots().len(), 3);
 }
 
 #[test]
@@ -1311,7 +1308,7 @@ fn a_file_tool_off_in_the_profile_is_ignored() {
     let settings = ProfileToolSettings {
         sources: HashMap::new(),
         tools: HashMap::from([("core:files:read_file".into(), ai_vault::ToolState::Off)]),
-        command_ids: Vec::new(),
+        picked_command_ids: None,
     };
     let files = ConversationFiles::with_attachments(
         vec![root("workspace", &dir.join("workspace"), Allow, Allow)],

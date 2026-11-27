@@ -35,4 +35,4 @@ export function aiCommandToolContext(commandId: string, tools: ToolRef[]) {
 /** Profile tool settings from a few changes */
 export const toolSettings = (
   patch: Partial<ProfileToolSettings> = {}
-): ProfileToolSettings => ({ sources: {}, tools: {}, commandIds: [], ...patch })
+): ProfileToolSettings => ({ sources: {}, tools: {}, ...patch })

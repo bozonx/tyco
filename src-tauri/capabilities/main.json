@@ -9,7 +9,7 @@
     "allow-cancel-external-job",
     "allow-open-system-hotkey-settings",
     "allow-add-ai-profile-memory-fact",
-    "allow-clear-ai-profile-memory",
+    "allow-delete-ai-profile-memory-file",
     "allow-create-ai-profile",
     "allow-create-ai-project",
     "allow-delete-ai-profile",

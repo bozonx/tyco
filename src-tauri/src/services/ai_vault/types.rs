@@ -19,6 +19,17 @@ pub struct ProjectPermission {
 }
 
 impl ProjectPermission {
+    /// What a profile has in a project it stores no permission for: reading
+    /// without asking, changes with confirmation. Keep in sync with
+    /// `DEFAULT_PROJECT_ACCESS_LEVEL` in `lib/ai-profiles/project-access.ts`.
+    pub fn workspace_default() -> Self {
+        Self {
+            read: ProjectAccessMode::Allow,
+            write: ProjectAccessMode::Ask,
+            delete: ProjectAccessMode::Ask,
+        }
+    }
+
     /// The access to deleting, kept no freer than writing.
     pub fn effective_delete(&self) -> ProjectAccessMode {
         stricter_access(&self.write, &self.delete)
@@ -57,8 +68,9 @@ pub struct ToolSourceSettings {
 }
 
 /// The tools a profile's chat may use, as the differences from the defaults:
-/// the `core` and `plugin` sources are on, `mcp` servers and commands are
-/// picked; a tool's policy comes from its risk. See
+/// the `core`, `plugin` and `commands` sources are on, `mcp` servers are
+/// picked, every command is offered unless the profile picks some; a tool's
+/// policy comes from its risk. See
 /// `dev_docs/architecture.md`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
@@ -69,9 +81,11 @@ pub struct ProfileToolSettings {
     /// By tool key, `<kind>:<id>:<tool>`.
     #[serde(default)]
     pub tools: HashMap<String, ToolState>,
-    /// The commands the profile's chat may run.
-    #[serde(default)]
-    pub command_ids: Vec<String>,
+    /// The only commands the profile's chat may run; all of them when unset,
+    /// so a new command is offered too.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub picked_command_ids: Option<Vec<String>>,
 }
 
 /// The memory mode of a profile.

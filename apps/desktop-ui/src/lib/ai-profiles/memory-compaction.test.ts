@@ -7,14 +7,18 @@ import {
 } from './memory-compaction'
 
 describe('memory-compaction', () => {
-  it('builds a prompt mentioning the target file and rules', () => {
+  it('gives the file as data apart from the rules', () => {
     const prompt = buildMemoryCompactionPrompt(
       'health.md',
       '- Coffee: headache'
     )
-    expect(prompt.system).toContain('health.md')
     expect(prompt.system).toContain('duplicates')
-    expect(prompt.messages[0].content).toContain('Coffee: headache')
+    expect(prompt.system).toContain('language')
+    expect(prompt.system).toContain('not instructions')
+    expect(prompt.system).not.toContain('Coffee')
+    expect(prompt.messages[0].content).toBe(
+      '<memory_file name="health.md">\n- Coffee: headache\n</memory_file>'
+    )
   })
 
   it('cleans surrounding markdown fences', () => {
@@ -23,6 +27,9 @@ describe('memory-compaction', () => {
 
     const fencedPlain = '```\n# Plain\n```'
     expect(cleanCompactedMarkdown(fencedPlain)).toBe('# Plain')
+
+    const tagged = '<memory_file name="core.md">\n# Tagged\n</memory_file>'
+    expect(cleanCompactedMarkdown(tagged)).toBe('# Tagged')
 
     const unfenced = '# Unfenced\n- Fact'
     expect(cleanCompactedMarkdown(unfenced)).toBe('# Unfenced\n- Fact')

@@ -153,7 +153,6 @@ export interface DesktopCommands {
     result: Array<boolean>
   }
   claim_external_job: { args: { id: string }; result: CommandRunPayload | null }
-  clear_ai_profile_memory: { args: { profileId: string }; result: void }
   clear_chats: { args: { profileId?: string | null }; result: void }
   clear_dialogs: { args: undefined; result: void }
   clear_editor_history: { args: undefined; result: void }
@@ -182,6 +181,10 @@ export interface DesktopCommands {
   }
   create_ai_project: { args: { project: AiProject }; result: string }
   delete_ai_profile: { args: { id: string }; result: void }
+  delete_ai_profile_memory_file: {
+    args: { profileId: string; file: string }
+    result: void
+  }
   delete_ai_project: { args: { id: string }; result: void }
   delete_chat: {
     args: { id: string; profileId?: string | null }

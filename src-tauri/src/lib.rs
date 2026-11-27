@@ -268,7 +268,7 @@ pub fn run() {
             commands::ai_web::run_ai_web_tool,
             commands::ai_web::cancel_ai_web_tool,
             commands::ai_vault::add_ai_profile_memory_fact,
-            commands::ai_vault::clear_ai_profile_memory,
+            commands::ai_vault::delete_ai_profile_memory_file,
             commands::ai_vault::create_ai_profile,
             commands::ai_vault::create_ai_project,
             commands::ai_vault::delete_ai_profile,

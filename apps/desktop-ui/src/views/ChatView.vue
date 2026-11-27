@@ -97,6 +97,7 @@ import {
 } from '../composables/use-chat-scope'
 import { useI18n } from '../composables/use-i18n'
 import { profileCapabilities } from '../lib/ai-profiles/profile-capabilities'
+import { vaultOfRef } from '../lib/ai-profiles/profile-ref'
 import { preventMouseFocus } from '../lib/ui/focus'
 import { appNavigation } from '../navigation'
 import { useAiProfilesStore } from '../stores/ai-profiles'
@@ -149,10 +150,19 @@ const capabilitiesText = computed(() => {
   const pluginIds = [
     ...new Set(pluginChatTools.tools.map((tool) => tool.pluginId)),
   ]
+  const vaultId = vaultOfRef(profile.value.id)
   const parts = profileCapabilities(
     profile.value,
     desktopStore.userConfig?.tools,
-    pluginIds
+    {
+      pluginIds,
+      projectIds: (aiProfilesStore.projects ?? [])
+        .filter((project) => vaultOfRef(project.id) === vaultId)
+        .map((project) => project.id),
+      commandIds: (desktopStore.userConfig?.commands ?? [])
+        .filter((command) => command.isEnabled && command.description?.trim())
+        .map((command) => command.id),
+    }
   ).map((part) => (part.params ? t(part.key, part.params) : t(part.key)))
   return parts.length ? parts.join(' · ') : t('toolPermissions.summaryNothing')
 })

@@ -2,7 +2,11 @@ import type { AiProfile } from '@tyco/shared'
 
 import type { ChatToolAlwaysAllowTarget } from '../chat-tools/chat-tool-registry'
 import { withToolState } from '../chat-tools/tool-catalog'
-import { withAlwaysAllowedOperations } from './project-access'
+import {
+  effectiveProjectPermission,
+  projectAccessLevelOf,
+  withAlwaysAllowedOperations,
+} from './project-access'
 
 /**
  * What "always allow" of a call changes in the profile: the tool's policy
@@ -23,8 +27,11 @@ export function alwaysAllowedProfilePatch(
         'allow'
       ),
     }
-  const current = profile.projectPermissions[target.projectId]
-  if (!current) return undefined
+  const current = effectiveProjectPermission(
+    profile.projectPermissions,
+    target.projectId
+  )
+  if (!projectAccessLevelOf(current)) return undefined
   return {
     projectPermissions: {
       ...profile.projectPermissions,

@@ -64,7 +64,7 @@ fn main() {
             "claim_external_job",
             "get_quiet_run_status",
             "supply_command_run_input",
-            "clear_ai_profile_memory",
+            "delete_ai_profile_memory_file",
             "clear_chats",
             "clear_dialogs",
             "clear_editor_history",

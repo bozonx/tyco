@@ -491,18 +491,13 @@ impl ConversationFiles<'_> {
 }
 
 impl ConversationFiles<'_> {
-    /// Refuses a tool the profile has turned off; without a profile the
-    /// roots alone decide. Reading the conversation's attachments is the
-    /// always-on `attachments` source, which a file tool switched off in the
-    /// profile does not take away.
+    /// Refuses a tool switched off in the settings; the roots decide the
+    /// rest. Reading the conversation's attachments is the always-on
+    /// `attachments` source, which that switch does not take away.
     pub(super) fn ensure_tool_allowed(&self, request: &AiFileToolRequest) -> Result<(), AppError> {
         if request.reads_attachments() {
             return Ok(());
         }
-        permissions::ensure_file_tool_allowed(
-            &self.config,
-            self.profile.as_ref(),
-            request.tool_name(),
-        )
+        permissions::ensure_file_tool_allowed(&self.config, request.tool_name())
     }
 }

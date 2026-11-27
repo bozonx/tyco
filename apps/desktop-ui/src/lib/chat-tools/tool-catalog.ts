@@ -21,7 +21,8 @@ import type {
 export interface ProfileToolSettingsView {
   readonly sources: Readonly<Record<string, { readonly isEnabled: boolean }>>
   readonly tools: Readonly<Record<string, ToolState>>
-  readonly commandIds: readonly string[]
+  /** The only commands offered; all of them when unset */
+  readonly pickedCommandIds?: readonly string[]
 }
 
 /** A tool source: its kind and id */
@@ -142,7 +143,7 @@ export function defaultToolPolicy(tool: CatalogTool): ToolPolicy {
 
 /** Whether a profile has a source when it set nothing for it */
 export const isSourceEnabledByDefault = (kind: ToolSourceKind) =>
-  kind === 'core' || kind === 'plugin'
+  kind === 'core' || kind === 'plugin' || kind === 'commands'
 
 /**
  * Whether a source is available at all; the user may switch any source of the
@@ -213,7 +214,8 @@ export function isSourceEnabledInProfile(
   source: ToolSourceRef
 ): boolean {
   if (isAlwaysOnSource(source)) return true
-  if (source.kind === 'commands') return Boolean(settings?.commandIds.length)
+  // a profile has no switch for its files: the project permissions decide
+  if (source.kind === 'core' && source.id === CORE_SOURCE_IDS.files) return true
   return (
     settings?.sources[sourceKey(source)]?.isEnabled ??
     isSourceEnabledByDefault(source.kind)
@@ -231,9 +233,9 @@ export function effectiveToolState(
   tool: CatalogTool
 ): ToolState {
   if (!isToolAvailable(catalog, tool)) return 'off'
-  if (tool.source.kind === 'commands') {
-    if (!settings?.commandIds.includes(tool.name)) return 'off'
-  } else if (!isSourceEnabledInProfile(settings, tool.source)) return 'off'
+  if (!isSourceEnabledInProfile(settings, tool.source)) return 'off'
+  if (tool.source.kind === 'commands' && !isCommandPicked(settings, tool.name))
+    return 'off'
   const own = hasPerToolSettings(tool.source)
     ? settings?.tools[toolKey(tool.source, tool.name)]
     : undefined
@@ -254,7 +256,6 @@ export function effectiveToolPolicy(
 export const emptyProfileToolSettings = (): ProfileToolSettings => ({
   sources: {},
   tools: {},
-  commandIds: [],
 })
 
 /** The settings with a source switched; only a change from the default is kept */
@@ -291,18 +292,63 @@ export function withToolState(
   }
 }
 
-/** The settings with a command picked for the profile's chat, or not */
-export function withCommandSelected(
+/** Whether the profile offers a command: all are, unless it picks some */
+export const isCommandPicked = (
+  settings: ProfileToolSettingsView | undefined,
+  commandId: string
+) => settings?.pickedCommandIds?.includes(commandId) ?? true
+
+/**
+ * The settings offering only the `commandIds` picked, or every command, new
+ * ones too, when undefined
+ */
+export function withPickedCommands(
   settings: ProfileToolSettings | undefined,
-  commandId: string,
-  isSelected: boolean
+  commandIds: readonly string[] | undefined
 ): ProfileToolSettings {
-  const current = settings ?? emptyProfileToolSettings()
-  const others = current.commandIds.filter((id) => id !== commandId)
-  return {
-    ...current,
-    commandIds: isSelected ? [...others, commandId] : others,
-  }
+  const { pickedCommandIds: _previous, ...current } =
+    settings ?? emptyProfileToolSettings()
+  return commandIds
+    ? { ...current, pickedCommandIds: [...commandIds] }
+    : current
+}
+
+/**
+ * The settings with the state of a whole source: `off` switches it off, the
+ * rest switch it on with every tool of `tools` at that state
+ */
+export function withSourceState(
+  settings: ProfileToolSettings | undefined,
+  tools: readonly CatalogTool[],
+  state: ToolState
+): ProfileToolSettings | undefined {
+  const source = tools[0]?.source
+  if (!source) return settings
+  if (state === 'off') return withSourceEnabled(settings, source, false)
+  return tools.reduce(
+    (current, tool) => withToolState(current, tool, state),
+    withSourceEnabled(settings, source, true)
+  )
+}
+
+/**
+ * The state of a whole source shown on its header: `off` when it is off, the
+ * state its tools share, or `mixed`
+ */
+export function sourceState(
+  catalog: ToolCatalogSettings | undefined,
+  settings: ProfileToolSettingsView | undefined,
+  tools: readonly CatalogTool[]
+): ToolState | 'mixed' {
+  const source = tools[0]?.source
+  if (!source || !isSourceEnabledInProfile(settings, source)) return 'off'
+  const states = new Set(
+    tools
+      .filter((tool) => isToolAvailable(catalog, tool))
+      .map((tool) => effectiveToolState(catalog, settings, tool))
+  )
+  if (states.size === 0) return 'off'
+  return states.size === 1 ? [...states][0] : 'mixed'
 }
 
 /** Whether a whitelist has a tool: its whole source or the tool itself */

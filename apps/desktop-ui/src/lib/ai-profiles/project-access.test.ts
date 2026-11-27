@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  hasFileToolsOff,
+  NO_PROJECT_ACCESS,
+  effectiveProjectAccessLevel,
+  effectiveProjectPermission,
   isDeleteAllowed,
   normalizedProjectPermission,
   PROJECT_ACCESS_LEVELS,
@@ -111,7 +113,7 @@ describe('project access levels', () => {
     expect(withProjectAccess(custom, 'docs', 'custom')).toEqual(custom)
   })
 
-  it('connects and removes one project, keeping the others', () => {
+  it('sets and removes the access to one project, keeping the others', () => {
     const start = { docs: projectPermissionFor('read') }
     const connected = withProjectAccess(start, 'site', 'full')
     expect(connected).toEqual({
@@ -119,21 +121,22 @@ describe('project access levels', () => {
       site: projectPermissionFor('full'),
     })
     expect(withProjectAccess(connected, 'docs', undefined)).toEqual({
+      docs: NO_PROJECT_ACCESS,
       site: projectPermissionFor('full'),
     })
     expect(start).toEqual({ docs: projectPermissionFor('read') })
   })
 
-  it('tells when the file tools are off', () => {
-    expect(hasFileToolsOff({})).toBe(false)
-    expect(
-      hasFileToolsOff({
-        tools: {
-          sources: { 'core:files': { isEnabled: false } },
-          tools: {},
-          commandIds: [],
-        },
-      })
-    ).toBe(true)
+  it('gives every project the default access until it is changed', () => {
+    expect(effectiveProjectAccessLevel({}, 'docs')).toBe('readWrite')
+    expect(effectiveProjectPermission(undefined, 'docs')).toEqual({
+      read: 'allow',
+      write: 'ask',
+      delete: 'ask',
+    })
+    const denied = withProjectAccess({}, 'docs', undefined)
+    expect(effectiveProjectAccessLevel(denied, 'docs')).toBeUndefined()
+    // the default level is stored as nothing, so it follows the default
+    expect(withProjectAccess(denied, 'docs', 'readWrite')).toEqual({})
   })
 })

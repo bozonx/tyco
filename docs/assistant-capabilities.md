@@ -17,7 +17,10 @@ something new.
   read a web page or the output of a command or plugin, a change to the memory
   asks first: the memory shapes every chat to come, and the text it read could
   try to plant instructions there.
-- The projects you connected to the profile, each with its own permission:
+- The projects of its workspace, each with its own permission. A new
+  project starts at **Read and write**: the assistant reads it without
+  asking and asks before changing anything. In the profile settings you can
+  change the level of a project or take the access away:
 
   | Level          | Read | Write | Delete |
   | -------------- | ---- | ----- | ------ |
@@ -31,16 +34,19 @@ something new.
 - The files and screenshots you attach to the conversation.
 - The web (search and reading pages), unless you turn it off in the profile.
 
-Nothing else. To give an assistant a folder on your computer, connect it to the
-profile as an external project; there is no other way.
+Nothing else. To give an assistant a folder on your computer, add it to the
+workspace as an external project; there is no other way.
 
 ## What plugins and commands add
 
 A plugin or a command you wrote can do more than the built-in tools — a script
 may touch any file you can. That is your choice: you install the plugin, grant
 its capabilities and write the command. TyCo shows where each tool comes from
-and what the plugin may do, and by default asks before such a tool runs. Commands
-and plugin tools are picked per profile in its settings.
+and what the plugin may do, and by default asks before such a tool runs. In the
+profile settings you choose for each group of tools whether it is off, asks
+first or runs without asking. Every command with a description for the AI is
+available to a profile, new ones too, unless you switch the profile to the
+commands you select.
 
 ## What TyCo never does
 

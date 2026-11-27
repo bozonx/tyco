@@ -353,6 +353,7 @@ describe('ai-profiles-model', () => {
     expect(deps.saveProfile).toHaveBeenLastCalledWith(
       expect.objectContaining({
         projectPermissions: {
+          'docs-proj': { read: 'deny', write: 'deny', delete: 'deny' },
           'new-proj': { read: 'allow', write: 'allow', delete: 'ask' },
         },
       }),

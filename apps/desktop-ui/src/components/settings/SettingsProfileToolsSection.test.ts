@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { CORE_CATALOG } from '../../lib/chat-tools/tool-catalog-entries'
 import InfoTooltip from '../common/InfoTooltip.vue'
+import SegmentedControl from '../common/SegmentedControl.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -35,29 +36,43 @@ describe('SettingsProfileToolsSection', () => {
     expect(wrapper.find('[data-tool="web_fetch"]').exists()).toBe(true)
   })
 
-  it('switches a source off, keeping only the difference', async () => {
+  it('sets a whole source from its header, keeping only the difference', async () => {
     const wrapper = mount(SettingsProfileToolsSection, {
       props: { sources: [web], tools: undefined, catalog: undefined },
     })
-    await wrapper.get('input[type="checkbox"]').setValue(false)
-    expect(wrapper.emitted('update')?.[0]).toEqual([
-      {
-        sources: { 'core:web': { isEnabled: false } },
-        tools: {},
-        commandIds: [],
-      },
+    const header = wrapper.findAllComponents(SegmentedControl)[0]!
+    expect(header.props('modelValue')).toBe('allow')
+    header.vm.$emit('update:modelValue', 'off')
+    header.vm.$emit('update:modelValue', 'ask')
+    expect(wrapper.emitted('update')).toEqual([
+      [{ sources: { 'core:web': { isEnabled: false } }, tools: {} }],
+      [
+        {
+          sources: {},
+          tools: { 'core:web:web_search': 'ask', 'core:web:web_fetch': 'ask' },
+        },
+      ],
     ])
+  })
+
+  it('shows a source whose tools differ as mixed', () => {
+    const wrapper = mount(SettingsProfileToolsSection, {
+      props: {
+        sources: [web],
+        tools: { sources: {}, tools: { 'core:web:web_fetch': 'ask' } },
+        catalog: undefined,
+      },
+    })
+    expect(
+      wrapper.findAllComponents(SegmentedControl)[0]!.props('modelValue')
+    ).toBe('mixed')
   })
 
   it('hides the tools of a source that is off', () => {
     const wrapper = mount(SettingsProfileToolsSection, {
       props: {
         sources: [web],
-        tools: {
-          sources: { 'core:web': { isEnabled: false } },
-          tools: {},
-          commandIds: [],
-        },
+        tools: { sources: { 'core:web': { isEnabled: false } }, tools: {} },
         catalog: undefined,
       },
     })

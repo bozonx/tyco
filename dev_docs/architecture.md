@@ -71,7 +71,7 @@ docs and UI:
 TyCo's profiles are assistants, not code agents, and the rule is
 predictability: the agent can do exactly what the user set up and nothing more.
 Out of the box a profile's tools see only its `workspace/` and the projects
-connected to it; an outside folder is reached only as an external project.
+of its workspace; an outside folder is reached only as an external project.
 Plugins and commands may reach further, but only because the user installed or
 wrote them. There is no computer use: no screen, clipboard, selection or window
 tools. No tool changes settings, permissions, profiles, projects or commands
@@ -110,11 +110,22 @@ config, Settings → Tools) any source or single tool of the catalog, core ones
 included, can be switched off for every profile and AI command
 (`isToolAvailable`; Rust `is_tool_available`). "Ask AI" is not bound by it: its
 web search has its own switch. Everything is on by
-default; the always-on helpers are not switched there. A profile (`AiProfile.tools`: `sources`, `tools`, `commandIds`)
-keeps only its differences from the defaults: `core` and `plugin` sources are
-on, commands and MCP servers are picked. Project permissions are on the
-profile ↔ project link with `read`, `write` and `delete` (never freer than
-`write`; `normalizedProjectPermission`, `ProjectPermission::effective_delete`).
+default; the always-on helpers are not switched there. A profile (`AiProfile.tools`: `sources`, `tools`, `pickedCommandIds`)
+keeps only its differences from the defaults: `core`, `plugin` and `commands`
+sources are on, MCP servers are picked. Every command is offered, new ones
+too, unless the profile picks some (`pickedCommandIds`); a command asks before
+it runs. The settings set a whole source at once (`withSourceState`, shown by
+`sourceState`, `mixed` when its tools differ) or one tool. The file source has
+no profile switch: the project permissions decide.
+
+Project permissions (`AiProfile.projectPermissions`) hold `read`, `write` and
+`delete` per project (deleting never freer than writing;
+`normalizedProjectPermission`, `ProjectPermission::effective_delete`). A
+project the profile stores nothing for has the default access, reading
+without asking and changes with confirmation (`DEFAULT_PROJECT_ACCESS_LEVEL`,
+`ProjectPermission::workspace_default`), so a new project is reached at once;
+no access is stored as `deny` for all three (`NO_PROJECT_ACCESS`). Only the
+projects of the profile's own workspace count.
 
 **Where the call comes from** (`ToolScope` in the webview, `ToolCallContext`
 over IPC):

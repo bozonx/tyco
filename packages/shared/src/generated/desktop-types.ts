@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 538361a25c8134ef3717bcc1e8b54d38ba08f9f0baa6f47d630b119f81a05711
+// Source hash: 216cddfb6d98b8729a98255304c7d195d9bcb3d04f3f8824555747b0ae81f83b
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -901,16 +901,20 @@ export type ProfileSoul = { content: string; revision: string }
 
 /**
  * The tools a profile's chat may use, as the differences from the defaults: the
- * `core` and `plugin` sources are on, `mcp` servers and commands are picked; a
- * tool's policy comes from its risk. See `dev_docs/architecture.md`.
+ * `core`, `plugin` and `commands` sources are on, `mcp` servers are picked,
+ * every command is offered unless the profile picks some; a tool's policy comes
+ * from its risk. See `dev_docs/architecture.md`.
  */
 export type ProfileToolSettings = {
   /** By source key, `<kind>:<id>`. */
   sources: { [key in string]: ToolSourceSettings }
   /** By tool key, `<kind>:<id>:<tool>`. */
   tools: { [key in string]: ToolState }
-  /** The commands the profile's chat may run. */
-  commandIds: Array<string>
+  /**
+   * The only commands the profile's chat may run; all of them when unset, so a
+   * new command is offered too.
+   */
+  pickedCommandIds?: Array<string>
 }
 
 export type ProjectAccessMode = 'allow' | 'ask' | 'deny'

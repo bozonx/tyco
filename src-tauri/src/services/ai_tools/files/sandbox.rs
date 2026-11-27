@@ -9,8 +9,7 @@ use super::{
     WORKSPACE_ROOT,
 };
 use crate::errors::AppError;
-use crate::services::ai_tools::permissions::{self, FILES_SOURCE_ID};
-use crate::services::ai_vault::{self, AiProfile, ProjectAccessMode};
+use crate::services::ai_vault::{self, ProjectAccessMode, ProjectPermission};
 
 /// A path resolved inside one of the roots.
 pub(in crate::services::ai_tools) struct Resolved<'a> {
@@ -149,8 +148,8 @@ impl<'a> ConversationFiles<'a> {
         ))
     }
 
-    /// The attachments and the profile's roots as they are on disk now. A
-    /// profile whose file tools are off reaches its attachments only.
+    /// The attachments and the profile's roots as they are on disk now: its
+    /// workspace and the projects it has access to, by default all of them.
     pub fn load(
         vault_root: &Path,
         paths: &ai_vault::ProjectPaths,
@@ -158,19 +157,14 @@ impl<'a> ConversationFiles<'a> {
         attachments: Attachments<'a>,
     ) -> Result<Self, AppError> {
         let profile = ai_vault::get_profile(vault_root, profile_id)?;
-        if !files_enabled(&profile) {
-            return Ok(Self::new(
-                Vec::new(),
-                attachments,
-                Some("The file tools are off for this profile"),
-            ));
-        }
         let settings = profile.clone();
         let mut roots = vec![workspace_root(vault_root, profile_id)?];
         for project in ai_vault::list_projects(vault_root, paths)? {
-            let Some(permission) = profile.project_permissions.get(&project.id) else {
-                continue;
-            };
+            let permission = profile
+                .project_permissions
+                .get(&project.id)
+                .cloned()
+                .unwrap_or_else(ProjectPermission::workspace_default);
             if permission.read == ProjectAccessMode::Deny
                 && permission.write == ProjectAccessMode::Deny
             {
@@ -334,10 +328,6 @@ fn workspace_root(vault_root: &Path, profile_id: &str) -> Result<AiFileRoot, App
 }
 
 /// Whether the profile has its file source on; it is by default.
-fn files_enabled(profile: &AiProfile) -> bool {
-    permissions::is_core_source_enabled(profile, FILES_SOURCE_ID)
-}
-
 #[cfg(all(test, unix))]
 mod tests {
     use super::super::scoped_io;

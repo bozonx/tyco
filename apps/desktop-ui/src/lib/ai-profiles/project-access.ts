@@ -1,11 +1,6 @@
 import type { ProjectAccessMode, ProjectPermission } from '@tyco/shared'
 
 import { stricterAccess } from '../chat-tools/chat-tool-policy'
-import {
-  FILES_SOURCE,
-  isSourceEnabledInProfile,
-  type ProfileToolSettingsView,
-} from '../chat-tools/tool-catalog'
 
 /** A level the settings offer for a project a profile is connected to */
 export type SelectableProjectAccessLevel = 'read' | 'readWrite' | 'full'
@@ -29,8 +24,12 @@ export const PROJECT_ACCESS_LABEL_KEYS: Record<ProjectAccessLevel, string> = {
   custom: 'settings.accessLevelCustom',
 }
 
-/** The level a newly connected project starts with */
-export const DEFAULT_PROJECT_ACCESS_LEVEL: SelectableProjectAccessLevel = 'read'
+/**
+ * The level a profile has in every project of its workspace until the user
+ * changes it: reading without asking, changes with confirmation
+ */
+export const DEFAULT_PROJECT_ACCESS_LEVEL: SelectableProjectAccessLevel =
+  'readWrite'
 
 const PERMISSIONS: Record<SelectableProjectAccessLevel, ProjectPermission> = {
   read: { read: 'allow', write: 'deny', delete: 'deny' },
@@ -51,6 +50,34 @@ export function projectPermissionFor(
     ? { ...permission, delete: 'allow' }
     : permission
 }
+
+/** What a profile stores for a project it has no access to */
+export const NO_PROJECT_ACCESS: ProjectPermission = {
+  read: 'deny',
+  write: 'deny',
+  delete: 'deny',
+}
+
+/**
+ * The permission a profile has in a project: the stored one, or the default
+ * level when the profile stores none
+ */
+export function effectiveProjectPermission(
+  permissions: Readonly<Record<string, ProjectPermission>> | undefined,
+  projectId: string
+): ProjectPermission {
+  return (
+    permissions?.[projectId] ??
+    projectPermissionFor(DEFAULT_PROJECT_ACCESS_LEVEL)
+  )
+}
+
+/** The level a profile has in a project; undefined when it has no access */
+export const effectiveProjectAccessLevel = (
+  permissions: Readonly<Record<string, ProjectPermission>> | undefined,
+  projectId: string
+): ProjectAccessLevel | undefined =>
+  projectAccessLevelOf(effectiveProjectPermission(permissions, projectId))
 
 /** The permissions with deleting no freer than writing, as Rust applies them */
 export function normalizedProjectPermission(
@@ -89,14 +116,10 @@ export function projectAccessLevelOf(
   return level ?? 'custom'
 }
 
-/** The profile's file tools are off, so its project access does nothing */
-export function hasFileToolsOff(profile: {
-  readonly tools?: ProfileToolSettingsView | undefined
-}): boolean {
-  return !isSourceEnabledInProfile(profile.tools, FILES_SOURCE)
-}
-
-/** The permissions with one project connected at `level`, or removed */
+/**
+ * The permissions with one project at `level`, or without access to it. The
+ * default level is stored as no entry, so it follows the default
+ */
 export function withProjectAccess(
   permissions: Readonly<Record<string, ProjectPermission>>,
   projectId: string,
@@ -105,12 +128,11 @@ export function withProjectAccess(
   // a custom permission stays as it is
   if (level === 'custom') return { ...permissions }
   const { [projectId]: removed, ...rest } = permissions
-  return level
-    ? {
-        ...rest,
-        [projectId]: projectPermissionFor(level, isDeleteAllowed(removed)),
-      }
-    : rest
+  if (!level) return { ...rest, [projectId]: { ...NO_PROJECT_ACCESS } }
+  const permission = projectPermissionFor(level, isDeleteAllowed(removed))
+  return level === DEFAULT_PROJECT_ACCESS_LEVEL
+    ? rest
+    : { ...rest, [projectId]: permission }
 }
 
 /** The permissions with deleting in a project allowed without asking, or not */
@@ -119,8 +141,8 @@ export function withProjectDeleteAllowed(
   projectId: string,
   isAllowed: boolean
 ): Record<string, ProjectPermission> {
-  const current = permissions[projectId]
-  if (!current || current.write !== 'allow') return { ...permissions }
+  const current = effectiveProjectPermission(permissions, projectId)
+  if (current.write !== 'allow') return { ...permissions }
   return {
     ...permissions,
     [projectId]: { ...current, delete: isAllowed ? 'allow' : 'ask' },

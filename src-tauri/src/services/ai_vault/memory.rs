@@ -1021,27 +1021,29 @@ pub fn list_profile_memory_topics(
     Ok(topics)
 }
 
-/// Clears memory content for a profile: removes all topic files and snapshots,
-/// resets `core.md` to default, and clears read version records.
-pub fn clear_profile_memory(
+/// Deletes one memory file. `core.md` always exists: it is reset to its
+/// default instead. The reads of the file are forgotten, so a chat that read
+/// it reads it again before changing it.
+pub fn delete_profile_memory_file(
     vault_root: &Path,
     versions: &MemoryReadVersions,
     profile_id: &str,
+    file: &str,
 ) -> Result<(), AppError> {
     validate_id(profile_id)?;
+    let normalized = normalize_and_validate_memory_file(file)?;
     let memory_dir = profile_memory_dir(vault_root, profile_id)?;
-    let topics_dir = memory_dir.join(MEMORY_TOPICS_DIR);
-    if topics_dir.is_dir() {
-        crate::services::storage::watcher::remove_tree(&topics_dir)?;
+    let path = memory_file_path(&memory_dir, &normalized);
+    if normalized == MEMORY_CORE_FILE {
+        create_private_dir(&memory_dir)?;
+        write_private(&path, DEFAULT_MEMORY_CORE)?;
+    } else {
+        match fs::remove_file(&path) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.into()),
+        }
     }
-    create_private_dir(&topics_dir)?;
-
-    let snapshots_dir = memory_dir.join(MEMORY_SNAPSHOTS_DIR);
-    if snapshots_dir.is_dir() {
-        let _ = crate::services::storage::watcher::remove_tree(&snapshots_dir);
-    }
-
-    write_private(&memory_dir.join(MEMORY_CORE_FILE), DEFAULT_MEMORY_CORE)?;
-    versions.clear_profile(vault_root, profile_id);
+    versions.forget(vault_root, profile_id, &normalized);
     Ok(())
 }

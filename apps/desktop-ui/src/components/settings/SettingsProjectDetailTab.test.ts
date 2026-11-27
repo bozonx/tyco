@@ -40,12 +40,6 @@ const profile = (permissions: AiProfile['projectPermissions']): AiProfile => ({
   name: 'Writer',
   memoryMode: 'auto',
   projectPermissions: permissions,
-  // the file tools are off, so the access does nothing yet
-  tools: {
-    sources: { 'core:files': { isEnabled: false } },
-    tools: {},
-    commandIds: [],
-  },
   createdAt: 1,
   updatedAt: 1,
 })
@@ -111,6 +105,15 @@ describe('SettingsProjectDetailTab.vue', () => {
   const button = (wrapper: ReturnType<typeof mountTab>, label: string) =>
     wrapper.findAll('button').find((item) => item.text().includes(label))!
 
+  it('shows the project folder relative to its workspace', () => {
+    store.projects[0]!.id = 'workspace:notes'
+    const wrapper = mountTab('workspace:notes')
+
+    expect(wrapper.get('.path-display-text').attributes('title')).toBe(
+      'projects/notes'
+    )
+  })
+
   it('creates an external project with a picked folder', async () => {
     const wrapper = mountTab('new')
     await wrapper.get('input').setValue('Docs')
@@ -145,7 +148,7 @@ describe('SettingsProjectDetailTab.vue', () => {
     await wrapper.get('input').setValue('Docs')
     await wrapper
       .findComponent({ name: 'FieldCheckbox' })
-      .vm.$emit('update:modelValue', true)
+      .vm.$emit('update:modelValue', false)
     await wrapper.get('form').trigger('submit')
     await flushPromises()
     expect(
@@ -286,31 +289,39 @@ describe('SettingsProjectDetailTab.vue', () => {
       .findAllComponents({ name: 'SettingsEntityItem' })
       .filter((item) => item.props('title') === 'Writer')
     expect(items).toHaveLength(1)
-    expect(items[0]!.props('description')).toBe(
-      'settings.projectAccessFileToolsOff'
-    )
     expect(items[0]!.text()).toContain('settings.accessLevelReadWrite')
-    expect(wrapper.text()).not.toContain('Reader')
+    // a profile that sets nothing for the project has the default access
+    expect(wrapper.text()).toContain('Reader')
     expect(wrapper.findComponent({ name: 'FieldSelect' }).exists()).toBe(false)
     items[0]!.vm.$emit('open')
     expect(store.setProjectAccess).not.toHaveBeenCalled()
     expect(context.navigate).toHaveBeenCalledWith('ai-profile:writer')
   })
 
-  it('grants the chosen access when a new project is created', async () => {
-    store.profiles.push(profile({}))
+  it('gives every profile the default access to a new project, unless unchecked', async () => {
+    store.profiles.push(profile({}), {
+      ...profile({}),
+      id: 'reader',
+      name: 'Reader',
+    })
     const wrapper = mountTab('new')
     await wrapper.get('input').setValue('Docs')
-    const checkbox = wrapper.findComponent({ name: 'FieldCheckbox' })
-    await checkbox.vm.$emit('update:modelValue', true)
-    expect(checkbox.props('modelValue')).toBe(true)
+    const checkboxes = wrapper.findAllComponents({ name: 'FieldCheckbox' })
+    expect(checkboxes.map((item) => item.props('modelValue'))).toEqual([
+      true,
+      true,
+    ])
+    await checkboxes[1]!.vm.$emit('update:modelValue', false)
+    expect(checkboxes[1]!.props('modelValue')).toBe(false)
     expect(store.setProjectAccess).not.toHaveBeenCalled()
     await button(wrapper, 'settings.saveProject').trigger('click')
     await flushPromises()
+    // the default needs nothing stored: only the unchecked profile changes
+    expect(store.setProjectAccess).toHaveBeenCalledOnce()
     expect(store.setProjectAccess).toHaveBeenCalledWith(
-      'writer',
+      'reader',
       'created',
-      'read'
+      undefined
     )
     expect(context.navigate).toHaveBeenCalledWith('ai-project:created')
   })

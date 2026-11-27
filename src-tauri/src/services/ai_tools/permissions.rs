@@ -168,23 +168,17 @@ pub fn ensure_web_tool_allowed(
     }
 }
 
-/// Checks that a file tool may be called: it is not switched off everywhere
-/// and, in a profile's chat, the profile has its file source on. A profile
-/// does not set the file tools one by one: the project permissions decide. The "Ask AI" chat reaches
+/// Checks that a file tool may be called: it is not switched off everywhere.
+/// A profile has no switch of its own for the file tools: the project
+/// permissions decide what it reaches. The "Ask AI" chat reaches
 /// its attachments only and an AI command no files at all; the file tools
 /// enforce that by the roots they are given.
-pub fn ensure_file_tool_allowed(
-    config: &Value,
-    profile: Option<&AiProfile>,
-    tool_name: &str,
-) -> Result<(), AppError> {
-    if is_tool_available(config, CORE_SOURCE_KIND, FILES_SOURCE_ID, tool_name)
-        && profile.is_none_or(|profile| is_core_source_enabled(profile, FILES_SOURCE_ID))
-    {
+pub fn ensure_file_tool_allowed(config: &Value, tool_name: &str) -> Result<(), AppError> {
+    if is_tool_available(config, CORE_SOURCE_KIND, FILES_SOURCE_ID, tool_name) {
         Ok(())
     } else {
         Err(refused(format!(
-            "{tool_name} is turned off for this profile"
+            "{tool_name} is turned off in the settings"
         )))
     }
 }
@@ -250,7 +244,7 @@ mod tests {
                 .iter()
                 .map(|(key, state)| ((*key).to_string(), *state))
                 .collect(),
-            command_ids: Vec::new(),
+            picked_command_ids: None,
         }
     }
 
@@ -284,7 +278,7 @@ mod tests {
             ensure_web_tool_allowed(&profile_context(), "web_fetch", &config, Some(&profile))
                 .is_ok()
         );
-        assert!(ensure_file_tool_allowed(&config, Some(&profile), "delete_path").is_ok());
+        assert!(ensure_file_tool_allowed(&config, "delete_path").is_ok());
     }
 
     #[test]
@@ -313,19 +307,9 @@ mod tests {
             Some(&tool_off)
         )
         .is_ok());
-        let asking = profile(Some(settings(
-            &[],
-            &[("core:files:write_file", ToolState::Ask)],
-        )));
-        assert!(ensure_file_tool_allowed(&config, Some(&asking), "write_file").is_ok());
-        // the profile does not switch file tools one by one: the projects decide
-        let file_tool_off = profile(Some(settings(
-            &[],
-            &[("core:files:delete_path", ToolState::Off)],
-        )));
-        assert!(ensure_file_tool_allowed(&config, Some(&file_tool_off), "delete_path").is_ok());
-        let files_off = profile(Some(settings(&[("core:files", false)], &[])));
-        assert!(ensure_file_tool_allowed(&config, Some(&files_off), "read_file").is_err());
+        // a profile neither switches the file tools nor their source: the
+        // project permissions decide
+        assert!(ensure_file_tool_allowed(&config, "read_file").is_ok());
         // a profile chat without its profile is refused
         assert!(ensure_web_tool_allowed(&profile_context(), "web_search", &config, None).is_err());
     }
@@ -353,9 +337,8 @@ mod tests {
             assert!(ensure_web_tool_allowed(&context, "web_fetch", &config, profile).is_err());
             assert!(ensure_web_tool_allowed(&context, "web_search", &config, profile).is_ok());
         }
-        assert!(ensure_file_tool_allowed(&config, Some(&profile), "read_file").is_err());
-        assert!(ensure_file_tool_allowed(&config, None, "read_file").is_err());
-        assert!(ensure_file_tool_allowed(&json!({}), None, "read_file").is_ok());
+        assert!(ensure_file_tool_allowed(&config, "read_file").is_err());
+        assert!(ensure_file_tool_allowed(&json!({}), "read_file").is_ok());
     }
 
     #[test]

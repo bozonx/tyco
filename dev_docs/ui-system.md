@@ -169,7 +169,8 @@ and content together; request revisions suppress stale results after closing,
 changing profiles, disabling memory or disposal. Writes retain their original
 profile/file identity, and compaction updates an open editor only if its source
 text still matches. The component wires stores, translates messages and disposes
-these models.
+these models. Each file is deleted on its own after a confirmation (`core.md`
+is reset to its template instead), and compacting asks first: it runs a model.
 
 ## Shared control conventions
 

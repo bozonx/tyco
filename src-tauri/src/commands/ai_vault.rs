@@ -551,16 +551,21 @@ pub async fn undo_ai_profile_memory(
     .await?
 }
 
-/// Clears all memory topics and resets `core.md` to default for a profile.
+/// Deletes one memory file of a profile; `core.md` is reset instead.
 #[tauri::command]
-pub async fn clear_ai_profile_memory(app: AppHandle, profile_id: String) -> Result<(), AppError> {
+pub async fn delete_ai_profile_memory_file(
+    app: AppHandle,
+    profile_id: String,
+    file: String,
+) -> Result<(), AppError> {
     run_blocking(move || {
         let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
         ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::clear_profile_memory(
+            ai_vault::delete_profile_memory_file(
                 dir,
                 &app.state::<ai_vault::MemoryReadVersions>(),
                 profile_id,
+                &file,
             )
         })
     })

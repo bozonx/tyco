@@ -15,7 +15,12 @@ import type {
   ChatToolProvider,
 } from './chat-tool-registry'
 import { adaptCommand } from './registered-operation-adapter'
-import { commandRisk } from './tool-catalog'
+import {
+  COMMANDS_SOURCE,
+  commandRisk,
+  isCommandPicked,
+  isSourceEnabledInProfile,
+} from './tool-catalog'
 
 export interface CommandToolProviderDependencies {
   /** All user commands configured in the app */
@@ -47,8 +52,8 @@ export function createCommandToolProvider(
         operations: deps.operations,
       })
       if (context.scope.kind !== 'profile') return []
-      const allowedIds = new Set(context.scope.settings?.commandIds ?? [])
-      if (allowedIds.size === 0) return []
+      const settings = context.scope.settings
+      if (!isSourceEnabledInProfile(settings, COMMANDS_SOURCE)) return []
 
       const allCommands = deps.commands()
       const riskLookup = commandRiskLookup(allCommands)
@@ -56,7 +61,7 @@ export function createCommandToolProvider(
       const definitions: ChatToolDefinition[] = []
 
       for (const command of allCommands) {
-        if (!allowedIds.has(command.id)) continue
+        if (!isCommandPicked(settings, command.id)) continue
         if (!command.isEnabled) continue
 
         const description = command.description?.trim()

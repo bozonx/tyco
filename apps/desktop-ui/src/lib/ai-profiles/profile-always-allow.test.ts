@@ -17,11 +17,7 @@ describe('alwaysAllowedProfilePatchOf', () => {
       alwaysAllowedProfilePatchOf(
         {
           ...profile,
-          tools: {
-            sources: {},
-            commandIds: [],
-            tools: { 'core:files:write_file': 'ask' },
-          },
+          tools: { sources: {}, tools: { 'core:files:write_file': 'ask' } },
         },
         [
           {
@@ -33,21 +29,31 @@ describe('alwaysAllowedProfilePatchOf', () => {
         ]
       )
     ).toEqual({
-      tools: {
-        sources: {},
-        tools: { 'core:files:write_file': 'allow' },
-        commandIds: [],
-      },
+      tools: { sources: {}, tools: { 'core:files:write_file': 'allow' } },
       projectPermissions: {
         book: { read: 'allow', write: 'allow', delete: 'ask' },
       },
     })
   })
 
-  it('changes nothing for a project no longer connected', () => {
+  it('raises the default access of a project the profile sets nothing for', () => {
     expect(
       alwaysAllowedProfilePatchOf(profile, [
-        { kind: 'project', projectId: 'gone', operations: ['write'] },
+        { kind: 'project', projectId: 'other', operations: ['write'] },
+      ])?.projectPermissions?.other
+    ).toEqual({ read: 'allow', write: 'allow', delete: 'ask' })
+  })
+
+  it('changes nothing for a project the profile has no access to', () => {
+    const denied = {
+      ...profile,
+      projectPermissions: {
+        closed: { read: 'deny', write: 'deny', delete: 'deny' },
+      } as const,
+    }
+    expect(
+      alwaysAllowedProfilePatchOf(denied, [
+        { kind: 'project', projectId: 'closed', operations: ['write'] },
       ])
     ).toBeUndefined()
   })

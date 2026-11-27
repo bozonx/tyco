@@ -43,15 +43,15 @@ const createLookup = (
 ): OperationLookup => ({ get: (id) => tools[id] })
 
 const profileSettings = (
-  patch: { commandIds?: string[] } = {}
+  patch: { commandIds?: string[]; isOff?: boolean } = {}
 ): ProfileToolSettings => ({
-  sources: {},
+  sources: patch.isOff ? { 'commands:commands': { isEnabled: false } } : {},
   tools: {},
-  commandIds: patch.commandIds ?? ['cmd-1'],
+  pickedCommandIds: patch.commandIds ?? ['cmd-1'],
 })
 
 describe('command-tools', () => {
-  it('returns no tools when the profile picked no command', async () => {
+  it('offers every command when the profile picked none', async () => {
     const provider = createCommandToolProvider({
       commands: () => [mockCommand()],
       operations: createLookup(),
@@ -59,10 +59,10 @@ describe('command-tools', () => {
 
     expect(
       await provider.tools({ ...toolContext('p1'), modelId: 'm1' })
-    ).toEqual([])
+    ).toHaveLength(1)
   })
 
-  it('returns no tools when no commandIds are selected', async () => {
+  it('offers nothing with the commands off or none picked', async () => {
     const provider = createCommandToolProvider({
       commands: () => [mockCommand()],
       operations: createLookup(),
@@ -77,7 +77,7 @@ describe('command-tools', () => {
 
     expect(
       await provider.tools({
-        ...toolContext('p1', profileSettings({ commandIds: [] })),
+        ...toolContext('p1', profileSettings({ isOff: true })),
         modelId: 'm1',
       })
     ).toEqual([])

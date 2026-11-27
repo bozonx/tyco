@@ -4,13 +4,13 @@ import type { ProfileMemoryTopic } from '@tyco/shared'
 /** A refresh cannot restore topics after disabling memory or changing profile. */
 export function createMemoryTopicsModel(deps: {
   list: (profileId: string) => Promise<ProfileMemoryTopic[]>
-  clear: (profileId: string) => Promise<unknown>
+  deleteFile: (profileId: string, file: string) => Promise<unknown>
   reportError: (error: unknown) => void
-  onCleared: () => void
+  onDeleted: (file: string) => void
 }) {
   const topics = ref<ProfileMemoryTopic[]>([])
   const isLoading = ref(false)
-  const isClearing = ref(false)
+  const isDeleting = ref(false)
   let revision = 0
   let isDisposed = false
   function reset() {
@@ -34,21 +34,21 @@ export function createMemoryTopicsModel(deps: {
       if (request === revision) isLoading.value = false
     }
   }
-  async function clearMemory(profileId: string) {
-    if (isDisposed || isClearing.value) return
-    reset()
+  /** Deletes one file, then lists the files again */
+  async function deleteFile(profileId: string, file: string) {
+    if (isDisposed || isDeleting.value) return
     const request = revision
-    isClearing.value = true
+    isDeleting.value = true
     try {
-      await deps.clear(profileId)
+      await deps.deleteFile(profileId, file)
       if (!isDisposed && request === revision) {
-        deps.onCleared()
+        deps.onDeleted(file)
         await loadTopics(profileId)
       }
     } catch (error) {
       if (!isDisposed && request === revision) deps.reportError(error)
     } finally {
-      isClearing.value = false
+      isDeleting.value = false
     }
   }
   function dispose() {
@@ -58,10 +58,10 @@ export function createMemoryTopicsModel(deps: {
   return {
     topics,
     isLoading,
-    isClearing,
+    isDeleting,
     reset,
     loadTopics,
-    clearMemory,
+    deleteFile,
     dispose,
   }
 }

@@ -305,8 +305,11 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     )
   }
 
-  const clearMemory = async (profileId: string) => {
-    resultOrThrow(await call('clear_ai_profile_memory', { profileId }))
+  /** Deletes one memory file; `core.md` is reset instead */
+  const deleteMemoryFile = async (profileId: string, file: string) => {
+    resultOrThrow(
+      await call('delete_ai_profile_memory_file', { profileId, file })
+    )
   }
 
   const undoMemory = async (
@@ -372,7 +375,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     listMemoryTopics,
     readMemory,
     writeMemory,
-    clearMemory,
+    deleteMemoryFile,
     undoMemory,
     // Projects
     getProject: projectsModel.getProject,

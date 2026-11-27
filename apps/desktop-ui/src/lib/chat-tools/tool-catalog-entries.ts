@@ -75,19 +75,3 @@ export const TOOL_POLICY_LABEL_KEYS: Record<ToolPolicy, string> = {
   ask: 'settings.accessAsk',
   allow: 'settings.accessAllow',
 }
-
-/** About four characters a token: what describing a tool costs the context */
-const CHARACTERS_PER_TOKEN = 4
-
-/** A rough size of a tool's description to the model, in tokens */
-export function estimateToolTokens(tool: {
-  name: string
-  description: string
-  inputSchema?: unknown
-}): number {
-  const characters =
-    tool.name.length +
-    tool.description.length +
-    (tool.inputSchema ? JSON.stringify(tool.inputSchema).length : 0)
-  return Math.ceil(characters / CHARACTERS_PER_TOKEN)
-}

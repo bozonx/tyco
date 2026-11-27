@@ -25,23 +25,6 @@
           <span class="memory-topics-title">
             {{ t('settings.profileMemoryFiles') }}
           </span>
-          <div class="memory-header-actions">
-            <Button
-              size="xs"
-              variant="neutral"
-              icon="mdi:trash-can-outline"
-              :disabled="
-                isLoading ||
-                isClearing ||
-                isSaving ||
-                isApplying ||
-                topics.length === 0
-              "
-              @click="isConfirmClearOpen = true"
-            >
-              {{ t('settings.profileMemoryClear') }}
-            </Button>
-          </div>
         </div>
 
         <StateMessage
@@ -67,12 +50,6 @@
           <SettingsEntityItem
             v-for="topic in topics"
             :key="topic.file"
-            :icon="
-              topic.file === 'core.md'
-                ? 'mdi:brain'
-                : 'mdi:file-document-outline'
-            "
-            :icon-tone="topic.file === 'core.md' ? 'primary' : 'secondary'"
             :title="topicTitle(topic)"
             :description="topicDescription(topic)"
           >
@@ -90,16 +67,24 @@
                   icon="mdi:auto-fix"
                   :label="t('settings.profileMemoryCompact')"
                   :title="t('settings.profileMemoryCompact')"
-                  :disabled="isCompacting || isApplying || isClearing"
-                  @click="startCompaction(topic.file)"
+                  :disabled="isCompacting || isApplying || isDeleting"
+                  @click="fileToCompact = topic.file"
                 />
                 <IconButton
                   size="sm"
                   icon="mdi:square-edit-outline"
                   :label="t('settings.profileMemoryEditFile')"
                   :title="t('settings.profileMemoryEditFile')"
-                  :disabled="isSaving || isApplying || isClearing"
+                  :disabled="isSaving || isApplying || isDeleting"
                   @click="openEditor(topic.file)"
+                />
+                <IconButton
+                  size="sm"
+                  icon="mdi:trash-can-outline"
+                  :label="deleteLabel(topic.file)"
+                  :title="deleteLabel(topic.file)"
+                  :disabled="isSaving || isApplying || isDeleting"
+                  @click="fileToDelete = topic.file"
                 />
               </div>
             </template>
@@ -131,7 +116,7 @@
           :disabled="
             isCompacting || isApplying || isSaving || !editorContent.trim()
           "
-          @click="compactCurrentEditor"
+          @click="fileToCompact = editingFile"
         >
           {{ t('settings.profileMemoryCompact') }}
         </Button>
@@ -143,7 +128,7 @@
           variant="primary"
           icon="mdi:content-save-outline"
           :loading="isSaving"
-          :disabled="isApplying || isClearing"
+          :disabled="isApplying || isDeleting"
           @click="saveEditor"
         >
           {{ t('common.save') }}
@@ -182,7 +167,7 @@
             variant="primary"
             icon="mdi:check"
             :loading="isApplying"
-            :disabled="isSaving || isClearing"
+            :disabled="isSaving || isDeleting"
             @click="applyCompaction"
           >
             {{ t('settings.profileMemoryApplyCompact') }}
@@ -191,15 +176,28 @@
       </div>
     </BaseDialog>
 
-    <!-- Clear Confirm Modal -->
     <ConfirmModal
-      :open="isConfirmClearOpen"
-      :title="t('settings.profileMemoryClearTitle')"
-      :message="t('settings.profileMemoryClearConfirm')"
-      :confirm-text="t('settings.profileMemoryClear')"
-      danger
-      @confirm="handleClearMemory"
-      @cancel="isConfirmClearOpen = false"
+      :open="Boolean(fileToCompact)"
+      :title="t('settings.profileMemoryCompactConfirmTitle')"
+      :message="
+        t('settings.profileMemoryCompactConfirm', { file: fileToCompact })
+      "
+      :confirm-text="t('settings.profileMemoryCompact')"
+      @confirm="confirmCompaction"
+      @cancel="fileToCompact = ''"
+    />
+
+    <ConfirmModal
+      :open="Boolean(fileToDelete)"
+      :title="deleteLabel(fileToDelete)"
+      :message="
+        fileToDelete === 'core.md'
+          ? t('settings.profileMemoryResetCoreConfirm')
+          : t('settings.profileMemoryDeleteConfirm', { file: fileToDelete })
+      "
+      :confirm-text="deleteLabel(fileToDelete)"
+      @confirm="handleDeleteFile"
+      @cancel="fileToDelete = ''"
     />
   </SettingsSection>
 </template>
@@ -279,11 +277,13 @@ function handleModeChange(value: number | string | undefined) {
 
 const topicsModel = createMemoryTopicsModel({
   list: (id) => aiProfilesStore.listMemoryTopics(id),
-  clear: (id) => aiProfilesStore.clearMemory(id),
+  deleteFile: (id, file) => aiProfilesStore.deleteMemoryFile(id, file),
   reportError: toastError,
-  onCleared: () => toastKey('settings.profileMemoryClearSuccess', 'info'),
+  onDeleted: (file) => {
+    if (editingFile.value === file) editor.closeEditor()
+  },
 })
-const { topics, isLoading, isClearing } = topicsModel
+const { topics, isLoading, isDeleting } = topicsModel
 function loadTopics() {
   if (props.profile.memoryMode === 'off') {
     topicsModel.reset()
@@ -398,7 +398,8 @@ watch(
     editor.closeEditor()
     compaction.closeDiffModal()
     topicsModel.reset()
-    isConfirmClearOpen.value = false
+    fileToDelete.value = ''
+    fileToCompact.value = ''
     void loadTopics()
   }
 )
@@ -422,14 +423,34 @@ function resolveCompactionModelId(): string | undefined {
   )
 }
 
-const isConfirmClearOpen = ref(false)
+/** The file waiting for the user to confirm its deletion */
+const fileToDelete = ref('')
+/** The file waiting for the user to confirm its compaction */
+const fileToCompact = ref('')
 void loadTopics()
-async function handleClearMemory() {
-  if (isSaving.value || isApplying.value || isClearing.value) return
-  isConfirmClearOpen.value = false
-  editor.closeEditor()
-  compaction.closeDiffModal()
-  await topicsModel.clearMemory(props.profile.id)
+
+/** `core.md` always exists: it is cleared, a topic file is deleted */
+const deleteLabel = (file: string) =>
+  file === 'core.md'
+    ? t('settings.profileMemoryResetCore')
+    : t('settings.profileMemoryDeleteFile')
+
+function confirmCompaction() {
+  const file = fileToCompact.value
+  fileToCompact.value = ''
+  if (!file) return
+  // the open editor compacts what it shows, unsaved changes too
+  if (isEditorOpen.value && editingFile.value === file)
+    void compactCurrentEditor()
+  else void startCompaction(file)
+}
+
+async function handleDeleteFile() {
+  const file = fileToDelete.value
+  fileToDelete.value = ''
+  if (!file || isSaving.value || isApplying.value) return
+  if (compactingFile.value === file) compaction.closeDiffModal()
+  await topicsModel.deleteFile(props.profile.id, file)
 }
 </script>
 
@@ -452,12 +473,6 @@ async function handleClearMemory() {
   font-weight: 500;
   font-size: var(--text-control);
   color: var(--app-text-muted);
-}
-
-.memory-header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
 }
 
 .memory-topics-list {

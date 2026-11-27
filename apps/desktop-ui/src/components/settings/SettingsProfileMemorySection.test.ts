@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
   listMemoryTopics: vi.fn().mockResolvedValue([]),
   readMemory: vi.fn(),
   writeMemory: vi.fn(),
-  clearMemory: vi.fn(),
+  deleteMemoryFile: vi.fn(),
   runLlm: vi.fn(),
   toastKey: vi.fn(),
   toastError: vi.fn(),
@@ -28,7 +28,7 @@ vi.mock('../../stores/ai-profiles', () => ({
     listMemoryTopics: mocks.listMemoryTopics,
     readMemory: mocks.readMemory,
     writeMemory: mocks.writeMemory,
-    clearMemory: mocks.clearMemory,
+    deleteMemoryFile: mocks.deleteMemoryFile,
   }),
 }))
 
@@ -192,7 +192,7 @@ describe('SettingsProfileMemorySection', () => {
     })
 
     await vi.waitFor(() => {
-      expect(wrapper.findAll('.icon-btn')).toHaveLength(2)
+      expect(wrapper.findAll('.icon-btn')).toHaveLength(3)
     })
 
     const editBtn = wrapper.find('[data-icon="mdi:square-edit-outline"]')
@@ -235,9 +235,10 @@ describe('SettingsProfileMemorySection', () => {
     expect(wrapper.emitted('update:memoryMode')?.[0]).toEqual(['read-only'])
   })
 
-  it('opens confirm modal on clear button click and clears memory', async () => {
+  it('deletes one memory file after a confirmation', async () => {
     mocks.listMemoryTopics.mockResolvedValue([
       { file: 'core.md', title: 'Core', bytes: 10, updatedAt: 1000 },
+      { file: 'health.md', title: 'Health', bytes: 10, updatedAt: 1000 },
     ])
 
     const wrapper = mount(SettingsProfileMemorySection, {
@@ -247,44 +248,42 @@ describe('SettingsProfileMemorySection', () => {
           SettingsSection: { template: '<div><slot /></div>' },
           FieldRow: { template: '<div><slot /></div>' },
           FieldSelect: true,
-          SettingsEntityItem: true,
-          Button: {
-            props: ['disabled'],
+          SettingsEntityItem: {
+            template: '<div class="entity-item"><slot name="actions" /></div>',
+          },
+          Badge: true,
+          IconButton: {
+            props: ['icon', 'disabled'],
             template:
-              '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
+              '<button class="icon-btn" :data-icon="icon" :disabled="disabled" @click="$emit(\'click\')"></button>',
           },
           ConfirmModal: {
-            props: ['open'],
+            props: ['open', 'message'],
             template:
-              '<div v-if="open" class="confirm-modal"><button class="confirm" @click="$emit(\'confirm\')">OK</button></div>',
+              '<div v-if="open" class="confirm-modal">{{ message }}<button class="confirm" @click="$emit(\'confirm\')">OK</button></div>',
           },
           BaseDialog: true,
+          Diff: true,
         },
       },
     })
 
     await vi.waitFor(() => {
-      expect(mocks.listMemoryTopics).toHaveBeenCalled()
+      expect(wrapper.findAll('.entity-item')).toHaveLength(2)
     })
+    // there is no button that clears the whole memory at once
+    expect(wrapper.text()).not.toContain('settings.profileMemoryClear')
+    const deleteButtons = wrapper.findAll('[data-icon="mdi:trash-can-outline"]')
+    await deleteButtons[1]!.trigger('click')
+    expect(mocks.deleteMemoryFile).not.toHaveBeenCalled()
+    expect(wrapper.find('.confirm-modal').text()).toContain(
+      'settings.profileMemoryDeleteConfirm:health.md'
+    )
 
-    const findClearButton = () =>
-      wrapper
-        .findAll('button')
-        .find((b) => b.text().includes('settings.profileMemoryClear'))
-    // the button is enabled once the topics have loaded
-    await vi.waitFor(() => {
-      expect(findClearButton()?.attributes('disabled')).toBeUndefined()
-    })
-    await findClearButton()?.trigger('click')
-
-    expect(wrapper.find('.confirm-modal').exists()).toBe(true)
-
-    // Confirm clear
     await wrapper.find('.confirm').trigger('click')
-    expect(mocks.clearMemory).toHaveBeenCalledWith('test-profile')
-    expect(mocks.toastKey).toHaveBeenCalledWith(
-      'settings.profileMemoryClearSuccess',
-      'info'
+    expect(mocks.deleteMemoryFile).toHaveBeenCalledWith(
+      'test-profile',
+      'health.md'
     )
   })
 
@@ -313,7 +312,11 @@ describe('SettingsProfileMemorySection', () => {
           },
           Button: true,
           BaseDialog: true,
-          ConfirmModal: true,
+          ConfirmModal: {
+            props: ['open'],
+            template:
+              '<div v-if="open" class="confirm-modal"><button class="confirm" @click="$emit(\'confirm\')">OK</button></div>',
+          },
           Diff: true,
         },
       },
@@ -325,6 +328,9 @@ describe('SettingsProfileMemorySection', () => {
 
     const compactBtn = wrapper.findAll('.icon-btn')[0]
     await compactBtn.trigger('click')
+    // the model runs only once the user confirms
+    expect(mocks.runLlm).not.toHaveBeenCalled()
+    await wrapper.find('.confirm').trigger('click')
 
     expect(mocks.runLlm).toHaveBeenCalledWith(
       'chat',

@@ -16,7 +16,10 @@ import {
   toolCallContextOf,
   toolKey,
   toolStateIn,
-  withCommandSelected,
+  withPickedCommands,
+  withSourceState,
+  sourceState,
+  isCommandPicked,
   withSourceEnabled,
   withSourceAvailable,
   withToolAvailable,
@@ -27,7 +30,7 @@ import {
 
 const settings = (
   patch: Partial<ProfileToolSettings> = {}
-): ProfileToolSettings => ({ sources: {}, tools: {}, commandIds: [], ...patch })
+): ProfileToolSettings => ({ sources: {}, tools: {}, ...patch })
 
 const webFetch: CatalogTool = {
   source: WEB_SOURCE,
@@ -67,7 +70,7 @@ describe('tool catalog', () => {
     ).toBe('ask')
   })
 
-  it('has the core and plugin sources on, commands picked', () => {
+  it('has the core, plugin and command sources on, every command too', () => {
     expect(effectiveToolState(undefined, undefined, webFetch)).toBe('allow')
     expect(
       effectiveToolState(undefined, undefined, plugin(false, 'read'))
@@ -77,14 +80,23 @@ describe('tool catalog', () => {
       name: 'notes',
       risk: 'external',
     } as const
-    expect(effectiveToolState(undefined, settings(), command)).toBe('off')
+    expect(effectiveToolState(undefined, settings(), command)).toBe('ask')
     expect(
       effectiveToolState(
         undefined,
-        settings({ commandIds: ['notes'] }),
+        settings({ pickedCommandIds: ['other'] }),
+        command
+      )
+    ).toBe('off')
+    expect(
+      effectiveToolState(
+        undefined,
+        settings({ pickedCommandIds: ['notes'] }),
         command
       )
     ).toBe('ask')
+    const off = withSourceEnabled(undefined, COMMANDS_SOURCE, false)
+    expect(effectiveToolState(undefined, off, command)).toBe('off')
   })
 
   it('follows the profile, then the catalog', () => {
@@ -105,7 +117,7 @@ describe('tool catalog', () => {
     ).toBe('off')
   })
 
-  it('switches the file tools only as a whole source', () => {
+  it('leaves the file tools to the project permissions', () => {
     const readFile = {
       source: FILES_SOURCE,
       name: 'read_file',
@@ -115,7 +127,10 @@ describe('tool catalog', () => {
     const asking = settings({ tools: { 'core:files:read_file': 'ask' } })
     expect(effectiveToolState(undefined, asking, readFile)).toBe('allow')
     const off = withSourceEnabled(undefined, FILES_SOURCE, false)
-    expect(effectiveToolState(undefined, off, readFile)).toBe('off')
+    expect(effectiveToolState(undefined, off, readFile)).toBe('allow')
+    // switched off everywhere, they are off in every profile
+    const catalog = { sources: { 'core:files': { isEnabled: false } } }
+    expect(effectiveToolState(catalog, undefined, readFile)).toBe('off')
   })
 
   it('keeps only the differences from the defaults', () => {
@@ -124,11 +139,28 @@ describe('tool catalog', () => {
     const changed = withToolState(undefined, webFetch, 'ask')
     expect(changed.tools).toEqual({ 'core:web:web_fetch': 'ask' })
     expect(withToolState(changed, webFetch, 'allow').tools).toEqual({})
-    expect(withCommandSelected(undefined, 'a', true).commandIds).toEqual(['a'])
-    expect(
-      withCommandSelected(settings({ commandIds: ['a', 'b'] }), 'a', false)
-        .commandIds
-    ).toEqual(['b'])
+    const picked = withPickedCommands(undefined, ['a'])
+    expect(picked.pickedCommandIds).toEqual(['a'])
+    expect(isCommandPicked(picked, 'b')).toBe(false)
+    const all = withPickedCommands(picked, undefined)
+    expect('pickedCommandIds' in all).toBe(false)
+    expect(isCommandPicked(all, 'b')).toBe(true)
+  })
+
+  it('sets a whole source and tells its shared state', () => {
+    const webSearch = { ...webFetch, name: 'web_search' } as const
+    const tools = [webFetch, webSearch]
+    expect(sourceState(undefined, undefined, tools)).toBe('allow')
+    const asking = withSourceState(undefined, tools, 'ask')
+    expect(sourceState(undefined, asking, tools)).toBe('ask')
+    const mixed = withToolState(asking, webSearch, 'allow')
+    expect(sourceState(undefined, mixed, tools)).toBe('mixed')
+    const off = withSourceState(mixed, tools, 'off')
+    expect(sourceState(undefined, off, tools)).toBe('off')
+    // switching it on again keeps no stale "off"
+    const back = withSourceState(off, tools, 'allow')
+    expect(back?.sources).toEqual({})
+    expect(back?.tools).toEqual({})
   })
 
   it('gives "Ask AI" the web by its switch and the helpers only', () => {

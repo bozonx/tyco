@@ -40,7 +40,7 @@
             {{ t('settings.conflictKeepMine') }}
           </Button>
         </InlineNotice>
-        <SettingsSection :title="t('settings.aiEntityGeneral')">
+        <SettingsSection>
           <FieldRow
             :label="t('settings.projectName')"
             :error="name.trim() ? undefined : t('settings.projectNameRequired')"
@@ -109,7 +109,9 @@
             </template>
             <div class="project-folder">
               <PathDisplay
-                :path="isExternal ? targetPath : `projects/${projectId}`"
+                :path="
+                  isExternal ? targetPath : `projects/${splitRef(projectId).id}`
+                "
                 :placeholder="
                   isStored
                     ? t('settings.projectFolderNotSetOnDevice')
@@ -166,7 +168,7 @@
               >
                 <FieldCheckbox
                   :aria-label="p.name"
-                  :model-value="Boolean(pendingAccess[p.id])"
+                  :model-value="!pendingDenied.has(p.id)"
                   @update:model-value="togglePendingAccess(p.id, $event)"
                 />
               </SettingsEntityItem>
@@ -178,7 +180,6 @@
                 v-for="entry in accessEntries"
                 :key="entry.id"
                 :title="entry.title"
-                :description="entry.warning"
                 openable
                 open-target="title"
                 @open="navigate(profileTab(entry.id))"
@@ -236,14 +237,14 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSettingsDraft } from '../../composables/use-settings-draft'
 import useToast from '../../composables/use-toast'
 import type { ConvertProjectOptions } from '../../lib/ai-profiles/ai-projects-model'
-import { vaultOfRef } from '../../lib/ai-profiles/profile-ref'
+import { splitRef, vaultOfRef } from '../../lib/ai-profiles/profile-ref'
 import {
   DEFAULT_PROJECT_ACCESS_LEVEL,
   PROJECT_ACCESS_LABEL_KEYS,
   type ProjectAccessLevel,
-  hasFileToolsOff,
+  effectiveProjectAccessLevel,
+  effectiveProjectPermission,
   isDeleteAllowed,
-  projectAccessLevelOf,
 } from '../../lib/ai-profiles/project-access'
 import { createProjectEditor } from '../../lib/ai-profiles/project-editor'
 import {
@@ -364,28 +365,28 @@ const ACCESS_LEVEL_TONES: Record<
   'neutral' | 'accent' | 'success'
 > = { read: 'neutral', readWrite: 'accent', full: 'success', custom: 'neutral' }
 
-/** The access a new project gives on creation, by profile */
-const pendingAccess = ref<Record<string, ProjectAccessLevel>>({})
+/**
+ * The profiles a new project gives no access on creation; the others have the
+ * default access, as in every project of their workspace
+ */
+const pendingDenied = ref<ReadonlySet<string>>(new Set())
 
 function accessLevelOf(profile: {
   id: string
   projectPermissions: Record<string, ProjectPermission>
 }): ProjectAccessLevel | undefined {
   return isNew.value
-    ? pendingAccess.value[profile.id]
-    : projectAccessLevelOf(profile.projectPermissions[props.projectId])
+    ? pendingDenied.value.has(profile.id)
+      ? undefined
+      : DEFAULT_PROJECT_ACCESS_LEVEL
+    : effectiveProjectAccessLevel(profile.projectPermissions, props.projectId)
 }
 
 function togglePendingAccess(profileId: string, enabled: boolean) {
-  if (enabled) {
-    pendingAccess.value = {
-      ...pendingAccess.value,
-      [profileId]: DEFAULT_PROJECT_ACCESS_LEVEL,
-    }
-  } else {
-    const { [profileId]: _removed, ...rest } = pendingAccess.value
-    pendingAccess.value = rest
-  }
+  const denied = new Set(pendingDenied.value)
+  if (enabled) denied.delete(profileId)
+  else denied.add(profileId)
+  pendingDenied.value = denied
 }
 
 /** The profiles with access, as the profiles set it */
@@ -393,7 +394,10 @@ const accessEntries = computed(() =>
   profiles.value.flatMap((profile) => {
     const level = accessLevelOf(profile)
     if (!level) return []
-    const permission = profile.projectPermissions[props.projectId]
+    const permission = effectiveProjectPermission(
+      profile.projectPermissions,
+      props.projectId
+    )
     return [
       {
         id: profile.id,
@@ -403,9 +407,6 @@ const accessEntries = computed(() =>
             ? `${t(PROJECT_ACCESS_LABEL_KEYS[level])} · ${t('settings.accessDeleteWithoutAsking')}`
             : t(PROJECT_ACCESS_LABEL_KEYS[level]),
         tone: ACCESS_LEVEL_TONES[level],
-        warning: hasFileToolsOff(profile)
-          ? t('settings.projectAccessFileToolsOff')
-          : undefined,
       },
     ]
   })
@@ -480,14 +481,14 @@ async function handleCreate() {
     const created = await aiProfilesStore.createProject(editor.fields())
     // the project is there either way: a failed grant is reported, not undone
     const grants = await Promise.allSettled(
-      Object.entries(pendingAccess.value).map(([profileId, level]) =>
-        aiProfilesStore.setProjectAccess(profileId, created.id, level)
+      [...pendingDenied.value].map((profileId) =>
+        aiProfilesStore.setProjectAccess(profileId, created.id, undefined)
       )
     )
     for (const grant of grants) {
       if (grant.status === 'rejected') toastError(grant.reason)
     }
-    pendingAccess.value = {}
+    pendingDenied.value = new Set()
     navigate(projectTab(created.id))
   })
 }

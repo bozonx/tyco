@@ -113,6 +113,15 @@ describe('SettingsProfileDetailTab.vue', () => {
           item.attributes('title')?.includes(label)
       )!
 
+  it('shows the profile folder relative to its workspace', () => {
+    store.profiles[0]!.id = 'workspace:writer'
+    const wrapper = mountTab('workspace:writer')
+
+    expect(wrapper.get('.path-display-text').attributes('title')).toBe(
+      'profiles/writer'
+    )
+  })
+
   it('creates a profile and opens it', async () => {
     const wrapper = mountTab('new')
     await wrapper.get('input').setValue('Editor')
@@ -128,7 +137,7 @@ describe('SettingsProfileDetailTab.vue', () => {
     expect(context.navigate).toHaveBeenCalledWith('ai-profile:created')
   })
 
-  it('connects projects and switches the project files', async () => {
+  it('gives every project the default access and changes it', async () => {
     store.projects.push(
       {
         id: 'docs',
@@ -142,47 +151,35 @@ describe('SettingsProfileDetailTab.vue', () => {
     store.profiles[0]!.projectPermissions = {
       docs: { read: 'allow', write: 'deny', delete: 'deny' },
     }
-    store.profiles[0]!.tools = {
-      sources: { 'core:files': { isEnabled: false } },
-      tools: {},
-      commandIds: [],
-    }
     const wrapper = mountTab()
     await flushPromises()
-    const filesSwitch = wrapper
-      .findAllComponents({ name: 'FieldSwitch' })
-      .find((item) => item.props('label') === 'settings.projectFilesSwitch')!
-    expect(filesSwitch.props('modelValue')).toBe(false)
-    // the file tools are not listed one by one with the other tools
+    // the projects decide on the files: there is no switch for them
+    expect(
+      wrapper
+        .findAllComponents({ name: 'FieldSwitch' })
+        .some((item) => item.props('label') === 'settings.projectFilesSwitch')
+    ).toBe(false)
     expect(wrapper.text()).not.toContain('chatTools.files.group')
     const list = wrapper.findComponent({ name: 'SettingsAccessList' })
     expect(list.props('entries')).toEqual([
       expect.objectContaining({ id: 'docs', level: 'read' }),
+      expect.objectContaining({ id: 'site', level: 'readWrite' }),
     ])
-    expect(list.props('candidates')).toEqual([
-      expect.objectContaining({ id: 'site' }),
-    ])
-    await list.vm.$emit('change', 'site', 'full')
+    expect(list.props('candidates')).toEqual([])
+    await list.vm.$emit('change', 'site', undefined)
     await flushPromises()
     expect(store.updateProfile).toHaveBeenLastCalledWith(
       'writer',
       {
         projectPermissions: {
           docs: { read: 'allow', write: 'deny', delete: 'deny' },
-          site: { read: 'allow', write: 'allow', delete: 'ask' },
+          site: { read: 'deny', write: 'deny', delete: 'deny' },
         },
       },
       undefined
     )
     await list.vm.$emit('open', 'docs')
     expect(context.navigate).toHaveBeenCalledWith('ai-project:docs')
-    await filesSwitch.vm.$emit('update:modelValue', true)
-    await flushPromises()
-    expect(store.updateProfile).toHaveBeenLastCalledWith(
-      'writer',
-      { tools: { sources: {}, tools: {}, commandIds: [] } },
-      undefined
-    )
   })
 
   it('shows the folder of an existing profile', async () => {

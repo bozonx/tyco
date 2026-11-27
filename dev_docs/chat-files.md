@@ -87,9 +87,10 @@ The file tools get their roots from the conversation, resolved in Rust
 
 - general: `attachments/` of the conversation, read-only;
 - profile: `attachments/`, plus `workspace/` (everything allowed, deleting
-  too) and the connected projects by their `read`, `write` and `delete`
-  permissions when the profile's file source is on. A profile does not set
-  the file tools one by one: only the catalog switches one off everywhere;
+  too) and every project of its workspace by its `read`, `write` and `delete`
+  permissions, the default access where the profile stores none. A profile
+  has no switch for the file tools: only the catalog switches one off
+  everywhere;
 - AI command: no files at all;
 - memory stays a separate capability of a profile.
 

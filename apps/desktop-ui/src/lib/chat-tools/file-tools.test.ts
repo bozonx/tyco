@@ -101,11 +101,13 @@ describe('file-tools', () => {
     expect(stricterAccess()).toBe('allow')
   })
 
-  it('offers nothing to "Ask AI" or a profile with the group off', async () => {
+  it('offers nothing to "Ask AI"; a profile has no switch for its files', async () => {
     const { provider, deps } = setup()
     expect(await provider.tools(context(settings(), null))).toEqual([])
-    expect(await provider.tools(context(settings(false)))).toEqual([])
     expect(deps.listRoots).not.toHaveBeenCalled()
+    expect(
+      (await provider.tools(context(settings(false)))).length
+    ).toBeGreaterThan(0)
   })
 
   it('offers only reading the attachments without the files group', async () => {

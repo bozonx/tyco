@@ -48,10 +48,7 @@
           {{ t('settings.conflictKeepMine') }}
         </Button>
       </InlineNotice>
-      <SettingsSection
-        :title="t('settings.aiEntityGeneral')"
-        :info="t('settings.profileGenerationHint')"
-      >
+      <SettingsSection>
         <FieldRow
           :label="t('settings.profileName')"
           :error="name.trim() ? undefined : t('settings.profileNameRequired')"
@@ -63,7 +60,7 @@
           :info="t('settings.vaultFolderFixedHint')"
         >
           <PathDisplay
-            :path="`profiles/${profile.id}`"
+            :path="`profiles/${splitRef(profile.id).id}`"
             can-open
             :open-label="t('settings.openProfileFolder')"
             @open="handleOpenFolder"
@@ -76,49 +73,29 @@
         :tools="profile.tools"
         :catalog="desktopStore.userConfig?.tools"
         @update="changeSettings({ tools: $event })"
-      >
-        <SettingsEntityItem
-          icon="mdi:console-line"
-          icon-tone="secondary"
-          :title="t('chatTools.commands.group')"
-          :info="t('chatTools.commands.groupHint')"
-        >
-          <Badge tone="muted">
-            {{ t('toolPermissions.contextTokens', { count: commandTokens }) }}
-          </Badge>
-        </SettingsEntityItem>
-        <div class="pt-2">
-          <SettingsProfileCommandTools
-            :commands="commands"
-            :selected-ids="profile.tools?.commandIds ?? []"
-            :current-platform="desktopStore.userData?.platform"
-            @toggle="toggleProfileCommand"
-            @update-selected="setProfileCommands"
-          />
-        </div>
-      </SettingsProfileToolsSection>
+      />
+
+      <SettingsProfileCommandTools
+        :commands="commands"
+        :tools="profile.tools"
+        :catalog="desktopStore.userConfig?.tools"
+        :current-platform="desktopStore.userData?.platform"
+        @update="changeSettings({ tools: $event })"
+      />
 
       <SettingsSection
         :title="t('settings.projectsTitle')"
         :info="t('settings.projectPermissionsHint')"
       >
-        <template #actions>
-          <Badge v-if="!areFilesAvailable" tone="muted">
+        <template v-if="!areFilesAvailable" #actions>
+          <Badge tone="muted">
             {{ t('toolPermissions.sourceOffEverywhere') }}
           </Badge>
-          <FieldSwitch
-            :label="t('settings.projectFilesSwitch')"
-            :disabled="!areFilesAvailable"
-            :model-value="areFilesAvailable && !hasFileToolsOff(profile)"
-            @update:model-value="setFilesEnabled"
-          />
         </template>
         <div
           class="settings-section-content"
-          :class="{
-            'opacity-60': !areFilesAvailable || hasFileToolsOff(profile),
-          }"
-          :inert="!areFilesAvailable || hasFileToolsOff(profile)"
+          :class="{ 'opacity-60': !areFilesAvailable }"
+          :inert="!areFilesAvailable"
         >
           <SettingsProfileProjectAccess
             :projects="projects"
@@ -188,23 +165,17 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSettingsDraft } from '../../composables/use-settings-draft'
 import useToast from '../../composables/use-toast'
 import { createProfileEditor } from '../../lib/ai-profiles/profile-editor'
-import { vaultOfRef } from '../../lib/ai-profiles/profile-ref'
+import { splitRef, vaultOfRef } from '../../lib/ai-profiles/profile-ref'
 import {
   type ProjectAccessLevel,
-  hasFileToolsOff,
   withProjectAccess,
   withProjectDeleteAllowed,
 } from '../../lib/ai-profiles/project-access'
 import {
   FILES_SOURCE,
   isSourceAvailable,
-  withCommandSelected,
-  withSourceEnabled,
 } from '../../lib/chat-tools/tool-catalog'
-import {
-  CORE_CATALOG,
-  estimateToolTokens,
-} from '../../lib/chat-tools/tool-catalog-entries'
+import { CORE_CATALOG } from '../../lib/chat-tools/tool-catalog-entries'
 import {
   AI_OVERVIEW_TAB,
   NEW_ENTITY_ID,
@@ -217,12 +188,10 @@ import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
-import FieldSwitch from '../common/FieldSwitch.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import PathDisplay from '../common/PathDisplay.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
-import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsProfileCommandTools from './SettingsProfileCommandTools.vue'
 import SettingsProfileMemorySection from './SettingsProfileMemorySection.vue'
 import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
@@ -240,7 +209,7 @@ const desktopStore = useDesktopStore()
 const commands = computed(() => desktopStore.userConfig?.commands ?? [])
 
 const pluginToolSources = usePluginToolSources()
-// the file tools are switched with the projects, which decide on them
+// the projects decide on the file tools: they have no switch of their own
 const toolSources = computed(() => [
   ...CORE_CATALOG.filter((entry) => entry.source !== FILES_SOURCE),
   ...pluginToolSources.value,
@@ -249,49 +218,6 @@ const toolSources = computed(() => [
 const areFilesAvailable = computed(() =>
   isSourceAvailable(desktopStore.userConfig?.tools, FILES_SOURCE)
 )
-
-function setFilesEnabled(isEnabled: boolean) {
-  void changeSettings({
-    tools: withSourceEnabled(profile.value?.tools, FILES_SOURCE, isEnabled),
-  })
-}
-
-function toggleProfileCommand(commandId: string, enabled: boolean) {
-  // the ids of removed commands go with any change of the list
-  const known = new Set(commands.value.map((command) => command.id))
-  const tools = withCommandSelected(profile.value?.tools, commandId, enabled)
-  void changeSettings({
-    tools: {
-      ...tools,
-      commandIds: tools.commandIds.filter((id) => known.has(id)),
-    },
-  })
-}
-
-function setProfileCommands(commandIds: string[]) {
-  void changeSettings({
-    tools: {
-      ...withCommandSelected(profile.value?.tools, '', false),
-      commandIds,
-    },
-  })
-}
-
-/** About how much of the context the picked commands take */
-const commandTokens = computed(() => {
-  const selected = new Set(profile.value?.tools?.commandIds ?? [])
-  return commands.value
-    .filter((command) => selected.has(command.id))
-    .reduce(
-      (total, command) =>
-        total +
-        estimateToolTokens({
-          name: command.id,
-          description: command.description,
-        }),
-      0
-    )
-})
 
 function setProjectDeleteAllowed(projectId: string, isAllowed: boolean) {
   if (!profile.value) return

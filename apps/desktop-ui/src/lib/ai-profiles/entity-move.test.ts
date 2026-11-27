@@ -21,18 +21,23 @@ describe('entity move', () => {
     ])
   })
 
-  it('lists the access a move takes away', () => {
+  it('lists the access a move takes away: by default every project', () => {
     const projects = [
       { id: 'project-a', name: 'A' },
       { id: 'project-b', name: 'B' },
+      { id: 'w:project-c', name: 'C' },
     ]
     const profile = {
       id: 'profile-x',
       name: 'X',
-      projectPermissions: { 'project-b': {} },
+      projectPermissions: {
+        'project-a': { read: 'deny', write: 'deny', delete: 'deny' },
+      } as const,
     }
     expect(projectsLostByProfile(profile, projects)).toEqual(['B'])
     expect(profilesLosingProject('project-b', [profile])).toEqual(['X'])
     expect(profilesLosingProject('project-a', [profile])).toEqual([])
+    // a project of another workspace was never in reach
+    expect(profilesLosingProject('w:project-c', [profile])).toEqual([])
   })
 })
