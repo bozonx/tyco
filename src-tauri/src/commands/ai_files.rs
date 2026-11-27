@@ -15,7 +15,7 @@ use crate::{
         Attachments, ConversationFiles,
     },
     services::ai_tools::permissions::ToolCallContext,
-    services::{ai_vault, chat_images::ChatImages, storage, storage::ChatScope},
+    services::{ai_workspace, chat_images::ChatImages, storage, storage::ChatScope},
     state::AppState,
 };
 
@@ -51,14 +51,14 @@ fn with_conversation_files<T>(
     };
     match profile_id {
         None => operation(&ConversationFiles::general(attachments).with_config(config)),
-        // a profile reaches the projects and files of its own vault only
+        // a profile reaches the projects and files of its own workspace only
         Some(profile_id) => {
-            let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-            // the folders and permissions are read under the vault lock; the
+            let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+            // the folders and permissions are read under the workspace lock; the
             // tool itself, which may read or search much, runs without it
-            ai_vault::with_projects_then(
+            ai_workspace::with_projects_then(
                 app,
-                vault_id,
+                workspace_id,
                 |dir, paths| {
                     ConversationFiles::load(dir, paths, profile_id, attachments)
                         .map(|files| files.with_config(config))
@@ -142,8 +142,8 @@ pub async fn save_chat_file_to_workspace(
     run_blocking(move || {
         let scope = ChatScope::from_profile_id(Some(profile_id.clone()));
         let bytes = storage::read_chat_file(&app, &scope, &file_id)?;
-        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
+        let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
             ConversationFiles::workspace(dir, profile_id)?.save_copy(&name, &bytes)
         })
     })

@@ -6,7 +6,7 @@ use crate::{
     errors::AppError,
     services::ai_tools::permissions::{self, ToolCallContext},
     services::ai_tools::web::{self, AiWebToolOutput, AiWebToolRequest, WebRuns},
-    services::ai_vault,
+    services::ai_workspace,
     services::secrets::{with_store, SecretStore},
     state::AppState,
 };
@@ -26,9 +26,9 @@ pub async fn run_ai_web_tool(
             if trimmed_id.is_empty() {
                 return Err(AppError::InvalidInput("Profile ID cannot be empty".into()));
             }
-            let (vault_id, profile_id) = ai_vault::split_ref(trimmed_id);
-            Some(ai_vault::with_vault(&app, vault_id, |dir| {
-                ai_vault::get_profile(dir, profile_id)
+            let (workspace_id, profile_id) = ai_workspace::split_ref(trimmed_id);
+            Some(ai_workspace::with_workspace(&app, workspace_id, |dir| {
+                ai_workspace::get_profile(dir, profile_id)
             })?)
         }
         None => None,

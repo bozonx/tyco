@@ -1,4 +1,4 @@
-import type { UserConfig, VaultChatHistory } from '@tyco/shared'
+import type { UserConfig, WorkspaceChatHistory } from '@tyco/shared'
 import { historyRetentionChoices } from '../history/history-retention'
 
 /**
@@ -11,15 +11,15 @@ type ChatHistorySettingsSource = Pick<UserConfig, 'chat'>
 
 /**
  * New chats are stored on disk, not only until the app quits. A profile chat
- * follows the settings of its workspace, `vaultHistory`, alone; "Ask AI" the
- * chat settings
+ * follows the settings of its workspace, `workspaceHistory`, alone; "Ask AI"
+ * the chat settings
  */
 export function isChatHistoryOnDisk(
   config: ChatHistorySettingsSource,
   profileId?: string | null,
-  vaultHistory?: VaultChatHistory
+  workspaceHistory?: WorkspaceChatHistory
 ): boolean {
-  if (profileId) return vaultHistory?.storage !== 'session'
+  if (profileId) return workspaceHistory?.storage !== 'session'
   return config.chat.history.storage !== 'session'
 }
 
@@ -36,8 +36,8 @@ export function chatHistoryRetentionChoices(saved: unknown): number[] {
 export function isQuickRequestSavingEnabled(
   config: ChatHistorySettingsSource,
   profileId?: string | null,
-  vaultHistory?: VaultChatHistory
+  workspaceHistory?: WorkspaceChatHistory
 ): boolean {
-  const history = profileId ? vaultHistory : config.chat.history
+  const history = profileId ? workspaceHistory : config.chat.history
   return history?.isQuickRequestSavingEnabled !== false
 }

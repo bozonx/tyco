@@ -55,7 +55,7 @@ ai-vault/profiles/<profile-id>/
 Conversation files are content-addressed: the name is the SHA-256 of the
 bytes, the chat JSON keeps only references (`{ id, size }` plus the name and
 media type of the attachment). Each history has its own folder, so files move
-with the AI vault, and clearing the general history cannot reach a profile.
+with the AI workspace, and clearing the general history cannot reach a profile.
 Orphan records stay in `index/orphan-images.json` of the state folder, keyed by
 the folder of each history.
 

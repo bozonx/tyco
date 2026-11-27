@@ -71,12 +71,12 @@ import type {
   ToolCallContext,
   UserDataRelocationMode,
   UserDataTarget,
-  VaultChatHistory,
-  VaultFolder,
-  VaultInfo,
   VaultState,
   VoiceCaptureInfo,
   WindowGeometry,
+  WorkspaceChatHistory,
+  WorkspaceFolder,
+  WorkspaceInfo,
 } from './desktop-types'
 import type { UserConfig } from '../user-config'
 
@@ -137,7 +137,10 @@ export interface DesktopCommands {
     args: { request: HotkeyApplyRequest }
     result: HotkeyApplyResult
   }
-  attach_ai_vault: { args: { path: string; name: string }; result: VaultInfo }
+  attach_ai_workspace: {
+    args: { path: string; name: string }
+    result: WorkspaceInfo
+  }
   cancel_ai_web_tool: { args: { runId: string }; result: boolean }
   cancel_external_job: { args: { id: string }; result: void }
   cancel_net_task: { args: { id: number }; result: void }
@@ -195,7 +198,7 @@ export interface DesktopCommands {
   delete_dialog: { args: { id: string }; result: Dialog | null }
   delete_editor_history_item: { args: { id: string }; result: void }
   delete_secret: { args: { id: string }; result: void }
-  detach_ai_vault: { args: { vaultId: string }; result: void }
+  detach_ai_workspace: { args: { workspaceId: string }; result: void }
   discard_dialog_recording: {
     args: { dialogId: string; file: string }
     result: void
@@ -240,7 +243,10 @@ export interface DesktopCommands {
     args: { id: string; targetPath?: string | null }
     result: ProjectTransferPreview
   }
-  inspect_ai_vault_folder: { args: { path: string }; result: VaultFolder }
+  inspect_ai_workspace_folder: {
+    args: { path: string }
+    result: WorkspaceFolder
+  }
   inspect_user_data_target: {
     args: { path?: string | null }
     result: UserDataTarget
@@ -259,7 +265,7 @@ export interface DesktopCommands {
   }
   list_ai_profiles: { args: undefined; result: Array<AiProfile> }
   list_ai_projects: { args: undefined; result: Array<AiProject> }
-  list_ai_vaults: { args: undefined; result: Array<VaultInfo> }
+  list_ai_workspaces: { args: undefined; result: Array<WorkspaceInfo> }
   list_chats: {
     args: { profileId?: string | null }
     result: Array<ChatSummary>
@@ -282,17 +288,17 @@ export interface DesktopCommands {
     result: void
   }
   move_ai_profile: {
-    args: { id: string; vaultId: string }
+    args: { id: string; workspaceId: string }
     result: MovedEntity
   }
   move_ai_project: {
-    args: { id: string; vaultId: string }
+    args: { id: string; workspaceId: string }
     result: MovedEntity
   }
   open_action_log: { args: undefined; result: boolean }
   open_ai_project_location: { args: { id: string }; result: void }
-  open_ai_vault_location: {
-    args: { vaultId?: string | null; profileId?: string | null }
+  open_ai_workspace_location: {
+    args: { workspaceId?: string | null; profileId?: string | null }
     result: void
   }
   open_in_browser: { args: { url: string }; result: void }
@@ -385,9 +391,9 @@ export interface DesktopCommands {
   rebind_hotkeys: { args: undefined; result: void }
   release_deleted_chat_images: { args: { id: string }; result: void }
   release_dialog_recordings: { args: { id: string }; result: void }
-  relink_ai_vault: {
-    args: { vaultId: string; path: string }
-    result: VaultInfo
+  relink_ai_workspace: {
+    args: { workspaceId: string; path: string }
+    result: WorkspaceInfo
   }
   relocate_user_data: {
     args: { mode: UserDataRelocationMode; path?: string | null }
@@ -397,7 +403,10 @@ export interface DesktopCommands {
     args: { activationId: number; imageId?: string | null }
     result: void
   }
-  rename_ai_vault: { args: { vaultId: string; name: string }; result: void }
+  rename_ai_workspace: {
+    args: { workspaceId: string; name: string }
+    result: void
+  }
   rename_chat: {
     args: { id: string; title: string; profileId?: string | null }
     result: void
@@ -490,8 +499,8 @@ export interface DesktopCommands {
   search_dialogs: { args: { query: string }; result: Array<string> }
   send_socket_binary: { args: BinaryArgs<SocketFrameMeta>; result: void }
   send_socket_text: { args: { id: number; text: string }; result: void }
-  set_ai_vault_chat_history: {
-    args: { vaultId: string; chatHistory: VaultChatHistory }
+  set_ai_workspace_chat_history: {
+    args: { workspaceId: string; chatHistory: WorkspaceChatHistory }
     result: void
   }
   set_capture_microphone_muted: {

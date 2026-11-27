@@ -156,7 +156,7 @@ const itemStyle = (index: number): CSSProperties | undefined => {
 const profileSources = computed(() => ({
   profiles: aiProfilesStore.profiles,
   areProfilesLoaded: aiProfilesStore.isLoaded,
-  connectedVaultIds: aiProfilesStore.connectedVaultIds,
+  connectedWorkspaceIds: aiProfilesStore.connectedWorkspaceIds,
 }))
 
 const isProfileMissing = (prompt: ChatPromptConfig) =>
@@ -185,7 +185,7 @@ function updatePrompt(index: number, patch: Partial<ChatPromptConfig>) {
 }
 
 function setProfile(index: number, value: string | number | undefined) {
-  // the main vault is left out, so the prompt has one form of its reference
+  // the main workspace is left out, so the prompt has one form of its reference
   const { profileId, vaultId } = configProfileFields(
     typeof value === 'string' ? value : ''
   )

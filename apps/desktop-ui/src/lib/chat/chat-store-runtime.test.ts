@@ -264,7 +264,7 @@ describe('chat-store-runtime', () => {
       refreshProfile: vi.fn(async () => profile),
       readSoul: vi.fn(async () => '# Soul'),
       updateProfileModel: vi.fn(async () => {
-        throw new Error('vault locked')
+        throw new Error('workspace locked')
       }),
       getUserConfig: () => configWithToolModels(),
       getSessionState: () => structuredClone(DEFAULT_SESSION_STATE),

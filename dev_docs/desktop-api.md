@@ -151,8 +151,8 @@ A save that merged a change another device synced into the same fields emits
 `app://settings-conflict` with their paths; the change of this device won.
 A command that needs the user data folder while it is not connected, or read
 only, fails with `userDataUnavailable`. A script run that refers to a variable
-without a value on this device fails with `variableNotSet`, a vault operation
-while the vault set on this device is not there with `vaultUnavailable`, and a
+without a value on this device fails with `variableNotSet`, a workspace operation
+while the workspace set on this device is not there with `workspaceUnavailable`, and a
 file tool on an external project without its folder here with
 `projectUnavailable`. `UserDataState` carries `deviceId` and `platform` of this
 device: the built-in variable `TYCO_DEVICE_ID` and the platform a command's
@@ -160,10 +160,10 @@ device: the built-in variable `TYCO_DEVICE_ID` and the platform a command's
 returns its path, e.g. for the value of a variable.
 
 `app://storage-changed` carries an array of changed relative paths, with `/`
-separators. Paths of the active vault use the `ai-vault/` prefix, including
-when that vault is external. It refreshes profile lists and saved idle chats;
+separators. Paths of the active workspace use the `ai-vault/` prefix, including
+when that workspace is external. It refreshes profile lists and saved idle chats;
 settings still arrive through the existing desktop snapshot publication.
-Editor history and plugin updates retain their dedicated events. Local vault
+Editor history and plugin updates retain their dedicated events. Local workspace
 writes also publish storage changes so other windows refresh immediately.
 
 ## Verification

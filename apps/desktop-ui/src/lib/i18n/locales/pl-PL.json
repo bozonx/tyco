@@ -410,7 +410,7 @@
     "unsupportedConfig": "Ustawienia zapisała nowsza wersja aplikacji",
     "userDataUnavailable": "Folder danych jest niedostępny",
     "variableNotSet": "Zmienna nie ma wartości na tym urządzeniu",
-    "vaultUnavailable": "Przestrzeń robocza nie jest podłączona na tym urządzeniu",
+    "workspaceUnavailable": "Przestrzeń robocza nie jest podłączona na tym urządzeniu",
     "projectUnavailable": "Folder projektu nie jest ustawiony na tym urządzeniu",
     "alreadyExists": "Już istnieje",
     "staleRevision": "Plik zmieniono na innym urządzeniu lub poza TyCo",
@@ -749,7 +749,7 @@
     "aiCommands": "Polecenia AI",
     "aiProfilesHint": "Oddzielni asystenci z własną instrukcją, modelem, narzędziami i czatami. Każdy profil to karta na górnym pasku.",
     "aiProfilesTab": "Profile AI",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "Podłącz przestrzeń roboczą…",
       "attachedDeviceScopedHint": "Podłączone przestrzenie robocze ustawia się na każdym komputerze osobno; główna synchronizuje się z folderem danych.",
       "detach": "Usuń z listy",
@@ -757,7 +757,7 @@
       "hint": "Przestrzeń robocza to folder z profilami, projektami, ich czatami i pamięcią. Główna jest w folderze danych; podłącz inne, np. służbową, synchronizowaną osobno. Profil widzi tylko projekty swojej przestrzeni roboczej.",
       "main": "Główny",
       "name": "Nazwa",
-      "newVault": "Nowa przestrzeń robocza",
+      "newWorkspace": "Nowa przestrzeń robocza",
       "newer": "Utworzony przez nowszy TyCo",
       "notConnected": "Niepodłączony na tym urządzeniu",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "Zmień nazwę przestrzeni roboczej",
       "title": "Przestrzeń robocza",
       "useSubfolder": "Folder zawiera inne pliki. Utworzyć przestrzeń roboczą w {path}?",
-      "vault": "Przestrzeń robocza",
+      "workspace": "Przestrzeń robocza",
       "writableByOthers": "Inni użytkownicy tego komputera mogą zapisywać w przestrzeni roboczej {name}: jej profile uruchamiają polecenia tego urządzenia."
     },
     "allPluginsTab": "Wszystkie wtyczki",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "Każda przestrzeń robocza może przechowywać czaty po swojemu na karcie",
     "profileCopyName": "{name} (kopia)",
     "profileDefaultSoul": "# Rola\nJesteś moim osobistym asystentem. Pomagasz w codziennych sprawach: odpowiadasz na pytania, piszesz i poprawiasz teksty, pomagasz planować i przemyśleć rozwiązania.\n\n# Styl\n- Odpowiadaj w języku mojej wiadomości.\n- Pisz krótko i na temat; szczegóły, gdy o nie poproszę.\n- Używaj list i nagłówków, gdy ułatwiają czytanie odpowiedzi.\n\n# Zasady\n- Jeśli prośba jest niejasna, dopytaj, zanim odpowiesz.\n- Nie wymyślaj faktów: powiedz, gdy nie masz pewności.\n- Zanim zmienisz pliki lub uruchomisz polecenia, powiedz, co zamierzasz zrobić.\n\n# O mnie\n- Opisz tu siebie: czym się zajmujesz i co asystent powinien brać pod uwagę.\n",
+    "profileFolder": "Folder",
+    "profileFolderFixedHint": "Folder nie zmienia się po zmianie nazwy profilu, więc czaty i dostęp do projektów zostają przy nim.",
     "profileMemoryApplyCompact": "Zastosuj",
     "profileMemoryCompact": "Kompaktuj",
     "profileMemoryCompactNoChange": "Plik jest już optymalny, brak wymaganych zmian",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "Folder {path} znajduje się na innym dysku. Czy potwierdzasz przeniesienie plików z {current} na inny dysk?"
     },
     "variablesTab": "Zmienne",
-    "vaultFolder": "Folder",
-    "vaultFolderFixedHint": "Folder nie zmienia się po zmianie nazwy profilu, więc czaty i dostęp do projektów zostają przy nim.",
     "vision": "Wejście obrazów",
     "voiceHold": {
       "voice": "Przytrzymuj skrót podczas dyktowania (Push-to-Talk)",

@@ -64,7 +64,7 @@ desktop_events! {
     /// The app is about to quit; carries the id the settings acknowledge with.
     QuitRequested = "app://quit-requested" => u64;
     QuitCancelled = "app://quit-cancelled" => ();
-    /// Relative paths changed by synchronization, or local vault writes.
+    /// Relative paths changed by synchronization, or local workspace writes.
     StorageChanged = "app://storage-changed" => StorageChangedEvent;
     PluginsChanged = "app://plugins-changed" => ();
     StateChanged = "app://state-changed" => DesktopSnapshot;

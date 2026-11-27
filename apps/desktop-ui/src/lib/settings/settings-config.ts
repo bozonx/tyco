@@ -12,7 +12,7 @@ import type { PluginFactory } from '../../types/plugins'
 export interface SettingsConfigDependencies {
   pluginFactories: () => PluginFactory[]
   appearance: () => AppearanceSettings
-  mainVaultId?: () => string | undefined
+  mainWorkspaceId?: () => string | undefined
 }
 
 const recordOf = (value: unknown): Record<string, unknown> =>
@@ -37,7 +37,7 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
           recordOf(input.plugins)
         ),
       },
-      deps.mainVaultId?.()
+      deps.mainWorkspaceId?.()
     )
   }
   return { prepare }

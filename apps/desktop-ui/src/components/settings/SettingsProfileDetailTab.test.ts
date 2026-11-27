@@ -62,7 +62,7 @@ function createStore() {
     refreshProfile: vi.fn(
       async (): Promise<AiProfile | undefined> => undefined
     ),
-    openVaultDir: vi.fn(async () => {}),
+    openWorkspaceDir: vi.fn(async () => {}),
     countChats: vi.fn(async () => 3),
     deleteProfile: vi.fn(async () => {}),
   })
@@ -206,12 +206,12 @@ describe('SettingsProfileDetailTab.vue', () => {
   })
 
   it('opens the profile folder and reports failures', async () => {
-    store.openVaultDir.mockRejectedValueOnce(new Error('No folder'))
+    store.openWorkspaceDir.mockRejectedValueOnce(new Error('No folder'))
     const wrapper = mountTab()
     await flushPromises()
     await button(wrapper, 'settings.openProfileFolder').trigger('click')
     await flushPromises()
-    expect(store.openVaultDir).toHaveBeenCalledWith('writer')
+    expect(store.openWorkspaceDir).toHaveBeenCalledWith('writer')
     expect(toastError).toHaveBeenCalledWith(new Error('No folder'))
   })
 

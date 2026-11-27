@@ -148,17 +148,17 @@ impl ConfigFiles {
         }
     }
 
-    fn main_vault_id(&self) -> String {
+    fn main_workspace_id(&self) -> String {
         self.user_path
             .as_deref()
             .and_then(Path::parent)
-            .map(crate::services::ai_vault::marker::main_vault_id)
+            .map(crate::services::ai_workspace::marker::main_workspace_id)
             .unwrap_or_default()
     }
 
     fn normalize(&self, config: &mut Value) {
         schema::normalize_user_config(config);
-        schema::normalize_profile_references(config, &self.main_vault_id());
+        schema::normalize_profile_references(config, &self.main_workspace_id());
     }
 
     fn user_data_key(&self) -> String {
@@ -289,7 +289,7 @@ impl ConfigFiles {
             return Err(AppError::UserDataUnavailable(self.unavailable.clone()).into());
         };
         let mut canonical = config.clone();
-        schema::normalize_profile_references(&mut canonical, &self.main_vault_id());
+        schema::normalize_profile_references(&mut canonical, &self.main_workspace_id());
         let config = &canonical;
         let unknown = self.device_unknown.locked().clone();
         let mut parts = Parts::of(config, &unknown, notes);
@@ -357,7 +357,7 @@ impl ConfigFiles {
             return Err(AppError::UserDataUnavailable(self.unavailable.clone()));
         };
         let mut canonical = config.clone();
-        schema::normalize_profile_references(&mut canonical, &self.main_vault_id());
+        schema::normalize_profile_references(&mut canonical, &self.main_workspace_id());
         let config = &canonical;
         let unknown = self.device_unknown.locked().clone();
         let mut parts = Parts::of(config, &unknown, notes);
@@ -400,7 +400,7 @@ impl ConfigFiles {
             return Err(AppError::InvalidInput("Config must be an object".into()));
         }
         let mut canonical = config.clone();
-        schema::normalize_profile_references(&mut canonical, &self.main_vault_id());
+        schema::normalize_profile_references(&mut canonical, &self.main_workspace_id());
         let config = &canonical;
         let unknown = self.device_unknown.locked().clone();
         let mut parts = Parts::of(config, &unknown, notes);
@@ -411,8 +411,13 @@ impl ConfigFiles {
             if version::is_newer_than_supported(&disk) {
                 return Err(newer_config_error());
             }
-            let user =
-                normalized_user_part(&disk, &parts.device, &unknown, notes, &self.main_vault_id());
+            let user = normalized_user_part(
+                &disk,
+                &parts.device,
+                &unknown,
+                notes,
+                &self.main_workspace_id(),
+            );
             let (mut value, _) = join_scopes(&user, &parts.device);
             put_note_paths(&mut value, &parts.as_device_file(), notes);
             self.normalize(&mut value);
@@ -479,10 +484,20 @@ impl ConfigFiles {
         };
         if disk != base {
             let device_part = &parts.device;
-            let disk_part =
-                normalized_user_part(&disk, device_part, unknown, notes, &self.main_vault_id());
-            let base_part =
-                normalized_user_part(&base, device_part, unknown, notes, &self.main_vault_id());
+            let disk_part = normalized_user_part(
+                &disk,
+                device_part,
+                unknown,
+                notes,
+                &self.main_workspace_id(),
+            );
+            let base_part = normalized_user_part(
+                &base,
+                device_part,
+                unknown,
+                notes,
+                &self.main_workspace_id(),
+            );
             let (user, lost) = merge::merge_preferring_next(&disk_part, &base_part, &merged.user)?;
             if keeps_copies && !lost.is_empty() {
                 if let Some(raw) = raw {
@@ -721,11 +736,11 @@ fn normalized_user_part(
     device: &Value,
     device_unknown: &HashSet<ConfigPath>,
     notes: NotesFields,
-    main_vault_id: &str,
+    main_workspace_id: &str,
 ) -> Value {
     let (mut joined, _) = join_scopes(user, device);
     schema::normalize_user_config(&mut joined);
-    schema::normalize_profile_references(&mut joined, main_vault_id);
+    schema::normalize_profile_references(&mut joined, main_workspace_id);
     Parts::of(&joined, device_unknown, notes).user
 }
 

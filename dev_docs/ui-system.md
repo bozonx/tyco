@@ -156,7 +156,7 @@ undoable removal live in `lib/commands/*-model.ts`; LLM key operations, connecti
 state and numeric edits live in `lib/llm/llm-settings-model.ts`. Components retain
 translation, rendering, focus, and dependency wiring.
 
-Settings reuse `VaultFolderField` for suggested vault IDs, `ModelNumberField`
+Settings reuse `ModelNumberField`
 for model/profile numeric controls, and `SettingsAdvancedFields` for their
 additional options. The caller owns field values and validation; these components
 render them and emit edits. `SettingsHistoryClear` owns confirmation and busy

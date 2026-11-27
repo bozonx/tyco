@@ -35,7 +35,7 @@ import { usePluginRuntimeStore } from '../stores/plugin-runtime'
 import { useOperationsStore } from '../stores/operations'
 import { useI18n } from './use-i18n'
 import { useSettingsContext } from './use-settings-context'
-import { entityLabel } from '../lib/ai-profiles/vault-groups'
+import { entityLabel } from '../lib/ai-profiles/workspace-groups'
 import {
   configProfileFields,
   configProfileKey,
@@ -93,7 +93,7 @@ export function useMainActionChoices(
     describeChatPrompts(userConfig.value.chatPrompts.items, {
       profiles: aiProfilesStore.profiles,
       areProfilesLoaded: aiProfilesStore.isLoaded,
-      connectedVaultIds: aiProfilesStore.connectedVaultIds,
+      connectedWorkspaceIds: aiProfilesStore.connectedWorkspaceIds,
     })
   )
 
@@ -112,14 +112,14 @@ export function useMainActionChoices(
 
   const availableActions = computed((): MainActionChoice[] => [
     ...aiProfilesStore.profiles.flatMap((entry) => {
-      // the vault is named when another profile has the same name
+      // the workspace is named when another profile has the same name
       const profile = {
         ...entry,
         name: entityLabel(
           entry,
           aiProfilesStore.profiles,
-          aiProfilesStore.vaults,
-          t('settings.aiVaults.main')
+          aiProfilesStore.workspaces,
+          t('settings.aiWorkspaces.main')
         ),
       }
       return PROFILE_ACTION_KINDS.map((action) => ({

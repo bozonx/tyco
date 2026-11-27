@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { VaultFolder } from '@tyco/shared'
+import type { WorkspaceFolder } from '@tyco/shared'
 
-import { attachPickedVault } from './vault-attach'
+import { attachPickedWorkspace } from './workspace-attach'
 
-function setup(folders: Record<string, VaultFolder['kind']>) {
+function setup(folders: Record<string, WorkspaceFolder['kind']>) {
   const deps = {
     pickFolder: vi.fn(async (): Promise<string | null> => '/picked'),
     inspect: vi.fn(async (path: string) => ({ path, kind: folders[path]! })),
@@ -15,17 +15,17 @@ function setup(folders: Record<string, VaultFolder['kind']>) {
   return deps
 }
 
-describe('attachPickedVault', () => {
-  it('attaches a vault as it is', async () => {
-    const deps = setup({ '/picked': { kind: 'vault', name: 'Work' } })
-    expect(await attachPickedVault(deps)).toBe(true)
+describe('attachPickedWorkspace', () => {
+  it('attaches a workspace as it is', async () => {
+    const deps = setup({ '/picked': { kind: 'workspace', name: 'Work' } })
+    expect(await attachPickedWorkspace(deps)).toBe(true)
     expect(deps.attach).toHaveBeenCalledWith('/picked', '')
     expect(deps.askName).not.toHaveBeenCalled()
   })
 
-  it('makes a named vault in an empty folder', async () => {
+  it('makes a named workspace in an empty folder', async () => {
     const deps = setup({ '/picked': { kind: 'empty' } })
-    expect(await attachPickedVault(deps)).toBe(true)
+    expect(await attachPickedWorkspace(deps)).toBe(true)
     expect(deps.attach).toHaveBeenCalledWith('/picked', 'Work')
   })
 
@@ -34,21 +34,21 @@ describe('attachPickedVault', () => {
       '/picked': { kind: 'occupied', subfolder: '/picked/TyCo Workspace' },
       '/picked/TyCo Workspace': { kind: 'empty' },
     })
-    expect(await attachPickedVault(deps)).toBe(true)
+    expect(await attachPickedWorkspace(deps)).toBe(true)
     expect(deps.attach).toHaveBeenCalledWith('/picked/TyCo Workspace', 'Work')
 
     deps.confirmSubfolder.mockResolvedValueOnce(false)
     deps.attach.mockClear()
-    expect(await attachPickedVault(deps)).toBe(false)
+    expect(await attachPickedWorkspace(deps)).toBe(false)
     expect(deps.attach).not.toHaveBeenCalled()
   })
 
-  it('refuses a copy of a vault that is here and a nested folder', async () => {
+  it('refuses a copy of a workspace that is here and a nested folder', async () => {
     const copy = setup({ '/picked': { kind: 'duplicate' } })
-    expect(await attachPickedVault(copy)).toBe(false)
+    expect(await attachPickedWorkspace(copy)).toBe(false)
     expect(copy.refuse).toHaveBeenCalledWith('duplicate', '/picked')
     const nested = setup({ '/picked': { kind: 'nested', message: 'inside' } })
-    expect(await attachPickedVault(nested)).toBe(false)
+    expect(await attachPickedWorkspace(nested)).toBe(false)
     expect(nested.refuse).toHaveBeenCalledWith('nested', 'inside')
     expect(nested.attach).not.toHaveBeenCalled()
   })
@@ -56,7 +56,7 @@ describe('attachPickedVault', () => {
   it('does nothing when no folder is picked', async () => {
     const deps = setup({})
     deps.pickFolder.mockResolvedValueOnce(null)
-    expect(await attachPickedVault(deps)).toBe(false)
+    expect(await attachPickedWorkspace(deps)).toBe(false)
     expect(deps.inspect).not.toHaveBeenCalled()
   })
 })

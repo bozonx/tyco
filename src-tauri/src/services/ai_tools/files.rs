@@ -25,7 +25,7 @@ use serde_json::Value;
 use super::file_search;
 use super::permissions;
 use crate::errors::AppError;
-use crate::services::ai_vault::{AiProfile, ProjectAccessMode};
+use crate::services::ai_workspace::{AiProfile, ProjectAccessMode};
 
 pub use self::attachments::{AiAttachedFile, Attachments, ATTACHMENTS_ROOT};
 

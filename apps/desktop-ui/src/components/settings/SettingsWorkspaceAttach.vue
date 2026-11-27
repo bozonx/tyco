@@ -7,26 +7,26 @@
     data-testid="workspace-attach"
     @click="attach"
   >
-    {{ t('settings.aiVaults.attach') }}
+    {{ t('settings.aiWorkspaces.attach') }}
   </Button>
 
   <SettingsCreateEntityModal
     :open="isNameAsked"
-    :title="t('settings.aiVaults.newVault')"
-    :label="t('settings.aiVaults.name')"
-    :confirm-text="t('settings.aiVaults.attach')"
+    :title="t('settings.aiWorkspaces.newWorkspace')"
+    :label="t('settings.aiWorkspaces.name')"
+    :confirm-text="t('settings.aiWorkspaces.attach')"
     @submit="answerName"
     @close="answerName(null)"
   />
   <ConfirmModal
     :open="subfolderRequest !== null"
-    :title="t('settings.aiVaults.attach')"
+    :title="t('settings.aiWorkspaces.attach')"
     :message="
-      t('settings.aiVaults.useSubfolder', {
+      t('settings.aiWorkspaces.useSubfolder', {
         path: subfolderRequest?.path ?? '',
       })
     "
-    :confirm-text="t('settings.aiVaults.attach')"
+    :confirm-text="t('settings.aiWorkspaces.attach')"
     @confirm="answerSubfolder(true)"
     @cancel="answerSubfolder(false)"
   />
@@ -38,7 +38,7 @@ import { computed, ref } from 'vue'
 import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
-import { attachPickedVault } from '../../lib/ai-profiles/vault-attach'
+import { attachPickedWorkspace } from '../../lib/ai-profiles/workspace-attach'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
@@ -46,13 +46,13 @@ import SettingsCreateEntityModal from './SettingsCreateEntityModal.vue'
 
 const emit = defineEmits<{
   /** A workspace was attached; its id */
-  attached: [vaultId: string]
+  attached: [workspaceId: string]
 }>()
 
 const REFUSAL_KEYS = {
-  duplicate: 'settings.aiVaults.refused.duplicate',
-  nested: 'settings.aiVaults.refused.nested',
-  occupied: 'settings.aiVaults.refused.occupied',
+  duplicate: 'settings.aiWorkspaces.refused.duplicate',
+  nested: 'settings.aiWorkspaces.refused.nested',
+  occupied: 'settings.aiWorkspaces.refused.occupied',
 } as const
 
 const { t } = useI18n()
@@ -79,12 +79,14 @@ const { isBusy: isAttaching, run: runAttaching } = useBusyAction()
 
 async function attach() {
   await runAttaching(async () => {
-    const before = new Set(store.vaults.map((vault) => vault.vaultId))
+    const before = new Set(
+      store.workspaces.map((workspace) => workspace.workspaceId)
+    )
     try {
-      await attachPickedVault({
+      await attachPickedWorkspace({
         pickFolder: store.pickFolder,
-        inspect: store.inspectVaultFolder,
-        attach: store.attachVault,
+        inspect: store.inspectWorkspaceFolder,
+        attach: store.attachWorkspace,
         askName: () =>
           new Promise<string | null>((resolve) => {
             nameResolver.value = resolve
@@ -100,8 +102,10 @@ async function attach() {
       toastError(error)
       return
     }
-    const added = store.vaults.find((vault) => !before.has(vault.vaultId))
-    if (added) emit('attached', added.vaultId)
+    const added = store.workspaces.find(
+      (workspace) => !before.has(workspace.workspaceId)
+    )
+    if (added) emit('attached', added.workspaceId)
   })
 }
 </script>

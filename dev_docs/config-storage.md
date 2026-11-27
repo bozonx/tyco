@@ -81,7 +81,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `transformations`   | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `styling`           | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `chatPrompts`       | `items`, the prompt library: each prompt has `profileId`, empty for a prompt of every profile                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `aiVaults`          | `attached`: `[{ path, vaultId }]`, the vaults this device attached                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `aiVaults`          | `attached`: `[{ path, vaultId }]`, the workspaces this device attached                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `markdown`          | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `plugins`           | per plugin id: `isEnabled` and the plugin-owned `settings`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `chat`              | `history` (`storage`: `session` or `disk`, `retentionDays`, `isQuickRequestSavingEnabled`): "Ask AI"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -354,7 +354,7 @@ in `services/storage/app_paths.rs`; `TYCO_DEV_HOME` isolates development storage
 | Device (`~/.config/com.tyco.app`; `%LOCALAPPDATA%\com.tyco.app\device`)          | `device.json`, `secrets.json`                                                                                                                                                                              |
 | State (`~/.local/state/com.tyco.app`)                                            | `logs/`; `webview/`; `config.base.json`; `index/` (chat and dialog indexes, `orphan-images.json`, `orphan-recordings.json`); `recordings/`; `recovery/`                                                    |
 | Cache (`~/.cache/com.tyco.app`)                                                  | Platform cache directory, created when opened; no application-owned model downloads                                                                                                                        |
-| User-selected paths                                                              | Plugin note files; attached vaults                                                                                                                                                                         |
+| User-selected paths                                                              | Plugin note files; attached workspaces                                                                                                                                                                     |
 
 The user data folder holds everything the user made and set up, and nothing
 else: it may be synced to other machines (Syncthing, Nextcloud, Dropbox,
@@ -382,7 +382,7 @@ layout is read and never written, including quarantine and directory creation.
 Cached paths are guarded before mutations too. Losing the folder or its marker
 during a session blocks further writes and requires a restart after the data
 returns. The watcher publishes the disconnected state. Reading chats, journals
-and the default vault needs no write access. The settings warn when other users
+and the default workspace needs no write access. The settings warn when other users
 may write into the chosen folder (Linux): its commands run on this machine.
 
 The folder is changed by `relocate_user_data` only (`desktop-api.md`), never by
@@ -394,9 +394,9 @@ known version and leaves the current data where it is; a folder with Tyco files
 but no marker is refused as a sync that has not finished; a folder with files
 of its own, or a folder of the app, is refused. `useDefault` uses the default
 folder with what it holds (initializing it when empty), moving nothing. The
-main vault, `ai-vault/`, moves with the data folder
+main workspace, `ai-vault/`, moves with the data folder
 (`storage::data_root_relocation`). The new folder may not lie inside an
-attached vault or hold one (`storage::sync_roots::check_sync_roots`: symlinks
+attached workspace or hold one (`storage::sync_roots::check_sync_roots`: symlinks
 resolved, on Windows without case and the `\\?\` prefix).
 
 Copies kept aside (broken files, files before a repair or a salvage, the disk's
@@ -415,7 +415,7 @@ Some folders of the user data folder may be links to a folder elsewhere, a
 symbolic link or a Windows junction (Rust counts a junction as a symbolic
 link): `history`, `dialogs`, `dialogs/recordings`, `chats`, `chats/images`,
 `chats/attachments`, `ai-vault` and `plugins` (`user_files::is_linkable_dir`),
-besides the data folder and the attached vaults themselves. Paths stay those
+besides the data folder and the attached workspaces themselves. Paths stay those
 inside the root, as the app writes them; the watcher follows these links and
 no other (profiles, projects and the files inside them are never followed).
 Nothing replaces or removes such a link: `clear_chats` empties a linked
@@ -479,12 +479,12 @@ recording folders immediately; orphaned recording folders without a matching
 Recording requires `dialog.history.storage == "disk"`.
 
 A chat is its file, `chats/<id>.json`. The list is an index of the state folder
-(`index/chats.json`, and `index/ai-vault/<vault id>/<profile>/` for the chats
-of profiles, so a vault that moves keeps its indexes; removing a vault from
+(`index/chats.json`, and `index/ai-vault/<workspace id>/<profile>/` for the chats
+of profiles, so a workspace that moves keeps its indexes; removing a workspace from
 the device removes them), rebuilt from the files when their names, sizes or
 modification times change; an earlier `chats/index.json` is not read.
 
-A profile of an AI vault keeps `profile.json`, `SOUL.md`, its chats in `chats/`
+A profile of an AI workspace keeps `profile.json`, `SOUL.md`, its chats in `chats/`
 (laid out as the app's own `chats/`) and its files in `workspace/`. Profile and
 project folders are named by ids made once, `profile-<8 hex>` and
 `project-<8 hex>`, never from the name and never changed: two devices that
@@ -517,9 +517,9 @@ Memory has two kinds of writers. The model of a chat reads with
 profile's `memoryMode` is `read-only` or `off` (and a read or search by the
 model when it is `off`), and refuses with
 `staleRevision` a change over a file that changed since that chat read it, and
-a rewrite of a file the chat never read. Read versions are keyed by vault root,
+a rewrite of a file the chat never read. Read versions are keyed by workspace root,
 profile id, chat and file, so two chats, or equal legacy ids in different
-vaults, never vouch for each other. Instructions, previews and the settings
+workspaces, never vouch for each other. Instructions, previews and the settings
 read with `peek_ai_profile_memory`, which records nothing. The settings store
 the user's edits with `save_ai_profile_memory`, whatever the mode, and only
 over the text they opened; that forgets the reads of every chat. Each chat
@@ -543,69 +543,69 @@ folders and mismatched copies are ignored without modifying them. Creation
 reserves the entity directory with an exclusive `mkdir` before writing its files;
 a concurrently arriving folder returns `alreadyExists`.
 
-### Vaults
+### Workspaces
 
-The UI calls a vault a **workspace** and the profile's `workspace/` folder its
-**Files**. On-disk, config and code names keep the old terms (`ai-vault/`,
-`tyco-vault.json`, `aiVaults`, `vaultId`, `ai_vault`, `profiles/<id>/workspace/`,
-the `workspace/` root of the file tools): older builds on other synced devices
-read them, and chats keep tool calls with these paths.
+A workspace contains profiles, projects, chats and memory. The UI calls each
+profile's `workspace/` folder **Files**. For compatibility with older builds on
+synced devices, the data format uses `ai-vault/`, `tyco-vault.json`,
+`tyco-vault-settings.json`, `aiVaults` and `vaultId`. Existing chats also keep
+their tool paths under `workspace/`.
 
-A vault is known by its marker `tyco-vault.json` (`formatVersion`, a
-`vaultId` made once, and the `name` of an attached vault, the same on every
-device). The main vault is always `ai-vault/` of the user data folder and moves
+A workspace is known by its marker `tyco-vault.json` (`formatVersion`, a
+`vaultId` made once, and the `name` of an attached workspace, the same on every
+device). The main workspace is always `ai-vault/` of the user data folder and moves
 only with it; it is made with its marker when it is not there, and that
 marker's `vaultId` is `data-<dataId>` (`default` for a data folder marker
-without `dataId`), so a device that finds the vault before a sync has brought
+without `dataId`), so a device that finds the workspace before a sync has brought
 its marker writes the same file and no conflicting copy comes up.
 
-Other vaults are attached per device (`aiVaults.attached: [{ path, vaultId }]`,
-`x-scope: device`; the `vaultId` is kept to name a vault that is away).
-`attach_ai_vault` uses a folder with a marker as it is, makes a new vault with
+Other workspaces are attached per device (`aiVaults.attached: [{ path, vaultId }]`,
+`x-scope: device`; the `vaultId` is kept to name a workspace that is away).
+`attach_ai_workspace` uses a folder with a marker as it is, makes a new workspace with
 a random id in a missing or empty one, and refuses a folder of other files (the
-settings offer its `TyCo Workspace` subfolder), a vault whose id is attached
-already or is that of the main vault (a copy), and a folder nested with the
-data folder or another vault (`check_sync_roots`). An attached vault is used
+settings offer its `TyCo Workspace` subfolder), a workspace whose id is attached
+already or is that of the main workspace (a copy), and a folder nested with the
+data folder or another workspace (`check_sync_roots`). An attached workspace is used
 only when it is there with its marker of that id; otherwise it is "not
 connected on this device": nothing is made in its place, its operations fail
-with `vaultUnavailable`, and the settings offer `relink_ai_vault` (a folder
-that holds that very vault) or `detach_ai_vault`, which removes it from the
-list and its chat indexes and leaves its files. `rename_ai_vault` writes the
+with `workspaceUnavailable`, and the settings offer `relink_ai_workspace` (a folder
+that holds that very workspace) or `detach_ai_workspace`, which removes it from the
+list and its chat indexes and leaves its files. `rename_ai_workspace` writes the
 name into the marker. A marker of a newer layout is shown as such and not used:
 update TyCo before opening it. This is deliberately stricter than the data
-folder's read-only compatibility path; an unknown vault layout is not interpreted.
-There is no separate read-only vault mode.
+folder's read-only compatibility path; an unknown workspace layout is not interpreted.
+There is no separate read-only workspace mode.
 
-The main vault is away while the data folder is: `list_ai_vaults` lists it as
-`notConnected` with an empty path, and the attached vaults stay listed and
-used. One vault that cannot be read hides the profiles and projects of no
-other. Resolving and listing are pure over the main vault as it opened and
-the attached list (`resolve_vault_in`, `list_vaults_in`,
-`connected_vaults_in`); the `AppHandle` functions only gather those.
+The main workspace is away while the data folder is: `list_ai_workspaces` lists it as
+`notConnected` with an empty path, and the attached workspaces stay listed and
+used. One workspace that cannot be read hides the profiles and projects of no
+other. Resolving and listing are pure over the main workspace as it opened and
+the attached list (`resolve_workspace_in`, `list_workspaces_in`,
+`connected_workspaces_in`); the `AppHandle` functions only gather those.
 
-The webview names a profile or a project by a reference `[vaultId:]id`
-(`ai_vault::split_ref`): the vault part is left out for the main vault.
-Commands take references; listing returns the entities of every vault that is
+The webview names a profile or a project by a reference `[workspaceId:]id`
+(`ai_workspace::split_ref`): the workspace part is left out for the main workspace.
+Commands take references; listing returns the entities of every workspace that is
 there. Profile permissions name projects by reference too, and the backend
-refuses a permission for a project of another vault: a profile reaches only
-the projects, files and tools root of its own vault. This is logical
+refuses a permission for a project of another workspace: a profile reaches only
+the projects, files and tools root of its own workspace. This is logical
 isolation: commands, scripts and plugins are shared by all profiles. In
 `config.json` a profile reference is `profileId` with an optional `vaultId`
 (grid items `profileChat` and `profile`, `chatPrompts.items[]`); the webview
-writes no vault for the main one. Both config normalizers canonicalize an explicit
-main marker id to an omitted `vaultId`, using the main vault identity published
-in `UserDataState.mainVaultId`. Persistence canonicalizes all three merge sides;
+writes no workspace for the main one. Both config normalizers canonicalize an explicit
+main marker id to an omitted `vaultId`, using the main workspace identity published
+in `UserDataState.mainWorkspaceId`. Persistence canonicalizes all three merge sides;
 opaque plugin settings and unknown nested fields remain untouched. The removed
-`aiVault.path` section is discarded during normalization. A reference to a vault that is not
+`aiVault.path` section is discarded during normalization. A reference to a workspace that is not
 connected is kept and hidden: its grid slot takes no place and its prompts are
-not offered until the vault is back.
+not offered until the workspace is back.
 
 The description of a project (`projects/<id>/project.json`: `id`, `name`,
-`description`, `isExternal`) is synced with the vault; the folder of an
+`description`, `isExternal`) is synced with the workspace; the folder of an
 external project is set on each device, in `aiProjectPaths` of `device.json`
-by vault id (of the marker), then project id. The webview gets it as
+by workspace id (of the marker), then project id. The webview gets it as
 `targetPath` of the project. The folder may neither lie inside the data
-folder or a vault of the device nor hold one (`check_project_folder`): the
+folder or a workspace of the device nor hold one (`check_project_folder`): the
 file tools would reach other profiles, their memory and the commands of the
 device. Saving or converting refuses it, and the file tools treat a folder set
 by hand there as `projectUnavailable`; `isInsideSyncedFolder` only marks such a
@@ -624,7 +624,7 @@ lead out of the files), the names taken in the destination, whether it is
 another disk, and how many other projects of this device use the same
 folder. An internal project always moves its files (all but `project.json`)
 to the new folder. An external one copies the files of its folder on this
-device into the vault with `transferFiles`, and with `trashSource` then moves
+device into the workspace with `transferFiles`, and with `trashSource` then moves
 that folder to the trash, which a folder another project of this device uses
 refuses; without `trashSource` the folder of the user is never touched. A
 name taken in the destination or a link leading out of the files refuses the
@@ -639,51 +639,51 @@ set. Changing the folder of an external project only relinks it: its files
 are not moved. `open_ai_project_location` shows the folder of a project on
 this device; the path is resolved in Rust.
 
-Links inside a profile or a project (`ai_vault::entity_files`): one that leads
+Links inside a profile or a project (`ai_workspace::entity_files`): one that leads
 elsewhere in the same entity is copied as a link, made relative so that it
 leads to the same file of the copy (on Windows a folder link that cannot be a
 symbolic link becomes a junction); one that leads out of the entity or
-nowhere refuses a conversion or a move to another vault. The file tools
+nowhere refuses a conversion or a move to another workspace. The file tools
 follow the same rule (`chat-files.md`).
 
-The settings of a vault live in `tyco-vault-settings.json` next to its marker
-(`ai_vault::settings`), synced with it and kept apart from the marker so that
+The settings of a workspace live in `tyco-vault-settings.json` next to its marker
+(`ai_workspace::settings`), synced with it and kept apart from the marker so that
 editing them never conflicts with it. Today it holds `chatHistory`
 (`storage`: `session` or `disk`, `retentionDays`, `isQuickRequestSavingEnabled`); each field is optional and a
 missing one takes its default: chats saved forever with their quick requests
-(`ChatHistoryPolicy::for_vault`; the chat settings of the app govern "Ask AI"
+(`ChatHistoryPolicy::for_workspace`; the chat settings of the app govern "Ask AI"
 only). Unknown fields are kept on write; a newer `formatVersion` or
 an unreadable file is refused on write and read as no settings, so a broken
-file never stops the chats. `set_ai_vault_chat_history` writes it and marks the
-chat cleanup pending; `list_ai_vaults` returns it as `chatHistory`. The watcher
+file never stops the chats. `set_ai_workspace_chat_history` writes it and marks the
+chat cleanup pending; `list_ai_workspaces` returns it as `chatHistory`. The watcher
 follows the file too: a change a sync brings refreshes the settings and marks
 the cleanup pending as well. The settings page applies these values at once.
-Whether quick requests to its profiles are saved is the vault's
+Whether quick requests to its profiles are saved is the workspace's
 `isQuickRequestSavingEnabled`, applied within its own saving choice.
 
-`move_ai_profile` and `move_ai_project` (`ai_vault::transfer`) move an entity
-to another connected vault, locking both vaults in the order of their roots.
+`move_ai_profile` and `move_ai_project` (`ai_workspace::transfer`) move an entity
+to another connected workspace, locking both workspaces in the order of their roots.
 The entity is copied into a hidden folder of the destination, its description
 rewritten (unknown fields kept), moved into place whole, and only then is the
 source removed; a failure removes the partial copy. The id is kept unless it
 is taken there, then a fresh one is made. A profile drops all its project
-permissions, its memory read versions and its chat index; once the vault locks
+permissions, its memory read versions and its chat index; once the workspace locks
 are released, the backend rewrites the references in `config.json` to the
-returned one (`ai_vault::config_refs`, plugin sections kept) as a regular
+returned one (`ai_workspace::config_refs`, plugin sections kept) as a regular
 settings save. A
 project is removed from the source as `delete_project` does, so profiles left
 behind drop their permissions; an external project's folder on this device
 moves to the destination key of `aiProjectPaths`, other devices set it again.
 
-Vault operations acquire the shared relocation gate before resolving a vault,
-then hold a mutex for that vault's canonical root for the complete operation,
-including profile permission cleanup on project deletion. Different vaults have
-independent mutexes; list-all operations lock each vault individually. The
+Workspace operations acquire the shared relocation gate before resolving a workspace,
+then hold a mutex for that workspace's canonical root for the complete operation,
+including profile permission cleanup on project deletion. Different workspaces have
+independent mutexes; list-all operations lock each workspace individually. The
 path-based service primitives expect the caller to hold that I/O lock when used
-concurrently. The lock order is relocation gate, vault I/O, settings/history,
+concurrently. The lock order is relocation gate, workspace I/O, settings/history,
 then file writes. Attaching and
-removing vaults, and relocating the data folder, hold exclusive access through
-settings publication. Settings saves and history maintenance acquire vault
+removing workspaces, and relocating the data folder, hold exclusive access through
+settings publication. Settings saves and history maintenance acquire workspace
 access before the settings and history locks. Timestamps in the stored files
 are Unix milliseconds (`createdAt`, `updatedAt`, `lastMessageAt`). A plugin
 file is named by the hex of its id, because ids that differ only in case
@@ -727,7 +727,7 @@ Startup collects the unreferenced managed webhook secrets of this device, and
 removes nothing from the config for a missing key; it does not run while the
 user data folder is not connected or read only, when the config is newer, was
 set aside as broken, or has a conflicting copy of a sync tool next to it, as
-uncertain references keep the keys. A failed vault-only deletion keeps its metadata for a later retry.
+uncertain references keep the keys. A failed workspace-only deletion keeps its metadata for a later retry.
 The system vault holds the key values; `secrets.json` holds only their ids and
 origins.
 
@@ -745,18 +745,18 @@ content-addressed images use metadata fingerprints; polling does not open or
 hydrate their content. Conflict resolution is a separate feature.
 
 Atomic writes and entity removals publish `StorageEvent` revisions through an
-internal broadcast bus. Only registered user/vault roots enter it; device
+internal broadcast bus. Only registered user/workspace roots enter it; device
 files and secrets do not. Matching disk echoes are suppressed, and consumed
 local revisions are retired so a later external restoration is detected.
-Local vault changes reach other windows without waiting for disk debounce.
+Local workspace changes reach other windows without waiting for disk debounce.
 
 The watcher invalidates chat indexes and cached search text, publishes editor history and plugin
 updates, and sends `app://storage-changed`: `paths` relative to the data folder
-and `vaultChanges` of `{ vaultId, path }`, a path relative to the root of its
-vault (empty `vaultId` for the main one). Idle, saved open
+and `workspaceChanges` of `{ workspaceId, path }`, a path relative to the root of its
+workspace (empty `workspaceId` for the main one). Idle, saved open
 chats reload with a guard against changes made during I/O. Missing image previews
-retry when their image file arrives, including profile images. Every attached vault
-that is there is watched as a root of its own; a vault that comes or goes is
+retry when their image file arrives, including profile images. Every attached workspace
+that is there is watched as a root of its own; a workspace that comes or goes is
 picked up by the next poll, without being created. A reappearing user-folder marker offers a restart on the missing
 folder screen; it never connects the folder in the running process.
 
@@ -765,16 +765,16 @@ folder screen; it never connects the folder in the running process.
 Later, if needed: showing the conflicting copies of sync tools and merging a
 copy of `config.json`; variables in transformation and styling prompts, LLM
 task rules and the DeepL endpoint; providers, commands, operations and plugins kept
-inside a vault.
+inside a workspace.
 
 A native sync (TyCo Cloud) would keep a server journal of revisions per entity
 path, write with an expected revision (CAS), keep deletions as server
-tombstones and take a root (the data folder or a vault) as its unit; it plugs
+tombstones and take a root (the data folder or a workspace) as its unit; it plugs
 into the `StorageEvent` bus. It needs a design of its own.
 
 Decided against: integrating with sync programs or Git; syncing keys; approving
-plugins, scripts and commands per device; an external path of the main vault
-(attached vaults instead); links between vaults; a read-only vault mode; a
+plugins, scripts and commands per device; an external path of the main workspace
+(attached workspaces instead); links between workspaces; a read-only workspace mode; a
 device field of plugins in the SDK; `--user-data-dir`, an environment variable
 for the data folder, a second instance, a portable mode on Windows; copying
 hotkeys from another device; merging Markdown; tombstone files on disk (a chat

@@ -96,7 +96,7 @@ describe('createActionMenuModel', () => {
     expect(mainActions.q.actionId).toBe('askInCurrentChat')
   })
 
-  it('hides the slot of a profile of a vault away without its place', () => {
+  it('hides the slot of a profile of a workspace away without its place', () => {
     const { deps } = setup()
     const mainActions = {
       q: { type: 'profileChat' as const, profileId: 'writer', vaultId: 'w1' },
@@ -107,10 +107,10 @@ describe('createActionMenuModel', () => {
       ...deps,
       mainActions: () => mainActions,
       profiles: () => [{ id: 'w1:writer', name: 'Writer' }],
-      connectedVaultIds: () => connected,
+      connectedWorkspaceIds: () => connected,
     })
     expect(store.getShortcutActions()[0]?.id).toBe('correction')
-    // the saved slot is kept and comes back with its vault
+    // the saved slot is kept and comes back with its workspace
     expect(mainActions.q.vaultId).toBe('w1')
     connected = ['w1']
     expect(store.getShortcutActions()[0]?.id).toBe('profileChat:w1:writer')

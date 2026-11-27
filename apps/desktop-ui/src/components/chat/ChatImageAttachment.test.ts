@@ -89,14 +89,14 @@ describe('image attachment preview', () => {
         profileId
           ? {
               paths: [],
-              vaultChanges: [
+              workspaceChanges: [
                 {
-                  vaultId: '',
+                  workspaceId: '',
                   path: `profiles/${profileId}/chats/images/${file}`,
                 },
               ],
             }
-          : { paths: [`chats/images/${file}`], vaultChanges: [] }
+          : { paths: [`chats/images/${file}`], workspaceChanges: [] }
       const desktop = installFakeDesktop()
       mocks.get
         .mockRejectedValueOnce(new Error('Missing image'))

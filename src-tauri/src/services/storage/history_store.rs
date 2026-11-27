@@ -175,7 +175,7 @@ impl HistoryStorageCoordinator {
         if !self.is_cleanup_pending() {
             return None;
         }
-        let _vault = state.read_vault();
+        let _workspace = state.read_workspace();
         let _settings = state.lock_settings_update();
         let _editor = self.lock_editor_history();
         let _dialogs = self.lock_dialog_history();
@@ -290,21 +290,24 @@ fn enforce_chat_history_policies(
     let ask_ai = chats::app_chat_dirs(app)
         .and_then(|dirs| chats::enforce_chat_history_policy(&dirs, settings.chat))
         .map(|removed| notify_chats_removed(app, &ChatScope::AskAi, removed));
-    // an unavailable vault has no chats to clean up now; they are trimmed once
+    // an unavailable workspace has no chats to clean up now; they are trimmed once
     // a profile chat is saved there again
     let mut profiles = Ok(());
-    for (vault_ref, vault) in crate::services::ai_vault::connected_vaults(app) {
-        let policy = chats::ChatHistoryPolicy::for_vault(
-            &crate::services::ai_vault::settings::read_chat_history(&vault.root),
+    for (workspace_ref, workspace) in crate::services::ai_workspace::connected_workspaces(app) {
+        let policy = chats::ChatHistoryPolicy::for_workspace(
+            &crate::services::ai_workspace::settings::read_chat_history(&workspace.root),
         );
         profiles = profiles.and(enforce_profile_chat_history_policy(
-            app, &vault_ref, &vault, policy,
+            app,
+            &workspace_ref,
+            &workspace,
+            policy,
         ));
     }
     stored.and(ask_ai).and(profiles)
 }
 
-/// Hands the session chats of the profile `from`, a reference `[vaultId:]id`,
+/// Hands the session chats of the profile `from`, a reference `[workspaceId:]id`,
 /// to `to` when the profile moves, or drops them when it is deleted: they
 /// must not bring back the folder of a profile that is gone.
 pub fn move_session_chats(app: &AppHandle, from: &str, to: Option<&str>) {
@@ -323,7 +326,7 @@ fn store_session_chats(app: &AppHandle) -> Result<(), AppError> {
     let mut result = Ok(());
     for key in session.scopes() {
         let scope = ChatScope::from_key(&key);
-        // a vault not attached now keeps its session chats until it is
+        // a workspace not attached now keeps its session chats until it is
         let Ok(policy) = scope_policy(app, &scope, &config) else {
             continue;
         };
@@ -358,15 +361,15 @@ fn store_session_chats(app: &AppHandle) -> Result<(), AppError> {
     result
 }
 
-/// Applies the policy of a vault to the chats of each of its profiles.
+/// Applies the policy of a workspace to the chats of each of its profiles.
 fn enforce_profile_chat_history_policy(
     app: &AppHandle,
-    vault_ref: &str,
-    vault: &crate::services::ai_vault::Vault,
+    workspace_ref: &str,
+    workspace: &crate::services::ai_workspace::Workspace,
     policy: chats::ChatHistoryPolicy,
 ) -> Result<(), AppError> {
     let mut result = Ok(());
-    for chats_dir in crate::services::ai_vault::all_profile_chats_dirs(&vault.root)? {
+    for chats_dir in crate::services::ai_workspace::all_profile_chats_dirs(&workspace.root)? {
         // the profile folder is named by the profile id
         let Some(profile_id) = chats_dir
             .parent()
@@ -376,10 +379,10 @@ fn enforce_profile_chat_history_policy(
         else {
             continue;
         };
-        let dirs = chats::profile_chat_dirs(app, &vault.id, &profile_id, chats_dir.clone())?;
+        let dirs = chats::profile_chat_dirs(app, &workspace.id, &profile_id, chats_dir.clone())?;
         match chats::enforce_chat_history_policy(&dirs, policy) {
             Ok(removed) => {
-                let key = crate::services::ai_vault::join_ref(vault_ref, &profile_id);
+                let key = crate::services::ai_workspace::join_ref(workspace_ref, &profile_id);
                 notify_chats_removed(app, &ChatScope::Profile(key), removed);
             }
             Err(error) => {
@@ -488,7 +491,7 @@ fn change_editor<T>(
 }
 
 /// Whose chat history an operation works on: the chats of "Ask AI" or a
-/// profile's own, kept in the profile folder of the AI vault.
+/// profile's own, kept in the profile folder of the AI workspace.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ChatScope {
     AskAi,
@@ -597,25 +600,26 @@ fn scope_chat_dirs(
 ) -> Result<chats::ChatDirs, AppError> {
     match scope {
         ChatScope::AskAi => chats::app_chat_dirs(app),
-        // the scope names the profile by its reference `[vaultId:]id`
+        // the scope names the profile by its reference `[workspaceId:]id`
         ChatScope::Profile(key) => {
-            let (vault_ref, profile_id) = crate::services::ai_vault::split_ref(key);
-            let vault = crate::services::ai_vault::resolve_vault(app, vault_ref)?;
+            let (workspace_ref, profile_id) = crate::services::ai_workspace::split_ref(key);
+            let workspace = crate::services::ai_workspace::resolve_workspace(app, workspace_ref)?;
             let chats_dir = match access {
-                ChatAccess::Read => {
-                    crate::services::ai_vault::existing_profile_chats_path(&vault.root, profile_id)
-                }
+                ChatAccess::Read => crate::services::ai_workspace::existing_profile_chats_path(
+                    &workspace.root,
+                    profile_id,
+                ),
                 ChatAccess::Write => {
-                    crate::services::ai_vault::profile_chats_dir(&vault.root, profile_id)
+                    crate::services::ai_workspace::profile_chats_dir(&workspace.root, profile_id)
                 }
             }?;
-            chats::profile_chat_dirs(app, &vault.id, profile_id, chats_dir)
+            chats::profile_chat_dirs(app, &workspace.id, profile_id, chats_dir)
         }
     }
 }
 
 /// The policy the chats of `scope` follow: a profile's chats follow the
-/// settings of its vault over the default of the app.
+/// settings of its workspace over the default of the app.
 fn scope_policy(
     app: &AppHandle,
     scope: &ChatScope,
@@ -624,10 +628,10 @@ fn scope_policy(
     match scope {
         ChatScope::AskAi => Ok(chats::ChatHistoryPolicy::from_config(config)),
         ChatScope::Profile(key) => {
-            let (vault_ref, _) = crate::services::ai_vault::split_ref(key);
-            let vault = crate::services::ai_vault::resolve_vault(app, vault_ref)?;
-            Ok(chats::ChatHistoryPolicy::for_vault(
-                &crate::services::ai_vault::settings::read_chat_history(&vault.root),
+            let (workspace_ref, _) = crate::services::ai_workspace::split_ref(key);
+            let workspace = crate::services::ai_workspace::resolve_workspace(app, workspace_ref)?;
+            Ok(chats::ChatHistoryPolicy::for_workspace(
+                &crate::services::ai_workspace::settings::read_chat_history(&workspace.root),
             ))
         }
     }
@@ -641,11 +645,11 @@ fn with_chats<T>(
     operation: impl FnOnce(&AppState, &chats::ChatDirs) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
-    let _vault = state.read_vault();
-    with_chats_in_vault(app, scope, access, operation)
+    let _workspace = state.read_workspace();
+    with_chats_in_workspace(app, scope, access, operation)
 }
 
-fn with_chats_in_vault<T>(
+fn with_chats_in_workspace<T>(
     app: &AppHandle,
     scope: &ChatScope,
     access: ChatAccess,
@@ -662,7 +666,7 @@ fn with_chats_in_vault<T>(
 
 /// Runs `operation` while no chat history is written, e.g. to remove a profile
 /// together with its chats.
-pub fn while_chats_locked_in_vault<T>(
+pub fn while_chats_locked_in_workspace<T>(
     app: &AppHandle,
     operation: impl FnOnce() -> Result<T, AppError>,
 ) -> Result<T, AppError> {
@@ -1053,9 +1057,9 @@ pub fn search_chats(
     // The index is a snapshot. Atomic file replacements allow searching each
     // chat without holding up unrelated saves or editor history operations.
     let state = app.state::<AppState>();
-    let _vault = state.read_vault();
+    let _workspace = state.read_workspace();
     let (chats_dir, stored, session_found, merged) =
-        with_chats_in_vault(app, scope, ChatAccess::Read, |state, dirs| {
+        with_chats_in_workspace(app, scope, ChatAccess::Read, |state, dirs| {
             let stored = chats::list_chats(dirs)?;
             let session = state.history.session_chats.locked();
             let list = session.list(scope.key());

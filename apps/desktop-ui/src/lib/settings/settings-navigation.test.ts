@@ -23,7 +23,7 @@ describe('settings navigation', () => {
     const hiddenSources = {
       ...sources,
       isInDevelopment: false,
-      isVaultLoaded: false,
+      isWorkspaceLoaded: false,
     }
     expect(
       buildSettingsNavigation(hiddenSources)
@@ -172,8 +172,8 @@ describe('settings navigation', () => {
     expect(settingsNavigationItemId('nope')).toBeUndefined()
   })
 
-  it('accepts vault pages before the vault is read', () => {
-    const loaded = { ...sources, isVaultLoaded: true }
+  it('accepts workspace pages before the workspace is read', () => {
+    const loaded = { ...sources, isWorkspaceLoaded: true }
     expect(isSettingsTabAvailable('ai-profile:writer', loaded)).toBe(true)
     expect(isSettingsTabAvailable('ai-profile:new', loaded)).toBe(true)
     expect(isSettingsTabAvailable('ai-profile:gone', loaded)).toBe(false)
@@ -181,7 +181,7 @@ describe('settings navigation', () => {
     expect(
       isSettingsTabAvailable('ai-profile:gone', {
         ...loaded,
-        isVaultLoaded: false,
+        isWorkspaceLoaded: false,
       })
     ).toBe(true)
     expect(isSettingsTabAvailable('plugin:missing', loaded)).toBe(false)

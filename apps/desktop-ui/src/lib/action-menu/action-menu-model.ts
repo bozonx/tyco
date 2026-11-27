@@ -91,10 +91,10 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   styling?: () => readonly { id: string; name: string }[] | undefined
   profiles?: () => readonly { id: string; name: string }[] | undefined
   /**
-   * The attached vaults that are there now: a slot of a profile of another one
-   * is hidden and takes no place until its vault is back
+   * The attached workspaces that are there now: a slot of a profile of another
+   * one is hidden and takes no place until its workspace is back
    */
-  connectedVaultIds?: () => readonly string[]
+  connectedWorkspaceIds?: () => readonly string[]
   /** Whether `profiles` is known; until then a prompt keeps its profile */
   areProfilesLoaded?: () => boolean
   /** The prompt library the items of the `chatPrompt` type refer to */
@@ -721,7 +721,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
   const getShortcutActions = (
     targetPageIndex = pageIndex.value
   ): (ActionItem | undefined)[] => {
-    const connected = deps.connectedVaultIds?.()
+    const connected = deps.connectedWorkspaceIds?.()
     const isAway = (item: MainActionConfig | null | undefined) =>
       connected !== undefined &&
       (item?.type === 'profile' || item?.type === 'profileChat') &&

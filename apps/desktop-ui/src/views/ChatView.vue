@@ -97,7 +97,7 @@ import {
 } from '../composables/use-chat-scope'
 import { useI18n } from '../composables/use-i18n'
 import { profileCapabilities } from '../lib/ai-profiles/profile-capabilities'
-import { vaultOfRef } from '../lib/ai-profiles/profile-ref'
+import { workspaceOfRef } from '../lib/ai-profiles/profile-ref'
 import { preventMouseFocus } from '../lib/ui/focus'
 import { appNavigation } from '../navigation'
 import { useAiProfilesStore } from '../stores/ai-profiles'
@@ -150,14 +150,14 @@ const capabilitiesText = computed(() => {
   const pluginIds = [
     ...new Set(pluginChatTools.tools.map((tool) => tool.pluginId)),
   ]
-  const vaultId = vaultOfRef(profile.value.id)
+  const workspaceId = workspaceOfRef(profile.value.id)
   const parts = profileCapabilities(
     profile.value,
     desktopStore.userConfig?.tools,
     {
       pluginIds,
       projectIds: (aiProfilesStore.projects ?? [])
-        .filter((project) => vaultOfRef(project.id) === vaultId)
+        .filter((project) => workspaceOfRef(project.id) === workspaceId)
         .map((project) => project.id),
       commandIds: (desktopStore.userConfig?.commands ?? [])
         .filter((command) => command.isEnabled && command.description?.trim())
@@ -197,13 +197,13 @@ watch(
   { immediate: true }
 )
 
-// a removed profile, or one of another vault, has no chat to show
+// a removed profile, or one of another workspace, has no chat to show
 watch(
   () =>
     aiProfilesStore.isLoaded &&
     Boolean(profileId.value) &&
     !profile.value &&
-    !aiProfilesStore.vaultError,
+    !aiProfilesStore.workspaceError,
   (isGone) => {
     if (isGone) void appNavigation.goToChat()
   },

@@ -410,7 +410,7 @@
     "unsupportedConfig": "設定是由較新版本的應用程式儲存",
     "userDataUnavailable": "資料夾無法使用",
     "variableNotSet": "變數在此裝置上沒有值",
-    "vaultUnavailable": "工作區未在此裝置上連接",
+    "workspaceUnavailable": "工作區未在此裝置上連接",
     "projectUnavailable": "專案資料夾未在此裝置上設定",
     "alreadyExists": "已存在",
     "staleRevision": "檔案已在其他裝置上或 TyCo 之外被變更",
@@ -749,7 +749,7 @@
     "aiCommands": "AI 指令",
     "aiProfilesHint": "擁有專屬指示、模型、工具與聊天記錄的獨立助手。每個設定檔皆為頂部列中的一個分頁。",
     "aiProfilesTab": "AI 設定檔",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "連接工作區…",
       "attachedDeviceScopedHint": "連接的工作區在每台電腦上分別設定；主工作區隨資料夾同步。",
       "detach": "從清單中移除",
@@ -757,7 +757,7 @@
       "hint": "工作區是存放設定檔、專案及其聊天和記憶的資料夾。主工作區位於資料夾中；也可以連接其他工作區，例如單獨同步的工作用工作區。設定檔只能存取其所在工作區的專案。",
       "main": "主庫",
       "name": "名稱",
-      "newVault": "新工作區",
+      "newWorkspace": "新工作區",
       "newer": "由較新版本的 TyCo 建立",
       "notConnected": "此裝置上未連接",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "重新命名工作區",
       "title": "工作區",
       "useSubfolder": "該資料夾中有其他檔案。要在 {path} 中建立工作區嗎？",
-      "vault": "工作區",
+      "workspace": "工作區",
       "writableByOthers": "此電腦的其他使用者可以寫入工作區 {name}：其設定檔會執行此裝置的命令。"
     },
     "allPluginsTab": "所有外掛程式",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "每個工作區都可以在下列分頁中依自己的方式保存聊天：",
     "profileCopyName": "{name}（複本）",
     "profileDefaultSoul": "# 角色\n你是我的個人助理。幫我處理日常事務：回答問題，撰寫和修改文字，幫我規劃、思考解決方案。\n\n# 風格\n- 用我訊息所用的語言回答。\n- 簡潔扼要；我要求時再展開細節。\n- 如果清單和標題能讓回答更易讀，就使用它們。\n\n# 規則\n- 如果請求不清楚，先提問再回答。\n- 不要捏造事實：不確定時要說明。\n- 在修改檔案或執行命令之前，先說明你要做什麼。\n\n# 關於我\n- 在這裡介紹你自己：你做什麼工作，助理需要注意什麼。\n",
+    "profileFolder": "資料夾",
+    "profileFolderFixedHint": "重新命名設定檔時資料夾不會改變，因此聊天和專案存取會保留。",
     "profileMemoryApplyCompact": "套用",
     "profileMemoryCompact": "壓縮最佳化",
     "profileMemoryCompactNoChange": "檔案已處於最佳狀態，無需變更",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "資料夾 {path} 位於另一個磁碟上。確認將檔案從 {current} 移動到該磁碟嗎？"
     },
     "variablesTab": "變數",
-    "vaultFolder": "資料夾",
-    "vaultFolderFixedHint": "重新命名設定檔時資料夾不會改變，因此聊天和專案存取會保留。",
     "vision": "圖片輸入",
     "voiceHold": {
       "voice": "聽寫時按住快速鍵 (Push-to-Talk)",

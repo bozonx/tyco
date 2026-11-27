@@ -7,7 +7,7 @@ import {
   type SessionState,
   type StorageChangedEvent,
   type UserConfig,
-  type VaultChatHistory,
+  type WorkspaceChatHistory,
   maxToolStepsOf,
 } from '@tyco/shared'
 import { computed, ref, unref, watch, type Ref } from 'vue'
@@ -79,7 +79,9 @@ export interface ChatStoreRuntimeDependencies {
   ) => Promise<void>
   getUserConfig: () => UserConfig | undefined
   /** The chat history settings of the workspace of a profile */
-  getVaultChatHistory?: (profileId: string) => VaultChatHistory | undefined
+  getWorkspaceChatHistory?: (
+    profileId: string
+  ) => WorkspaceChatHistory | undefined
   getSessionState: () => SessionState | undefined
   saveSessionState: (
     patch: Partial<SessionState>
@@ -346,7 +348,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       ? isChatHistoryOnDisk(
           config,
           profileId,
-          profileId ? deps.getVaultChatHistory?.(profileId) : undefined
+          profileId ? deps.getWorkspaceChatHistory?.(profileId) : undefined
         )
       : false
   }

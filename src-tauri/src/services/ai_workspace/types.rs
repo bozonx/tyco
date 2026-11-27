@@ -193,7 +193,7 @@ pub struct AiProject {
     #[ts(optional)]
     pub revision: Option<String>,
     /// The folder of an external project lies inside the data folder or a
-    /// vault and is synced with it; never stored in the file.
+    /// workspace and is synced with it; never stored in the file.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub is_inside_synced_folder: Option<bool>,

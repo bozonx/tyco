@@ -91,7 +91,7 @@ function createChatStoreSetup(profileId: string | null) {
         await aiProfilesStore.updateProfile(id, patch)
       },
       getUserConfig: () => desktopStore.userConfig,
-      getVaultChatHistory: aiProfilesStore.vaultChatHistoryOf,
+      getWorkspaceChatHistory: aiProfilesStore.workspaceChatHistoryOf,
       operations: operationsStore,
       environment: operationsStore.environment,
       pluginTools: usePluginChatToolsStore().dependencies,

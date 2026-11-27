@@ -56,8 +56,8 @@
           <FieldInput v-model="name" @update:model-value="changeName" />
         </FieldRow>
         <FieldRow
-          :label="t('settings.vaultFolder')"
-          :info="t('settings.vaultFolderFixedHint')"
+          :label="t('settings.profileFolder')"
+          :info="t('settings.profileFolderFixedHint')"
         >
           <PathDisplay
             :path="`profiles/${splitRef(profile.id).id}`"
@@ -165,7 +165,7 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSettingsDraft } from '../../composables/use-settings-draft'
 import useToast from '../../composables/use-toast'
 import { createProfileEditor } from '../../lib/ai-profiles/profile-editor'
-import { splitRef, vaultOfRef } from '../../lib/ai-profiles/profile-ref'
+import { splitRef, workspaceOfRef } from '../../lib/ai-profiles/profile-ref'
 import {
   type ProjectAccessLevel,
   withProjectAccess,
@@ -232,10 +232,10 @@ function setProjectDeleteAllowed(projectId: string, isAllowed: boolean) {
 
 const isNew = computed(() => props.profileId === NEW_ENTITY_ID)
 const profile = computed(() => aiProfilesStore.getProfile(props.profileId))
-// a profile reaches only the projects of its own vault
+// a profile reaches only the projects of its own workspace
 const projects = computed(() =>
   aiProfilesStore.projects.filter(
-    (project) => vaultOfRef(project.id) === vaultOfRef(props.profileId)
+    (project) => workspaceOfRef(project.id) === workspaceOfRef(props.profileId)
   )
 )
 
@@ -307,7 +307,7 @@ const {
 } = editor
 
 // the fields take the profile once it is there; the settings may open
-// before the vault is read
+// before the workspace is read
 watch(
   () => Boolean(profile.value),
   (isThere) => {
@@ -374,7 +374,7 @@ useSettingsDraft(editor.flush)
 
 async function handleOpenFolder() {
   try {
-    await aiProfilesStore.openVaultDir(props.profileId)
+    await aiProfilesStore.openWorkspaceDir(props.profileId)
   } catch (error) {
     toastError(error)
   }

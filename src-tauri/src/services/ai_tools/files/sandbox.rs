@@ -9,7 +9,7 @@ use super::{
     WORKSPACE_ROOT,
 };
 use crate::errors::AppError;
-use crate::services::ai_vault::{self, ProjectAccessMode, ProjectPermission};
+use crate::services::ai_workspace::{self, ProjectAccessMode, ProjectPermission};
 
 /// A path resolved inside one of the roots.
 pub(in crate::services::ai_tools) struct Resolved<'a> {
@@ -89,7 +89,7 @@ pub(in crate::services::ai_tools) fn is_forbidden(root: &AiFileRoot, relative: &
         if is_top
             && components.peek().is_none()
             && root.has_project_file
-            && name.eq_ignore_ascii_case(ai_vault::PROJECT_FILE)
+            && name.eq_ignore_ascii_case(ai_workspace::PROJECT_FILE)
         {
             return true;
         }
@@ -139,10 +139,10 @@ impl<'a> ConversationFiles<'a> {
 
     /// The profile's workspace alone, for a copy the user asks for whatever
     /// the profile's tools are.
-    pub fn workspace(vault_root: &Path, profile_id: &str) -> Result<Self, AppError> {
-        ai_vault::get_profile(vault_root, profile_id)?;
+    pub fn workspace(workspace_root: &Path, profile_id: &str) -> Result<Self, AppError> {
+        ai_workspace::get_profile(workspace_root, profile_id)?;
         Ok(Self::new(
-            vec![workspace_root(vault_root, profile_id)?],
+            vec![profile_files_root(workspace_root, profile_id)?],
             Attachments::none(),
             None,
         ))
@@ -151,15 +151,15 @@ impl<'a> ConversationFiles<'a> {
     /// The attachments and the profile's roots as they are on disk now: its
     /// workspace and the projects it has access to, by default all of them.
     pub fn load(
-        vault_root: &Path,
-        paths: &ai_vault::ProjectPaths,
+        workspace_root: &Path,
+        paths: &ai_workspace::ProjectPaths,
         profile_id: &str,
         attachments: Attachments<'a>,
     ) -> Result<Self, AppError> {
-        let profile = ai_vault::get_profile(vault_root, profile_id)?;
+        let profile = ai_workspace::get_profile(workspace_root, profile_id)?;
         let settings = profile.clone();
-        let mut roots = vec![workspace_root(vault_root, profile_id)?];
-        for project in ai_vault::list_projects(vault_root, paths)? {
+        let mut roots = vec![profile_files_root(workspace_root, profile_id)?];
+        for project in ai_workspace::list_projects(workspace_root, paths)? {
             let permission = profile
                 .project_permissions
                 .get(&project.id)
@@ -173,7 +173,7 @@ impl<'a> ConversationFiles<'a> {
             // a project not connected on this device is still named, so that
             // the model is told why it cannot reach it
             let (dir, unavailable) =
-                match ai_vault::project_files_dir_checked(vault_root, paths, &project) {
+                match ai_workspace::project_files_dir_checked(workspace_root, paths, &project) {
                     Ok(dir) => (dir, None),
                     Err(error) => (PathBuf::new(), Some(error.to_string())),
                 };
@@ -313,7 +313,7 @@ impl ConversationFiles<'_> {
     }
 }
 
-fn workspace_root(vault_root: &Path, profile_id: &str) -> Result<AiFileRoot, AppError> {
+fn profile_files_root(workspace_root: &Path, profile_id: &str) -> Result<AiFileRoot, AppError> {
     Ok(AiFileRoot {
         path: WORKSPACE_ROOT.into(),
         name: None,
@@ -321,7 +321,7 @@ fn workspace_root(vault_root: &Path, profile_id: &str) -> Result<AiFileRoot, App
         read: ProjectAccessMode::Allow,
         write: ProjectAccessMode::Allow,
         delete: ProjectAccessMode::Allow,
-        dir: ai_vault::profile_workspace_dir(vault_root, profile_id)?,
+        dir: ai_workspace::profile_workspace_dir(workspace_root, profile_id)?,
         has_project_file: false,
         unavailable: None,
     })

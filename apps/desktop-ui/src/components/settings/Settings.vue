@@ -276,7 +276,7 @@ const currentNavigationItemId = computed(() =>
 const isAvailable = (tab: string) =>
   isSettingsTabAvailable(tab, {
     ...navigationSources.value,
-    isVaultLoaded: aiProfilesStore.isLoaded,
+    isWorkspaceLoaded: aiProfilesStore.isLoaded,
   })
 
 watch(

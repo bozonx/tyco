@@ -636,15 +636,15 @@ fn renaming_an_unreadable_chat_sets_it_aside() {
 }
 
 #[test]
-fn every_vault_keeps_its_indexes_apart() {
-    let dir = TestDir::new("vault-index-dirs");
+fn every_workspace_keeps_its_indexes_apart() {
+    let dir = TestDir::new("workspace-index-dirs");
     let index = dir.join("index");
-    // named by the vault id, so a vault that moves keeps them
-    let one = vault_index_dir(&index, "data-1");
+    // named by the workspace id, so a workspace that moves keeps them
+    let one = workspace_index_dir(&index, "data-1");
     assert_eq!(one, index.join("ai-vault/data-1"));
-    assert_ne!(one, vault_index_dir(&index, "4f6c"));
+    assert_ne!(one, workspace_index_dir(&index, "4f6c"));
     // an id that is no plain name never leaves the folder
-    let odd = vault_index_dir(&index, "../x");
+    let odd = workspace_index_dir(&index, "../x");
     assert_eq!(odd.parent(), Some(index.join("ai-vault").as_path()));
 }
 
@@ -1047,25 +1047,25 @@ fn the_list_carries_no_recent_prompts_while_the_index_keeps_them() {
 }
 
 #[test]
-fn a_vault_alone_decides_how_its_chats_are_kept() {
-    use crate::services::ai_vault::{VaultChatHistory, VaultHistoryStorage};
+fn a_workspace_alone_decides_how_its_chats_are_kept() {
+    use crate::services::ai_workspace::{WorkspaceChatHistory, WorkspaceHistoryStorage};
     assert_eq!(
-        ChatHistoryPolicy::for_vault(&VaultChatHistory::default()),
+        ChatHistoryPolicy::for_workspace(&WorkspaceChatHistory::default()),
         ChatHistoryPolicy {
             is_session: false,
             retention_days: 0,
             saves_quick_requests: true,
         }
     );
-    let kept = ChatHistoryPolicy::for_vault(&VaultChatHistory {
-        storage: Some(VaultHistoryStorage::Disk),
+    let kept = ChatHistoryPolicy::for_workspace(&WorkspaceChatHistory {
+        storage: Some(WorkspaceHistoryStorage::Disk),
         retention_days: Some(7),
         is_quick_request_saving_enabled: Some(false),
     });
     assert!(!kept.is_session && !kept.saves_quick_requests);
     assert_eq!(kept.retention_days, 7);
-    let off = ChatHistoryPolicy::for_vault(&VaultChatHistory {
-        storage: Some(VaultHistoryStorage::Session),
+    let off = ChatHistoryPolicy::for_workspace(&WorkspaceChatHistory {
+        storage: Some(WorkspaceHistoryStorage::Session),
         retention_days: None,
         is_quick_request_saving_enabled: None,
     });

@@ -410,7 +410,7 @@
     "unsupportedConfig": "Ayarlar uygulamanın daha yeni bir sürümüyle kaydedilmiş",
     "userDataUnavailable": "Veri klasörü kullanılamıyor",
     "variableNotSet": "Bir değişkenin bu cihazda değeri yok",
-    "vaultUnavailable": "Çalışma alanı bu cihazda bağlı değil",
+    "workspaceUnavailable": "Çalışma alanı bu cihazda bağlı değil",
     "projectUnavailable": "Proje klasörü bu cihazda ayarlanmamış",
     "alreadyExists": "Zaten var",
     "staleRevision": "Dosya başka bir cihazda veya TyCo dışında değiştirildi",
@@ -749,7 +749,7 @@
     "aiCommands": "Yapay zekâ komutları",
     "aiProfilesHint": "Kendi talimatı, modeli, araçları ve sohbetleri olan ayrı asistanlar. Her profil üst çubukta bir sekmedir.",
     "aiProfilesTab": "Yapay Zekâ Profilleri",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "Çalışma alanı bağla…",
       "attachedDeviceScopedHint": "Bağlı çalışma alanları her bilgisayarda ayrı ayrı ayarlanır; ana çalışma alanı veri klasörüyle eşitlenir.",
       "detach": "Listeden kaldır",
@@ -757,7 +757,7 @@
       "hint": "Çalışma alanı; profillerin, projelerin, sohbetlerinin ve belleklerinin bulunduğu bir klasördür. Ana çalışma alanı veri klasöründedir; başkalarını da bağlayın, örneğin ayrı eşitlenen bir iş çalışma alanı. Bir profil yalnızca kendi çalışma alanının projelerine erişir.",
       "main": "Ana",
       "name": "Ad",
-      "newVault": "Yeni çalışma alanı",
+      "newWorkspace": "Yeni çalışma alanı",
       "newer": "Daha yeni bir TyCo tarafından oluşturuldu",
       "notConnected": "Bu cihazda bağlı değil",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "Çalışma alanını yeniden adlandır",
       "title": "Çalışma alanı",
       "useSubfolder": "Klasörde başka dosyalar var. Çalışma alanı {path} içinde oluşturulsun mu?",
-      "vault": "Çalışma alanı",
+      "workspace": "Çalışma alanı",
       "writableByOthers": "Bu bilgisayarın diğer kullanıcıları {name} çalışma alanına yazabilir: profilleri bu cihazın komutlarını çalıştırır."
     },
     "allPluginsTab": "Tüm eklentiler",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "Her çalışma alanı sohbetlerini kendi biçiminde saklayabilir, şu sekmede:",
     "profileCopyName": "{name} (kopya)",
     "profileDefaultSoul": "# Rol\nSen benim kişisel asistanımsın. Günlük işlerde yardım edersin: soruları yanıtlar, metin yazar ve düzeltir, plan yapmaya ve çözümleri düşünmeye yardım edersin.\n\n# Üslup\n- Mesajımın dilinde yanıt ver.\n- Kısa ve öz yaz; ayrıntıyı istediğimde ver.\n- Yanıtı okumayı kolaylaştırıyorsa liste ve başlık kullan.\n\n# Kurallar\n- İstek açık değilse yanıtlamadan önce sor.\n- Bilgi uydurma: emin olmadığında söyle.\n- Dosyaları değiştirmeden veya komut çalıştırmadan önce ne yapacağını söyle.\n\n# Hakkımda\n- Kendinizi burada anlatın: ne iş yaptığınızı ve asistanın nelere dikkat etmesi gerektiğini.\n",
+    "profileFolder": "Klasör",
+    "profileFolderFixedHint": "Profil yeniden adlandırıldığında klasör değişmez; böylece sohbetleri ve proje erişimi onunla kalır.",
     "profileMemoryApplyCompact": "Uygula",
     "profileMemoryCompact": "Sıkıştır",
     "profileMemoryCompactNoChange": "Dosya zaten en uygun durumda, değişiklik gerekmiyor",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "{path} klasörü başka bir diskte bulunuyor. Dosyalarınızın {current} konumundan diğer diske taşınmasını onaylıyor musunuz?"
     },
     "variablesTab": "Değişkenler",
-    "vaultFolder": "Klasör",
-    "vaultFolderFixedHint": "Profil yeniden adlandırıldığında klasör değişmez; böylece sohbetleri ve proje erişimi onunla kalır.",
     "vision": "Görsel desteği",
     "voiceHold": {
       "voice": "Dikte ederken kısayolu basılı tut (Push-to-Talk)",

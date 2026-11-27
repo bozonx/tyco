@@ -300,7 +300,7 @@ export interface TranslationMainAction {
 export interface ProfileChatMainAction {
   type: 'profileChat'
   profileId: string
-  /** The vault of an attached one; absent for the main vault */
+  /** The workspace of an attached one; absent for the main workspace */
   vaultId?: string
 }
 
@@ -318,7 +318,7 @@ export type ProfileActionKind = (typeof PROFILE_ACTION_KINDS)[number]
 export interface ProfileMainAction {
   type: 'profile'
   profileId: string
-  /** The vault of an attached one; absent for the main vault */
+  /** The workspace of an attached one; absent for the main workspace */
   vaultId?: string
   action: ProfileActionKind
 }

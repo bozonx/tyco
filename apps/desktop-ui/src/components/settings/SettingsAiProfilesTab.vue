@@ -2,10 +2,9 @@
   <div class="settings-stack">
     <div class="workspace-bar">
       <SegmentedControl
-        v-if="workspaceOptions.length > 1"
         size="sm"
-        :label="t('settings.aiVaults.vault')"
-        :model-value="activeVault.vaultId"
+        :label="t('settings.aiWorkspaces.workspace')"
+        :model-value="activeWorkspace.workspaceId"
         :options="workspaceOptions"
         data-testid="workspace-switcher"
         @update:model-value="selectWorkspace"
@@ -18,7 +17,7 @@
         :message="t('settings.workspaceNotConnected')"
         data-testid="workspace-not-connected"
       />
-      <SettingsWorkspaceSection :vault="activeVault" />
+      <SettingsWorkspaceSection :workspace="activeWorkspace" />
     </template>
     <template v-else>
       <SettingsSection
@@ -134,8 +133,8 @@
         </div>
       </SettingsSection>
 
-      <SettingsWorkspaceHistorySection :vault="activeVault" />
-      <SettingsWorkspaceSection :vault="activeVault" />
+      <SettingsWorkspaceHistorySection :workspace="activeWorkspace" />
+      <SettingsWorkspaceSection :workspace="activeWorkspace" />
     </template>
 
     <SettingsCreateEntityModal
@@ -253,9 +252,9 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { moveTargets } from '../../lib/ai-profiles/entity-move'
-import { splitRef, vaultOfRef } from '../../lib/ai-profiles/profile-ref'
+import { splitRef, workspaceOfRef } from '../../lib/ai-profiles/profile-ref'
 import { isProjectEmpty } from '../../lib/ai-profiles/project-files'
-import { vaultLabel } from '../../lib/ai-profiles/vault-groups'
+import { workspaceLabel } from '../../lib/ai-profiles/workspace-groups'
 import { profileTab, projectTab } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Badge from '../common/Badge.vue'
@@ -274,7 +273,7 @@ import SettingsSection from './SettingsSection.vue'
 import SettingsWorkspaceAttach from './SettingsWorkspaceAttach.vue'
 import SettingsWorkspaceHistorySection from './SettingsWorkspaceHistorySection.vue'
 import SettingsWorkspaceSection from './SettingsWorkspaceSection.vue'
-import type { AiProject, VaultInfo } from '@tyco/shared'
+import type { AiProject, WorkspaceInfo } from '@tyco/shared'
 
 const { t } = useI18n()
 const { navigate } = useSettingsContext()
@@ -285,13 +284,13 @@ const profiles = computed(() => aiProfilesStore.profiles)
 const projects = computed(() => aiProfilesStore.projects)
 
 /** The workspace shown; the main one when the chosen one is gone */
-const activeVault = computed<VaultInfo>(
+const activeWorkspace = computed<WorkspaceInfo>(
   () =>
-    aiProfilesStore.vaults.find(
-      (vault) => vault.vaultId === lastWorkspaceId.value
+    aiProfilesStore.workspaces.find(
+      (workspace) => workspace.workspaceId === lastWorkspaceId.value
     ) ??
-    aiProfilesStore.vaults.find((vault) => vault.isMain) ?? {
-      vaultId: '',
+    aiProfilesStore.workspaces.find((workspace) => workspace.isMain) ?? {
+      workspaceId: '',
       name: '',
       path: '',
       isMain: true,
@@ -301,24 +300,27 @@ const activeVault = computed<VaultInfo>(
     }
 )
 const isActiveConnected = computed(
-  () => activeVault.value.status === 'connected'
+  () => activeWorkspace.value.status === 'connected'
 )
 const workspaceOptions = computed(() =>
-  aiProfilesStore.vaults.map((vault) => ({
-    id: vault.vaultId,
-    name: vaultLabel(vault, t('settings.aiVaults.main')),
-    icon: vault.status === 'connected' ? undefined : 'mdi:alert-outline',
+  (aiProfilesStore.workspaces.length
+    ? aiProfilesStore.workspaces
+    : [activeWorkspace.value]
+  ).map((workspace) => ({
+    id: workspace.workspaceId,
+    name: workspaceLabel(workspace, t('settings.aiWorkspaces.main')),
+    icon: workspace.status === 'connected' ? undefined : 'mdi:alert-outline',
   }))
 )
-function selectWorkspace(vaultId: string) {
-  lastWorkspaceId.value = vaultId
+function selectWorkspace(workspaceId: string) {
+  lastWorkspaceId.value = workspaceId
 }
-const inActiveVault = (item: { id: string }) =>
-  vaultOfRef(item.id) === activeVault.value.vaultId
-const activeProfiles = computed(() => profiles.value.filter(inActiveVault))
-const activeProjects = computed(() => projects.value.filter(inActiveVault))
-/** The vault a new profile or project goes to */
-const targetVaultId = computed(() => activeVault.value.vaultId)
+const inActiveWorkspace = (item: { id: string }) =>
+  workspaceOfRef(item.id) === activeWorkspace.value.workspaceId
+const activeProfiles = computed(() => profiles.value.filter(inActiveWorkspace))
+const activeProjects = computed(() => projects.value.filter(inActiveWorkspace))
+/** The workspace a new profile or project goes to */
+const targetWorkspaceId = computed(() => activeWorkspace.value.workspaceId)
 
 /** An external project with no folder on this device */
 const isWithoutFolder = (project: AiProject) =>
@@ -538,7 +540,7 @@ function moveItem(
   kind: 'profile' | 'project',
   entity: { readonly id: string; readonly name: string }
 ): DropdownMenuItem[] {
-  if (moveTargets(entity.id, aiProfilesStore.vaults).length === 0) return []
+  if (moveTargets(entity.id, aiProfilesStore.workspaces).length === 0) return []
   return [
     {
       label: t('settings.moveToWorkspace.action'),
@@ -550,16 +552,16 @@ function moveItem(
   ]
 }
 
-async function handleMove(vaultId: string) {
+async function handleMove(workspaceId: string) {
   const entity = entityToMove.value
   if (!entity) return
   await runMoving(async () => {
     try {
       if (entity.kind === 'profile')
-        await aiProfilesStore.moveProfile(entity.id, vaultId)
-      else await aiProfilesStore.moveProject(entity.id, vaultId)
+        await aiProfilesStore.moveProfile(entity.id, workspaceId)
+      else await aiProfilesStore.moveProject(entity.id, workspaceId)
       entityToMove.value = null
-      selectWorkspace(vaultId)
+      selectWorkspace(workspaceId)
     } catch (error) {
       toastError(error)
     }
@@ -577,7 +579,7 @@ async function handleCreateProfile(name: string) {
   await runCreatingProfile(async () => {
     const created = await aiProfilesStore.createProfile({
       name,
-      vaultId: targetVaultId.value,
+      workspaceId: targetWorkspaceId.value,
       soul: t('settings.profileDefaultSoul'),
       settings: {},
     })
@@ -614,7 +616,7 @@ async function handleCreateProject(name: string) {
   await runCreatingProject(async () => {
     const created = await aiProfilesStore.createProject({
       name,
-      vaultId: targetVaultId.value,
+      workspaceId: targetWorkspaceId.value,
       isExternal: newProjectIsExternal.value,
       targetPath: newProjectIsExternal.value ? newProjectPath.value : undefined,
     })

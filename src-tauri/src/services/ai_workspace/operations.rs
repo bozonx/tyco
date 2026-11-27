@@ -62,16 +62,16 @@ pub fn validate_id(id: &str) -> Result<(), AppError> {
     Ok(())
 }
 
-/// The root may be a folder of the user's own: only the vault's own
+/// The root may be a folder of the user's own: only the workspace's own
 /// subfolders are closed to other users.
-pub fn ensure_vault_dirs(vault_root: &Path) -> Result<(), AppError> {
-    if crate::services::storage::user_data::ensure_write_allowed(vault_root).is_err() {
-        crate::services::storage::user_data::ensure_read_allowed(vault_root)?;
+pub fn ensure_workspace_dirs(workspace_root: &Path) -> Result<(), AppError> {
+    if crate::services::storage::user_data::ensure_write_allowed(workspace_root).is_err() {
+        crate::services::storage::user_data::ensure_read_allowed(workspace_root)?;
         return Ok(());
     }
-    fs::create_dir_all(vault_root)?;
-    create_private_dir(&vault_root.join("profiles"))?;
-    create_private_dir(&vault_root.join("projects"))?;
+    fs::create_dir_all(workspace_root)?;
+    create_private_dir(&workspace_root.join("profiles"))?;
+    create_private_dir(&workspace_root.join("projects"))?;
     Ok(())
 }
 
@@ -144,14 +144,14 @@ fn read_entries<T: serde::de::DeserializeOwned + serde::Serialize>(
 // Profiles
 // ---------------------------------------------------------------------------
 
-pub(super) fn profile_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+pub(super) fn profile_dir(workspace_root: &Path, id: &str) -> Result<PathBuf, AppError> {
     validate_id(id)?;
-    Ok(vault_root.join("profiles").join(id))
+    Ok(workspace_root.join("profiles").join(id))
 }
 
 /// The folder of a profile that exists; nothing is created for an unknown id.
-pub(super) fn existing_profile_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
-    let dir = profile_dir(vault_root, id)?;
+pub(super) fn existing_profile_dir(workspace_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+    let dir = profile_dir(workspace_root, id)?;
     if !dir.join(PROFILE_FILE).is_file() {
         return Err(not_found("Profile", id));
     }
@@ -189,22 +189,23 @@ fn profile_file_content(profile: &AiProfile) -> Result<String, AppError> {
     Ok(serde_json::to_string_pretty(&stored)?)
 }
 
-pub fn list_profiles(vault_root: &Path) -> Result<Vec<AiProfile>, AppError> {
-    ensure_vault_dirs(vault_root)?;
-    let mut profiles: Vec<AiProfile> = read_entries(&vault_root.join("profiles"), PROFILE_FILE)?
-        .into_iter()
-        .map(|(profile, revision)| AiProfile {
-            revision: Some(revision),
-            ..profile
-        })
-        .collect();
+pub fn list_profiles(workspace_root: &Path) -> Result<Vec<AiProfile>, AppError> {
+    ensure_workspace_dirs(workspace_root)?;
+    let mut profiles: Vec<AiProfile> =
+        read_entries(&workspace_root.join("profiles"), PROFILE_FILE)?
+            .into_iter()
+            .map(|(profile, revision)| AiProfile {
+                revision: Some(revision),
+                ..profile
+            })
+            .collect();
     profiles.sort_by_key(|a| a.created_at);
     Ok(profiles)
 }
 
 /// The profile as it is on disk now: the user may edit the file by hand.
-pub fn get_profile(vault_root: &Path, id: &str) -> Result<AiProfile, AppError> {
-    let dir = existing_profile_dir(vault_root, id)?;
+pub fn get_profile(workspace_root: &Path, id: &str) -> Result<AiProfile, AppError> {
+    let dir = existing_profile_dir(workspace_root, id)?;
     let raw = fs::read_to_string(dir.join(PROFILE_FILE))?;
     let profile: AiProfile = serde_json::from_str(&raw)?;
     if profile.id != id {
@@ -251,14 +252,14 @@ pub(super) fn remove_stale_staging(dir: &Path) {
 /// Creates the profile folder with its root instruction. An existing folder
 /// of that id is never written into: the caller picks another id.
 pub fn create_profile(
-    vault_root: &Path,
+    workspace_root: &Path,
     profile: AiProfile,
     soul: &str,
 ) -> Result<String, AppError> {
     validate_profile(&profile)?;
-    ensure_vault_dirs(vault_root)?;
+    ensure_workspace_dirs(workspace_root)?;
 
-    let dir = profile_dir(vault_root, &profile.id)?;
+    let dir = profile_dir(workspace_root, &profile.id)?;
     // any folder of that id, e.g. one a sync is still bringing, is taken
     if dir.symlink_metadata().is_ok() {
         return Err(AppError::AlreadyExists(format!(
@@ -269,8 +270,8 @@ pub fn create_profile(
     // the profile is laid out in a hidden folder and moved into place
     // whole, so a failure never leaves a folder that takes the id but has
     // no profile in it
-    remove_stale_staging(&vault_root.join("profiles"));
-    let staging = vault_root.join("profiles").join(format!(
+    remove_stale_staging(&workspace_root.join("profiles"));
+    let staging = workspace_root.join("profiles").join(format!(
         "{STAGING_PREFIX}{}-{}",
         profile.id,
         crate::services::random_id::new_uuid()
@@ -316,12 +317,12 @@ pub fn create_profile(
 /// `expected_revision` the file must be as the caller read it, see
 /// [`write_checked`]. Returns the new revision.
 pub fn save_profile(
-    vault_root: &Path,
+    workspace_root: &Path,
     profile: AiProfile,
     expected_revision: Option<&str>,
 ) -> Result<String, AppError> {
     validate_profile(&profile)?;
-    let dir = existing_profile_dir(vault_root, &profile.id)?;
+    let dir = existing_profile_dir(workspace_root, &profile.id)?;
     write_checked(
         &dir.join(PROFILE_FILE),
         &profile_file_content(&profile)?,
@@ -330,21 +331,24 @@ pub fn save_profile(
 }
 
 pub fn delete_profile(
-    vault_root: &Path,
+    workspace_root: &Path,
     versions: &super::memory::MemoryReadVersions,
     id: &str,
 ) -> Result<(), AppError> {
-    let dir = profile_dir(vault_root, id)?;
+    let dir = profile_dir(workspace_root, id)?;
     if dir.exists() {
-        versions.clear_profile(vault_root, id);
+        versions.clear_profile(workspace_root, id);
         crate::services::storage::watcher::remove_tree(&dir)?;
     }
     Ok(())
 }
 
 /// The root instruction with its revision; an empty one for no file.
-pub fn read_profile_soul_revision(vault_root: &Path, id: &str) -> Result<ProfileSoul, AppError> {
-    let path = existing_profile_dir(vault_root, id)?.join(SOUL_FILE);
+pub fn read_profile_soul_revision(
+    workspace_root: &Path,
+    id: &str,
+) -> Result<ProfileSoul, AppError> {
+    let path = existing_profile_dir(workspace_root, id)?.join(SOUL_FILE);
     match fs::read_to_string(path) {
         Ok(content) => {
             let revision = crate::services::storage::watcher::content_hash(content.as_bytes());
@@ -361,33 +365,33 @@ pub fn read_profile_soul_revision(vault_root: &Path, id: &str) -> Result<Profile
 /// Writes the root instruction, checking `expected_revision` as
 /// [`save_profile`] does; an empty revision expects no file.
 pub fn write_profile_soul(
-    vault_root: &Path,
+    workspace_root: &Path,
     id: &str,
     content: &str,
     expected_revision: Option<&str>,
 ) -> Result<String, AppError> {
-    let dir = existing_profile_dir(vault_root, id)?;
+    let dir = existing_profile_dir(workspace_root, id)?;
     write_checked(&dir.join(SOUL_FILE), content, expected_revision)
 }
 
 /// Where the profile keeps its chats; only an existing profile has one.
-pub fn profile_chats_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
-    let dir = existing_profile_chats_path(vault_root, id)?;
+pub fn profile_chats_dir(workspace_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+    let dir = existing_profile_chats_path(workspace_root, id)?;
     create_private_dir(&dir)?;
     Ok(dir)
 }
 
 /// The chat folder of an existing profile, which may not exist yet: reading
 /// chats creates nothing.
-pub fn existing_profile_chats_path(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
-    Ok(existing_profile_dir(vault_root, id)?.join(PROFILE_CHATS_DIR))
+pub fn existing_profile_chats_path(workspace_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+    Ok(existing_profile_dir(workspace_root, id)?.join(PROFILE_CHATS_DIR))
 }
 
-/// The chat folders of every profile in the vault, for the history settings
-/// all profiles share. Nothing is created: a vault or a profile without one
+/// The chat folders of every profile in the workspace, for the history settings
+/// all profiles share. Nothing is created: a workspace or a profile without one
 /// has no chats to keep.
-pub fn all_profile_chats_dirs(vault_root: &Path) -> Result<Vec<PathBuf>, AppError> {
-    let entries = match fs::read_dir(vault_root.join("profiles")) {
+pub fn all_profile_chats_dirs(workspace_root: &Path) -> Result<Vec<PathBuf>, AppError> {
+    let entries = match fs::read_dir(workspace_root.join("profiles")) {
         Ok(entries) => entries,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
         Err(error) => return Err(error.into()),
@@ -410,18 +414,21 @@ pub fn all_profile_chats_dirs(vault_root: &Path) -> Result<Vec<PathBuf>, AppErro
 }
 
 /// The folder of the profile's own files, the one its file tools always reach.
-pub fn profile_workspace_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
-    let dir = existing_profile_dir(vault_root, id)?.join("workspace");
+pub fn profile_workspace_dir(workspace_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+    let dir = existing_profile_dir(workspace_root, id)?.join("workspace");
     create_private_dir(&dir)?;
     Ok(dir)
 }
 
-/// The folder to show the user: the vault, or one profile in it.
-pub fn vault_dir_to_open(vault_root: &Path, profile_id: Option<&str>) -> Result<PathBuf, AppError> {
-    ensure_vault_dirs(vault_root)?;
+/// The folder to show the user: the workspace, or one profile in it.
+pub fn workspace_dir_to_open(
+    workspace_root: &Path,
+    profile_id: Option<&str>,
+) -> Result<PathBuf, AppError> {
+    ensure_workspace_dirs(workspace_root)?;
     match profile_id {
-        Some(id) => existing_profile_dir(vault_root, id),
-        None => Ok(vault_root.to_path_buf()),
+        Some(id) => existing_profile_dir(workspace_root, id),
+        None => Ok(workspace_root.to_path_buf()),
     }
 }
 
@@ -429,19 +436,19 @@ pub fn vault_dir_to_open(vault_root: &Path, profile_id: Option<&str>) -> Result<
 // Projects
 // ---------------------------------------------------------------------------
 
-pub(super) fn project_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+pub(super) fn project_dir(workspace_root: &Path, id: &str) -> Result<PathBuf, AppError> {
     validate_id(id)?;
-    Ok(vault_root.join("projects").join(id))
+    Ok(workspace_root.join("projects").join(id))
 }
 
-/// The folders of the external projects of one vault on this device: the
-/// description of a project is synced with the vault, its folder is set on
+/// The folders of the external projects of one workspace on this device: the
+/// description of a project is synced with the workspace, its folder is set on
 /// each device. Kept in `device.json`, see `DeviceFile::ai_project_paths`.
 pub struct ProjectPaths<'a> {
     pub device: &'a DeviceStore,
-    pub vault_id: &'a str,
+    pub workspace_id: &'a str,
     /// Folders an external project may neither lie in nor hold: the data
-    /// folder and every vault of this device. The vault of these paths is
+    /// folder and every workspace of this device. The workspace of these paths is
     /// always protected, listed or not.
     pub protected_roots: Vec<PathBuf>,
 }
@@ -451,7 +458,7 @@ impl ProjectPaths<'_> {
         self.device
             .snapshot()
             .ai_project_paths
-            .get(self.vault_id)
+            .get(self.workspace_id)
             .and_then(|paths| paths.get(project_id))
             .cloned()
     }
@@ -460,7 +467,7 @@ impl ProjectPaths<'_> {
         self.device.update(|file| {
             let paths = file
                 .ai_project_paths
-                .entry(self.vault_id.to_owned())
+                .entry(self.workspace_id.to_owned())
                 .or_default();
             match path {
                 Some(path) => {
@@ -471,7 +478,7 @@ impl ProjectPaths<'_> {
                 }
             }
             if paths.is_empty() {
-                file.ai_project_paths.remove(self.vault_id);
+                file.ai_project_paths.remove(self.workspace_id);
             }
         })
     }
@@ -497,11 +504,11 @@ fn canonical_or_same(path: &Path) -> PathBuf {
 /// profiles, memories and chats kept there.
 pub fn check_project_folder(
     target: &Path,
-    vault_root: &Path,
+    workspace_root: &Path,
     protected_roots: &[PathBuf],
 ) -> Result<(), AppError> {
     let target = canonical_or_same(target);
-    let overlapping = std::iter::once(vault_root)
+    let overlapping = std::iter::once(workspace_root)
         .chain(protected_roots.iter().map(PathBuf::as_path))
         .map(canonical_or_same)
         .find(|root| target.starts_with(root) || root.starts_with(&target));
@@ -520,7 +527,7 @@ pub fn check_project_folder(
 /// given.
 fn checked_target<'p>(
     project: &'p AiProject,
-    vault_root: &Path,
+    workspace_root: &Path,
     paths: &ProjectPaths,
 ) -> Result<Option<&'p str>, AppError> {
     let Some(target) = project
@@ -537,7 +544,7 @@ fn checked_target<'p>(
             "External target path must be an existing absolute directory".into(),
         ));
     }
-    check_project_folder(target_path, vault_root, &paths.protected_roots)?;
+    check_project_folder(target_path, workspace_root, &paths.protected_roots)?;
     Ok(Some(target))
 }
 
@@ -553,18 +560,18 @@ fn project_file_content(project: &AiProject) -> Result<String, AppError> {
     Ok(serde_json::to_string_pretty(&shared)?)
 }
 
-/// Where the files of a project are: its own folder in the vault, or the
+/// Where the files of a project are: its own folder in the workspace, or the
 /// folder an external project has on this device. An external project
 /// without one here is not connected: the model gets that as the result of
 /// its tool, not as a failure of the chat.
-pub fn project_files_dir(vault_root: &Path, project: &AiProject) -> Result<PathBuf, AppError> {
+pub fn project_files_dir(workspace_root: &Path, project: &AiProject) -> Result<PathBuf, AppError> {
     if !project.is_external {
-        return project_dir(vault_root, &project.id);
+        return project_dir(workspace_root, &project.id);
     }
     match project.target_path.as_deref().map(str::trim) {
         Some(target) if !target.is_empty() && Path::new(target).is_dir() => {
             // a folder set by hand in `device.json` is checked too
-            check_project_folder(Path::new(target), vault_root, &[]).map_err(|error| {
+            check_project_folder(Path::new(target), workspace_root, &[]).map_err(|error| {
                 AppError::ProjectUnavailable(format!(
                     "The project {} is not available: {error}",
                     project.id
@@ -586,13 +593,13 @@ pub fn project_files_dir(vault_root: &Path, project: &AiProject) -> Result<PathB
 /// [`project_files_dir`], with the folder of an external project kept out of
 /// every protected root of `paths` as well.
 pub fn project_files_dir_checked(
-    vault_root: &Path,
+    workspace_root: &Path,
     paths: &ProjectPaths,
     project: &AiProject,
 ) -> Result<PathBuf, AppError> {
-    let dir = project_files_dir(vault_root, project)?;
+    let dir = project_files_dir(workspace_root, project)?;
     if project.is_external {
-        check_project_folder(&dir, vault_root, &paths.protected_roots).map_err(|error| {
+        check_project_folder(&dir, workspace_root, &paths.protected_roots).map_err(|error| {
             AppError::ProjectUnavailable(format!(
                 "The project {} is not available: {error}",
                 project.id
@@ -602,19 +609,23 @@ pub fn project_files_dir_checked(
     Ok(dir)
 }
 
-/// The projects of the vault, each external one with its folder on this
+/// The projects of the workspace, each external one with its folder on this
 /// device, if it has one. The folders of projects not found are kept: a
 /// `project.json` a sync has not brought yet, or cannot be read now, is not a
 /// deleted project. Only `delete_project` here forgets a folder.
-pub fn list_projects(vault_root: &Path, paths: &ProjectPaths) -> Result<Vec<AiProject>, AppError> {
-    ensure_vault_dirs(vault_root)?;
-    let mut projects: Vec<AiProject> = read_entries(&vault_root.join("projects"), PROJECT_FILE)?
-        .into_iter()
-        .map(|(project, revision)| AiProject {
-            revision: Some(revision),
-            ..project
-        })
-        .collect();
+pub fn list_projects(
+    workspace_root: &Path,
+    paths: &ProjectPaths,
+) -> Result<Vec<AiProject>, AppError> {
+    ensure_workspace_dirs(workspace_root)?;
+    let mut projects: Vec<AiProject> =
+        read_entries(&workspace_root.join("projects"), PROJECT_FILE)?
+            .into_iter()
+            .map(|(project, revision)| AiProject {
+                revision: Some(revision),
+                ..project
+            })
+            .collect();
     projects.sort_by_key(|a| a.created_at);
     for project in &mut projects {
         project.target_path = project
@@ -627,19 +638,19 @@ pub fn list_projects(vault_root: &Path, paths: &ProjectPaths) -> Result<Vec<AiPr
 
 /// Creates the project; an external one needs its folder on this device.
 pub fn create_project(
-    vault_root: &Path,
+    workspace_root: &Path,
     paths: &ProjectPaths,
     project: AiProject,
 ) -> Result<String, AppError> {
     validate_project(&project)?;
-    let target = checked_target(&project, vault_root, paths)?;
+    let target = checked_target(&project, workspace_root, paths)?;
     if project.is_external && target.is_none() {
         return Err(AppError::InvalidInput(
             "External project requires a target path".into(),
         ));
     }
-    ensure_vault_dirs(vault_root)?;
-    let dir = project_dir(vault_root, &project.id)?;
+    ensure_workspace_dirs(workspace_root)?;
+    let dir = project_dir(workspace_root, &project.id)?;
     if dir.symlink_metadata().is_ok() {
         return Err(AppError::AlreadyExists(format!(
             "Project already exists: {}",
@@ -662,14 +673,14 @@ pub fn create_project(
 /// description is checked against `expected_revision` as [`save_profile`]
 /// does. Returns the new revision.
 pub fn save_project(
-    vault_root: &Path,
+    workspace_root: &Path,
     paths: &ProjectPaths,
     project: AiProject,
     expected_revision: Option<&str>,
 ) -> Result<String, AppError> {
     validate_project(&project)?;
-    let target = checked_target(&project, vault_root, paths)?;
-    let dir = project_dir(vault_root, &project.id)?;
+    let target = checked_target(&project, workspace_root, paths)?;
+    let dir = project_dir(workspace_root, &project.id)?;
     if !dir.join(PROJECT_FILE).is_file() {
         return Err(not_found("Project", &project.id));
     }
@@ -697,20 +708,20 @@ pub(super) fn read_project(dir: &Path) -> Result<AiProject, AppError> {
     )?)?)
 }
 
-/// The folder of the project `id` on this device: its vault folder, or the
+/// The folder of the project `id` on this device: its workspace folder, or the
 /// folder of an external project, checked as for the file tools.
 pub fn project_folder_on_device(
-    vault_root: &Path,
+    workspace_root: &Path,
     paths: &ProjectPaths,
     id: &str,
 ) -> Result<PathBuf, AppError> {
-    let dir = project_dir(vault_root, id)?;
+    let dir = project_dir(workspace_root, id)?;
     if !dir.join(PROJECT_FILE).is_file() {
         return Err(not_found("Project", id));
     }
     let stored = read_project(&dir)?;
     project_files_dir_checked(
-        vault_root,
+        workspace_root,
         paths,
         &AiProject {
             target_path: paths.get(id),
@@ -724,14 +735,14 @@ pub fn project_folder_on_device(
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct ProjectTransferPreview {
-    /// The files that would be transferred: those of the vault folder of an
+    /// The files that would be transferred: those of the workspace folder of an
     /// internal project, or of the folder of an external one on this device.
     pub files: TreeSummary,
     /// Names of the project that the destination holds already.
     pub taken_names: Vec<String>,
     /// The files go to another disk: they are copied byte by byte.
     pub is_other_disk: bool,
-    /// Other projects of this device, in any vault, with the same folder.
+    /// Other projects of this device, in any workspace, with the same folder.
     pub shared_folder_count: u32,
 }
 
@@ -752,19 +763,19 @@ pub struct ProjectConversion {
 /// What converting the project `id` would transfer; `target_path` is the
 /// folder an internal project would get.
 pub fn inspect_project_transfer(
-    vault_root: &Path,
+    workspace_root: &Path,
     paths: &ProjectPaths,
     id: &str,
     target_path: Option<&str>,
 ) -> Result<ProjectTransferPreview, AppError> {
-    let dir = project_dir(vault_root, id)?;
+    let dir = project_dir(workspace_root, id)?;
     if !dir.join(PROJECT_FILE).is_file() {
         return Err(not_found("Project", id));
     }
     let stored = read_project(&dir)?;
     let (source, destination) = if stored.is_external {
         let source = project_files_dir_checked(
-            vault_root,
+            workspace_root,
             paths,
             &AiProject {
                 target_path: paths.get(id),
@@ -779,7 +790,7 @@ pub fn inspect_project_transfer(
             .map(PathBuf::from)
             .filter(|target| target.is_dir());
         if let Some(target) = &target {
-            check_project_folder(target, vault_root, &paths.protected_roots)?;
+            check_project_folder(target, workspace_root, &paths.protected_roots)?;
         }
         (dir, target)
     };
@@ -808,20 +819,20 @@ pub fn inspect_project_transfer(
     })
 }
 
-/// The other projects of this device, in any vault, whose folder is `folder`.
+/// The other projects of this device, in any workspace, whose folder is `folder`.
 fn shared_folder_count(paths: &ProjectPaths, id: &str, folder: &Path) -> u32 {
     let folder = canonical_or_same(folder);
     let snapshot = paths.device.snapshot();
     let count = snapshot
         .ai_project_paths
         .iter()
-        .flat_map(|(vault_id, projects)| {
+        .flat_map(|(workspace_id, projects)| {
             projects
                 .iter()
-                .map(move |(project_id, path)| (vault_id, project_id, path))
+                .map(move |(project_id, path)| (workspace_id, project_id, path))
         })
-        .filter(|(vault_id, project_id, path)| {
-            !(vault_id.as_str() == paths.vault_id && project_id.as_str() == id)
+        .filter(|(workspace_id, project_id, path)| {
+            !(workspace_id.as_str() == paths.workspace_id && project_id.as_str() == id)
                 && canonical_or_same(Path::new(path)) == folder
         })
         .count();
@@ -832,7 +843,7 @@ fn shared_folder_count(paths: &ProjectPaths, id: &str, folder: &Path) -> u32 {
 /// `target_path`, or an external one into an internal one.
 ///
 /// An internal project always moves its files to the folder. An external
-/// one copies the files of its folder on this device into the vault with
+/// one copies the files of its folder on this device into the workspace with
 /// `transfer_files`; its folder is then left as it is, or handed to
 /// `discard_source` (the trash, in the app), which a folder another project
 /// of this device uses refuses. Links leading out of the files, or a name
@@ -842,7 +853,7 @@ fn shared_folder_count(paths: &ProjectPaths, id: &str, folder: &Path) -> u32 {
 /// was. Files of the old place that cannot be removed afterwards are left:
 /// the result says so.
 pub fn convert_project(
-    vault_root: &Path,
+    workspace_root: &Path,
     paths: &ProjectPaths,
     id: &str,
     target_path: Option<&str>,
@@ -850,7 +861,7 @@ pub fn convert_project(
     discard_source: Option<&DiscardFolder<'_>>,
     expected_revision: Option<&str>,
 ) -> Result<ProjectConversion, AppError> {
-    let dir = project_dir(vault_root, id)?;
+    let dir = project_dir(workspace_root, id)?;
     if !dir.join(PROJECT_FILE).is_file() {
         return Err(not_found("Project", id));
     }
@@ -873,7 +884,7 @@ pub fn convert_project(
     };
 
     if converted.is_external {
-        let target = checked_target(&converted, vault_root, paths)?.ok_or_else(|| {
+        let target = checked_target(&converted, workspace_root, paths)?.ok_or_else(|| {
             AppError::InvalidInput("External project requires a target path".into())
         })?;
         let target = Path::new(target);
@@ -892,7 +903,7 @@ pub fn convert_project(
     } else {
         let source = if transfer_files {
             let source = project_files_dir_checked(
-                vault_root,
+                workspace_root,
                 paths,
                 &AiProject {
                     target_path: paths.get(id),
@@ -1007,14 +1018,18 @@ fn remove_project_files(dir: &Path) -> bool {
 
 /// Removes the project and every profile's permissions for it. The files of
 /// an external project stay where they are: only its link is removed.
-pub fn delete_project(vault_root: &Path, paths: &ProjectPaths, id: &str) -> Result<(), AppError> {
-    let dir = project_dir(vault_root, id)?;
+pub fn delete_project(
+    workspace_root: &Path,
+    paths: &ProjectPaths,
+    id: &str,
+) -> Result<(), AppError> {
+    let dir = project_dir(workspace_root, id)?;
     // the permissions go first: a failure there leaves the project, not
     // profiles pointing to a project that is gone
-    for mut profile in list_profiles(vault_root)? {
+    for mut profile in list_profiles(workspace_root)? {
         if profile.project_permissions.remove(id).is_some() {
             let expected = profile.revision.clone();
-            save_profile(vault_root, profile, expected.as_deref())?;
+            save_profile(workspace_root, profile, expected.as_deref())?;
         }
     }
     if dir.exists() {

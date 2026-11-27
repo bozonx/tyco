@@ -3,8 +3,8 @@ import type { AiProfile, ProfileSoul } from '@tyco/shared'
 
 import { isIpcErrorCode } from '../ipc/ipc-model'
 import { type ProjectAccessLevel, withProjectAccess } from './project-access'
-import { vaultOfRef } from './profile-ref'
-import { createWithFreshId } from './vault-id'
+import { workspaceOfRef } from './profile-ref'
+import { createWithFreshId } from './workspace-id'
 
 export interface AiProfilesModelDependencies {
   listProfiles: () => Promise<AiProfile[]>
@@ -44,8 +44,8 @@ export type AiProfilePatch = Partial<
 
 export interface CreateProfileData {
   name: string
-  /** The vault the profile goes to; the main one when unset */
-  vaultId?: string
+  /** The workspace the profile goes to; the main one when unset */
+  workspaceId?: string
   /** The root instruction the profile starts with */
   soul: string
   /** Settings the profile starts with instead of the defaults */
@@ -129,7 +129,7 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
         return { ...newProfile, revision }
       },
       deps.randomSuffix,
-      data.vaultId
+      data.workspaceId
     )
     profiles.value = [...profiles.value, created]
     return created
@@ -227,8 +227,8 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     } = source
     return createProfile({
       name,
-      // a copy stays in the vault of the original
-      vaultId: vaultOfRef(id),
+      // a copy stays in the workspace of the original
+      workspaceId: workspaceOfRef(id),
       soul,
       settings: {
         modelId,

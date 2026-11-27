@@ -8,7 +8,7 @@ use super::{
 };
 use crate::errors::AppError;
 use crate::services::ai_tools::file_search;
-use crate::services::ai_vault::ProjectAccessMode;
+use crate::services::ai_workspace::ProjectAccessMode;
 
 pub(super) const DEFAULT_READ_LINES: usize = 2000;
 /// The bytes looked at to tell a binary file from a text one.

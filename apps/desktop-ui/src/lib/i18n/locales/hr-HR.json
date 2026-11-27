@@ -410,7 +410,7 @@
     "unsupportedConfig": "Postavke je spremila novija verzija aplikacije",
     "userDataUnavailable": "Mapa podataka nije dostupna",
     "variableNotSet": "Varijabla nema vrijednost na ovom uređaju",
-    "vaultUnavailable": "Radni prostor nije povezan na ovom uređaju",
+    "workspaceUnavailable": "Radni prostor nije povezan na ovom uređaju",
     "projectUnavailable": "Mapa projekta nije postavljena na ovom uređaju",
     "alreadyExists": "Već postoji",
     "staleRevision": "Datoteka je promijenjena na drugom uređaju ili izvan TyCo-a",
@@ -749,7 +749,7 @@
     "aiCommands": "AI naredbe",
     "aiProfilesHint": "Zasebni asistenti s vlastitom uputom, modelom, alatima i chatovima. Svaki profil je kartica na gornjoj traci.",
     "aiProfilesTab": "AI profili",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "Priključi radni prostor…",
       "attachedDeviceScopedHint": "Priključeni radni prostori postavljaju se na svakom računalu zasebno; glavni se sinkronizira s mapom podataka.",
       "detach": "Ukloni s popisa",
@@ -757,7 +757,7 @@
       "hint": "Radni prostor je mapa s profilima, projektima, njihovim razgovorima i memorijom. Glavni je u mapi podataka; priključite druge, npr. poslovni koji se sinkronizira zasebno. Profil vidi samo projekte svog radnog prostora.",
       "main": "Glavno",
       "name": "Naziv",
-      "newVault": "Novi radni prostor",
+      "newWorkspace": "Novi radni prostor",
       "newer": "Stvoreno novijim TyCo-om",
       "notConnected": "Nije povezano na ovom uređaju",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "Preimenuj radni prostor",
       "title": "Radni prostor",
       "useSubfolder": "Mapa sadrži druge datoteke. Stvoriti radni prostor u {path}?",
-      "vault": "Radni prostor",
+      "workspace": "Radni prostor",
       "writableByOthers": "Drugi korisnici ovog računala mogu pisati u radni prostor {name}: njegovi profili pokreću naredbe ovog uređaja."
     },
     "allPluginsTab": "Svi dodaci",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "Svaki radni prostor može čuvati razgovore na svoj način na kartici",
     "profileCopyName": "{name} (kopija)",
     "profileDefaultSoul": "# Uloga\nTi si moj osobni asistent. Pomažeš sa svakodnevnim zadacima: odgovaraš na pitanja, pišeš i uređuješ tekstove, pomažeš planirati i promišljati rješenja.\n\n# Stil\n- Odgovaraj na jeziku moje poruke.\n- Piši kratko i jasno; pojedinosti kad ih zatražim.\n- Koristi popise i naslove kad tako odgovor postaje čitljiviji.\n\n# Pravila\n- Ako zahtjev nije jasan, pitaj prije nego odgovoriš.\n- Ne izmišljaj činjenice: reci kad nisi siguran.\n- Prije mijenjanja datoteka ili pokretanja naredbi reci što namjeravaš učiniti.\n\n# O meni\n- Opišite se ovdje: čime se bavite i što bi asistent trebao uzeti u obzir.\n",
+    "profileFolder": "Mapa",
+    "profileFolderFixedHint": "Mapa se ne mijenja kad se profil preimenuje, pa razgovori i pristup projektima ostaju uz njega.",
     "profileMemoryApplyCompact": "Primijeni",
     "profileMemoryCompact": "Sažmi",
     "profileMemoryCompactNoChange": "Datoteka je već optimalna, promjene nisu potrebne",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "Mapa {path} nalazi se na drugom disku. Potvrđujete li premještanje datoteka iz {current} na drugi disk?"
     },
     "variablesTab": "Varijable",
-    "vaultFolder": "Mapa",
-    "vaultFolderFixedHint": "Mapa se ne mijenja kad se profil preimenuje, pa razgovori i pristup projektima ostaju uz njega.",
     "vision": "Unos slika",
     "voiceHold": {
       "voice": "Držite prečac tijekom diktiranja (Push-to-Talk)",

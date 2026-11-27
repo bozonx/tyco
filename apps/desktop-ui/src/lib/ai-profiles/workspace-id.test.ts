@@ -1,23 +1,25 @@
 import { describe, expect, it } from 'vitest'
 
 import { IpcCallError } from '../ipc/ipc-model'
-import { createVaultId, createWithFreshId } from './vault-id'
+import { createWorkspaceId, createWithFreshId } from './workspace-id'
 
 const suffixes = (...values: string[]) => {
   let index = 0
   return () => values[index++ % values.length]
 }
 
-describe('createVaultId', () => {
+describe('createWorkspaceId', () => {
   it('is random and never made from the name', () => {
-    expect(createVaultId('profile', [])).toMatch(/^profile-[0-9a-f]{8}$/)
-    expect(createVaultId('project', [])).toMatch(/^project-[0-9a-f]{8}$/)
-    expect(createVaultId('profile', [])).not.toBe(createVaultId('profile', []))
+    expect(createWorkspaceId('profile', [])).toMatch(/^profile-[0-9a-f]{8}$/)
+    expect(createWorkspaceId('project', [])).toMatch(/^project-[0-9a-f]{8}$/)
+    expect(createWorkspaceId('profile', [])).not.toBe(
+      createWorkspaceId('profile', [])
+    )
   })
 
   it('skips taken ids', () => {
     expect(
-      createVaultId(
+      createWorkspaceId(
         'profile',
         ['profile-aaaaaaaa'],
         suffixes('aaaaaaaa', 'bbbbbbbb')

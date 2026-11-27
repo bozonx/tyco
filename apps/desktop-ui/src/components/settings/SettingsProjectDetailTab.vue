@@ -237,7 +237,7 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSettingsDraft } from '../../composables/use-settings-draft'
 import useToast from '../../composables/use-toast'
 import type { ConvertProjectOptions } from '../../lib/ai-profiles/ai-projects-model'
-import { splitRef, vaultOfRef } from '../../lib/ai-profiles/profile-ref'
+import { splitRef, workspaceOfRef } from '../../lib/ai-profiles/profile-ref'
 import {
   DEFAULT_PROJECT_ACCESS_LEVEL,
   PROJECT_ACCESS_LABEL_KEYS,
@@ -281,10 +281,10 @@ const aiProfilesStore = useAiProfilesStore()
 const { isBusy: isCreating, run: runCreating } = useBusyAction()
 const isNew = computed(() => props.projectId === NEW_ENTITY_ID)
 
-// only the profiles of the vault of the project may reach it
+// only the profiles of the workspace of the project may reach it
 const profiles = computed(() =>
   aiProfilesStore.profiles.filter(
-    (profile) => vaultOfRef(profile.id) === vaultOfRef(props.projectId)
+    (profile) => workspaceOfRef(profile.id) === workspaceOfRef(props.projectId)
   )
 )
 
@@ -309,7 +309,7 @@ const editor = createProjectEditor({
   },
 })
 const reportSaveError = useRetryToast()
-/** The folder, as stored, is synced with the data folder or a vault */
+/** The folder, as stored, is synced with the data folder or a workspace */
 const isInsideSyncedFolder = computed(
   () =>
     Boolean(project.value?.isInsideSyncedFolder) &&
@@ -336,7 +336,7 @@ async function resolveConflict(keepMine: boolean) {
 const { name, description, isExternal, targetPath, isStored, isValid } = editor
 
 // the fields take the project once it is there; the settings may open
-// before the vault is read
+// before the workspace is read
 const project = computed(() =>
   isNew.value ? undefined : aiProfilesStore.getProject(props.projectId)
 )

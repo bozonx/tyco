@@ -410,7 +410,7 @@
     "unsupportedConfig": "A beállításokat az alkalmazás egy újabb verziója mentette",
     "userDataUnavailable": "Az adatmappa nem érhető el",
     "variableNotSet": "Egy változónak nincs értéke ezen az eszközön",
-    "vaultUnavailable": "A munkaterület nincs csatlakoztatva ezen az eszközön",
+    "workspaceUnavailable": "A munkaterület nincs csatlakoztatva ezen az eszközön",
     "projectUnavailable": "A projekt mappája nincs beállítva ezen az eszközön",
     "alreadyExists": "Már létezik",
     "staleRevision": "A fájl egy másik eszközön vagy a TyCo-n kívül módosult",
@@ -749,7 +749,7 @@
     "aiCommands": "MI-parancsok",
     "aiProfilesHint": "Különálló asszisztensek saját utasítással, modellel, eszközökkel és csevegésekkel. Minden profil egy lap a felső sávon.",
     "aiProfilesTab": "MI-profilok",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "Munkaterület csatolása…",
       "attachedDeviceScopedHint": "A csatolt munkaterületek minden számítógépen külön állíthatók be; a fő munkaterület az adatmappával szinkronizálódik.",
       "detach": "Eltávolítás a listából",
@@ -757,7 +757,7 @@
       "hint": "A munkaterület profilok, projektek, csevegéseik és memóriájuk mappája. A fő az adatmappában van; csatoljon másokat is, például egy külön szinkronizált munkahelyit. Egy profil csak a saját munkaterülete projektjeit éri el.",
       "main": "Fő",
       "name": "Név",
-      "newVault": "Új munkaterület",
+      "newWorkspace": "Új munkaterület",
       "newer": "Újabb TyCo hozta létre",
       "notConnected": "Ezen az eszközön nincs csatlakoztatva",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "Munkaterület átnevezése",
       "title": "Munkaterület",
       "useSubfolder": "A mappában más fájlok is vannak. Létrehozza a munkaterületet itt: {path}?",
-      "vault": "Munkaterület",
+      "workspace": "Munkaterület",
       "writableByOthers": "A számítógép más felhasználói is írhatnak a(z) {name} munkaterületre: a profiljai ennek az eszköznek a parancsait futtatják."
     },
     "allPluginsTab": "Minden bővítmény",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "Minden munkaterület a maga módján tárolhatja a csevegéseit ezen a lapon:",
     "profileCopyName": "{name} (másolat)",
     "profileDefaultSoul": "# Szerep\nA személyes asszisztensem vagy. Segítesz a mindennapi feladatokban: válaszolsz a kérdésekre, szövegeket írsz és javítasz, segítesz tervezni és átgondolni a megoldásokat.\n\n# Stílus\n- Az üzenetem nyelvén válaszolj.\n- Légy rövid és lényegre törő; részleteket akkor adj, ha kérem.\n- Használj listákat és címsorokat, ha így könnyebb olvasni a választ.\n\n# Szabályok\n- Ha a kérés nem egyértelmű, kérdezz, mielőtt válaszolsz.\n- Ne találj ki tényeket: mondd meg, ha nem vagy biztos.\n- Mielőtt fájlokat módosítasz vagy parancsokat futtatsz, mondd el, mit fogsz tenni.\n\n# Rólam\n- Írj itt magadról: mivel foglalkozol, és mit vegyen figyelembe az asszisztens.\n",
+    "profileFolder": "Mappa",
+    "profileFolderFixedHint": "A mappa nem változik a profil átnevezésekor, így a csevegések és a projekthozzáférések megmaradnak.",
     "profileMemoryApplyCompact": "Alkalmazás",
     "profileMemoryCompact": "Tömörítés",
     "profileMemoryCompactNoChange": "A fájl már optimális, nincs szükség módosításra",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "A(z) {path} mappa másik meghajtón található. Megerősíti a fájlok áthelyezését a(z) {current} mappából a másik meghajtóra?"
     },
     "variablesTab": "Változók",
-    "vaultFolder": "Mappa",
-    "vaultFolderFixedHint": "A mappa nem változik a profil átnevezésekor, így a csevegések és a projekthozzáférések megmaradnak.",
     "vision": "Képbevitel",
     "voiceHold": {
       "voice": "Gyorsbillentyű nyomva tartása diktálás közben (Push-to-Talk)",

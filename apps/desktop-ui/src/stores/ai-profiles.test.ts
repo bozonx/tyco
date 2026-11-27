@@ -30,7 +30,7 @@ afterEach(() => {
   desktop.dispose()
 })
 
-it('keeps the latest vault lists when an older load finishes later', async () => {
+it('keeps the latest workspace lists when an older load finishes later', async () => {
   const old = deferred<AiProfile[]>()
   let profileCalls = 0
   desktop.backend.handle('list_ai_profiles', () => {
@@ -44,10 +44,10 @@ it('keeps the latest vault lists when an older load finishes later', async () =>
   old.resolve([profile('old', 'Old')])
   await oldLoad
   expect(store.profiles[0]?.id).toBe('new')
-  expect(store.vaultError).toBe('')
+  expect(store.workspaceError).toBe('')
 })
 
-it('does not repopulate a failed vault load from a late sibling response', async () => {
+it('does not repopulate a failed workspace load from a late sibling response', async () => {
   const profiles = deferred<AiProfile[]>()
   desktop.backend.handle('list_ai_projects', () => {
     throw new FakeDesktopError({
@@ -61,16 +61,18 @@ it('does not repopulate a failed vault load from a late sibling response', async
   profiles.resolve([profile('late', 'Late')])
   await vi.waitFor(() => expect(store.isLoaded).toBe(true))
   expect(store.profiles).toEqual([])
-  expect(store.vaultError).toBe('unavailable')
+  expect(store.workspaceError).toBe('unavailable')
 })
 
-it('announces SOUL changes separately from the profile JSON revision and isolates vaults', async () => {
+it('announces SOUL changes separately from the profile JSON revision and isolates workspaces', async () => {
   const { DESKTOP_EVENTS } = await import('@tyco/shared')
   const store = useAiProfilesStore()
   await store.loadAll()
   await desktop.emit(DESKTOP_EVENTS.STORAGE_CHANGED, {
     paths: [],
-    vaultChanges: [{ vaultId: 'work', path: 'profiles/writer/SOUL.md' }],
+    workspaceChanges: [
+      { workspaceId: 'work', path: 'profiles/writer/SOUL.md' },
+    ],
   })
   await vi.waitFor(() =>
     expect(store.profileStorageRevisions['work:writer']).toBe(1)
@@ -78,7 +80,20 @@ it('announces SOUL changes separately from the profile JSON revision and isolate
   expect(store.profileStorageRevisions.writer).toBeUndefined()
   await desktop.emit(DESKTOP_EVENTS.STORAGE_CHANGED, {
     paths: [],
-    vaultChanges: [{ vaultId: '', path: 'profiles/writer/SOUL.md' }],
+    workspaceChanges: [{ workspaceId: '', path: 'profiles/writer/SOUL.md' }],
   })
   await vi.waitFor(() => expect(store.profileStorageRevisions.writer).toBe(1))
+})
+
+it('refreshes workspace lists when another window changes the attached workspaces', async () => {
+  const listProfiles = vi.fn(() => [profile('work:writer', 'Writer')])
+  desktop.backend.handle('list_ai_profiles', listProfiles)
+  const store = useAiProfilesStore()
+
+  desktop.setUserConfig({
+    aiVaults: { attached: [{ path: '/work', vaultId: 'work' }] },
+  })
+
+  await vi.waitFor(() => expect(store.profiles[0]?.id).toBe('work:writer'))
+  expect(listProfiles).toHaveBeenCalledOnce()
 })

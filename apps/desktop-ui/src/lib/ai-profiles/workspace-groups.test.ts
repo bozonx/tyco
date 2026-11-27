@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import type { VaultInfo } from '@tyco/shared'
+import type { WorkspaceInfo } from '@tyco/shared'
 
-import { entityLabel, vaultLabel } from './vault-groups'
+import { entityLabel, workspaceLabel } from './workspace-groups'
 
-const vault = (patch: Partial<VaultInfo>): VaultInfo => ({
-  vaultId: '',
+const workspace = (patch: Partial<WorkspaceInfo>): WorkspaceInfo => ({
+  workspaceId: '',
   name: '',
   path: '/data/ai-vault',
   isMain: true,
@@ -14,17 +14,22 @@ const vault = (patch: Partial<VaultInfo>): VaultInfo => ({
   ...patch,
 })
 
-const main = vault({})
-const work = vault({ vaultId: 'w1', name: 'Work', path: '/w', isMain: false })
-const away = vault({
-  vaultId: 'w2',
-  path: '/mnt/usb/Vault',
+const main = workspace({})
+const work = workspace({
+  workspaceId: 'w1',
+  name: 'Work',
+  path: '/w',
+  isMain: false,
+})
+const away = workspace({
+  workspaceId: 'w2',
+  path: '/mnt/usb/Workspace',
   isMain: false,
   status: 'notConnected',
 })
 
-describe('vault groups', () => {
-  it('name the vault only when profile names clash', () => {
+describe('workspace groups', () => {
+  it('name the workspace only when profile names clash', () => {
     const profiles = [
       { id: 'a', name: 'Assistant' },
       { id: 'w1:b', name: 'Assistant' },
@@ -37,6 +42,6 @@ describe('vault groups', () => {
       'Assistant (Work)',
       'Coder',
     ])
-    expect(vaultLabel(away, 'Main')).toBe('Vault')
+    expect(workspaceLabel(away, 'Main')).toBe('Workspace')
   })
 })

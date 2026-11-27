@@ -21,7 +21,7 @@ export const DESKTOP_ERROR_KEYS: Readonly<Record<DesktopErrorCode, string>> = {
   unsupportedConfig: 'desktopErrors.unsupportedConfig',
   userDataUnavailable: 'desktopErrors.userDataUnavailable',
   variableNotSet: 'desktopErrors.variableNotSet',
-  vaultUnavailable: 'desktopErrors.vaultUnavailable',
+  workspaceUnavailable: 'desktopErrors.workspaceUnavailable',
   projectUnavailable: 'desktopErrors.projectUnavailable',
   stale: 'desktopErrors.stale',
   alreadyExists: 'desktopErrors.alreadyExists',

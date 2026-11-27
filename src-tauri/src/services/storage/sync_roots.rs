@@ -1,4 +1,4 @@
-//! The roots the user may sync, the data folder and the attached vaults,
+//! The roots the user may sync, the data folder and the attached workspaces,
 //! never lie inside one another: the watcher would see one file twice, and
 //! moving one root would drag the other along.
 use std::path::Path;
@@ -34,18 +34,18 @@ fn is_nested_parts(first: &[String], second: &[String]) -> bool {
     first.starts_with(second) || second.starts_with(first)
 }
 
-/// What `kind` names in messages: the data folder or a vault.
+/// What `kind` names in messages: the data folder or a workspace.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SyncRootKind {
     DataFolder,
-    Vault,
+    Workspace,
 }
 
 impl SyncRootKind {
     fn label(self) -> &'static str {
         match self {
             Self::DataFolder => "the data folder",
-            Self::Vault => "an attached AI vault",
+            Self::Workspace => "an attached AI workspace",
         }
     }
 }
@@ -95,37 +95,40 @@ mod tests {
         let sync = dir.join("Sync");
         let data = sync.join("TyCo");
         std::fs::create_dir_all(&data).unwrap();
-        // a vault holding the data folder
+        // a workspace holding the data folder
         assert!(check_sync_roots(
             &sync,
-            SyncRootKind::Vault,
+            SyncRootKind::Workspace,
             &[(&data, SyncRootKind::DataFolder)]
         )
         .is_err());
-        // the data folder moved into a vault
+        // the data folder moved into a workspace
         assert!(check_sync_roots(
             &data,
             SyncRootKind::DataFolder,
-            &[(&sync, SyncRootKind::Vault)]
+            &[(&sync, SyncRootKind::Workspace)]
         )
         .is_err());
-        // a vault in a vault, and the same folder twice
+        // a workspace in a workspace, and the same folder twice
         let work = dir.join("work");
         assert!(check_sync_roots(
             &work.join("inner"),
-            SyncRootKind::Vault,
-            &[(&work, SyncRootKind::Vault)]
+            SyncRootKind::Workspace,
+            &[(&work, SyncRootKind::Workspace)]
         )
         .is_err());
-        assert!(
-            check_sync_roots(&work, SyncRootKind::Vault, &[(&work, SyncRootKind::Vault)]).is_err()
-        );
+        assert!(check_sync_roots(
+            &work,
+            SyncRootKind::Workspace,
+            &[(&work, SyncRootKind::Workspace)]
+        )
+        .is_err());
         // folders side by side, even with a shared name prefix
         assert!(check_sync_roots(
             &dir.join("work-2"),
-            SyncRootKind::Vault,
+            SyncRootKind::Workspace,
             &[
-                (&work, SyncRootKind::Vault),
+                (&work, SyncRootKind::Workspace),
                 (&data, SyncRootKind::DataFolder)
             ]
         )
@@ -141,8 +144,8 @@ mod tests {
         let link = dir.join("link");
         std::os::unix::fs::symlink(&data, &link).unwrap();
         assert!(check_sync_roots(
-            &link.join("vault"),
-            SyncRootKind::Vault,
+            &link.join("workspace"),
+            SyncRootKind::Workspace,
             &[(&data, SyncRootKind::DataFolder)]
         )
         .is_err());
@@ -154,8 +157,8 @@ mod tests {
         let second = parts_of(r"c:\users\me\sync\TyCo", true);
         assert!(is_nested_parts(&first, &second));
         assert_eq!(
-            parts_of(r"\\?\UNC\server\share\Vault", true),
-            parts_of(r"\\SERVER\share\vault", true)
+            parts_of(r"\\?\UNC\server\share\Workspace", true),
+            parts_of(r"\\SERVER\share\workspace", true)
         );
         // case matters elsewhere
         assert!(!is_nested_parts(

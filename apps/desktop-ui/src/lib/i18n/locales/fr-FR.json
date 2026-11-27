@@ -410,7 +410,7 @@
     "unsupportedConfig": "Les paramètres ont été enregistrés par une version plus récente de l’application",
     "userDataUnavailable": "Le dossier de données est indisponible",
     "variableNotSet": "Une variable n’a pas de valeur sur cet appareil",
-    "vaultUnavailable": "L’espace de travail n’est pas connecté sur cet appareil",
+    "workspaceUnavailable": "L’espace de travail n’est pas connecté sur cet appareil",
     "projectUnavailable": "Le dossier du projet n’est pas défini sur cet appareil",
     "alreadyExists": "Existe déjà",
     "staleRevision": "Le fichier a été modifié sur un autre appareil ou hors de TyCo",
@@ -749,7 +749,7 @@
     "aiCommands": "Commandes IA",
     "aiProfilesHint": "Des assistants distincts, chacun avec sa propre instruction, son modèle, ses outils et ses chats. Chaque profil est un onglet dans la barre supérieure.",
     "aiProfilesTab": "Profils IA",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "Ajouter un espace de travail…",
       "attachedDeviceScopedHint": "Les espaces de travail ajoutés se règlent sur chaque ordinateur séparément ; le principal est synchronisé avec le dossier de données.",
       "detach": "Retirer de la liste",
@@ -757,7 +757,7 @@
       "hint": "Un espace de travail est un dossier de profils, de projets, de leurs discussions et de leur mémoire. Le principal est dans le dossier de données ; ajoutez-en d’autres, par exemple un espace professionnel synchronisé à part. Un profil n’accède qu’aux projets de son espace de travail.",
       "main": "Principal",
       "name": "Nom",
-      "newVault": "Nouvel espace de travail",
+      "newWorkspace": "Nouvel espace de travail",
       "newer": "Créé par un TyCo plus récent",
       "notConnected": "Non connecté sur cet appareil",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "Renommer l’espace de travail",
       "title": "Espace de travail",
       "useSubfolder": "Le dossier contient d’autres fichiers. Créer l’espace de travail dans {path} ?",
-      "vault": "Espace de travail",
+      "workspace": "Espace de travail",
       "writableByOthers": "D’autres utilisateurs de cet ordinateur peuvent écrire dans l’espace de travail {name} : ses profils exécutent les commandes de cet appareil."
     },
     "allPluginsTab": "Tous les plugins",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "Chaque espace de travail peut conserver ses discussions à sa façon dans l’onglet",
     "profileCopyName": "{name} (copie)",
     "profileDefaultSoul": "# Rôle\nTu es mon assistant personnel. Tu m’aides au quotidien : tu réponds aux questions, rédiges et corriges des textes, aides à planifier et à réfléchir aux solutions.\n\n# Style\n- Réponds dans la langue de mon message.\n- Sois bref et précis ; détaille quand je le demande.\n- Utilise des listes et des titres quand cela rend la réponse plus lisible.\n\n# Règles\n- Si la demande n’est pas claire, pose une question avant de répondre.\n- N’invente pas de faits : dis-le quand tu n’es pas sûr.\n- Avant de modifier des fichiers ou de lancer des commandes, dis ce que tu vas faire.\n\n# À propos de moi\n- Décrivez-vous ici : ce que vous faites et ce dont l’assistant doit tenir compte.\n",
+    "profileFolder": "Dossier",
+    "profileFolderFixedHint": "Le dossier ne change pas quand le profil est renommé : ses discussions et ses accès aux projets restent attachés.",
     "profileMemoryApplyCompact": "Appliquer",
     "profileMemoryCompact": "Compacter",
     "profileMemoryCompactNoChange": "Le fichier est déjà optimal, aucune modification requise",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "Le dossier {path} se trouve sur un autre disque. Confirmez-vous le déplacement de vos fichiers de {current} vers cet autre disque ?"
     },
     "variablesTab": "Variables",
-    "vaultFolder": "Dossier",
-    "vaultFolderFixedHint": "Le dossier ne change pas quand le profil est renommé : ses discussions et ses accès aux projets restent attachés.",
     "vision": "Entrée d’images",
     "voiceHold": {
       "voice": "Maintenir le raccourci pendant la dictée (Push-to-Talk)",

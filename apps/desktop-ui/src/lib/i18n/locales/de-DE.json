@@ -410,7 +410,7 @@
     "unsupportedConfig": "Die Einstellungen stammen von einer neueren App-Version",
     "userDataUnavailable": "Der Datenordner ist nicht verfügbar",
     "variableNotSet": "Eine Variable hat auf diesem Gerät keinen Wert",
-    "vaultUnavailable": "Der Arbeitsbereich ist auf diesem Gerät nicht verbunden",
+    "workspaceUnavailable": "Der Arbeitsbereich ist auf diesem Gerät nicht verbunden",
     "projectUnavailable": "Der Projektordner ist auf diesem Gerät nicht festgelegt",
     "alreadyExists": "Ist bereits vorhanden",
     "staleRevision": "Die Datei wurde auf einem anderen Gerät oder außerhalb von TyCo geändert",
@@ -749,7 +749,7 @@
     "aiCommands": "KI-Befehle",
     "aiProfilesHint": "Getrennte Assistenten mit eigener Anweisung, eigenem Modell, eigenen Werkzeugen und Chats. Jedes Profil ist ein Tab in der oberen Leiste.",
     "aiProfilesTab": "KI-Profile",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "Arbeitsbereich anbinden…",
       "attachedDeviceScopedHint": "Angebundene Arbeitsbereiche werden auf jedem Computer einzeln festgelegt; der Hauptbereich wird mit dem Datenordner synchronisiert.",
       "detach": "Aus der Liste entfernen",
@@ -757,7 +757,7 @@
       "hint": "Ein Arbeitsbereich ist ein Ordner mit Profilen, Projekten, deren Chats und Gedächtnis. Der Hauptbereich liegt im Datenordner; binde weitere an, etwa einen beruflichen, der eigenständig synchronisiert wird. Ein Profil erreicht nur die Projekte seines Arbeitsbereichs.",
       "main": "Haupttresor",
       "name": "Name",
-      "newVault": "Neuer Arbeitsbereich",
+      "newWorkspace": "Neuer Arbeitsbereich",
       "newer": "Von neuerem TyCo angelegt",
       "notConnected": "Auf diesem Gerät nicht verbunden",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "Arbeitsbereich umbenennen",
       "title": "Arbeitsbereich",
       "useSubfolder": "Der Ordner enthält andere Dateien. Den Arbeitsbereich in {path} anlegen?",
-      "vault": "Arbeitsbereich",
+      "workspace": "Arbeitsbereich",
       "writableByOthers": "Andere Benutzer dieses Computers können in den Arbeitsbereich {name} schreiben: Seine Profile führen die Befehle dieses Geräts aus."
     },
     "allPluginsTab": "Alle Plugins",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "Jeder Arbeitsbereich kann seine Chats auf eigene Weise aufbewahren, im Tab",
     "profileCopyName": "{name} (Kopie)",
     "profileDefaultSoul": "# Rolle\nDu bist mein persönlicher Assistent. Du hilfst bei alltäglichen Aufgaben: beantwortest Fragen, schreibst und überarbeitest Texte, hilfst beim Planen und Durchdenken von Lösungen.\n\n# Stil\n- Antworte in der Sprache meiner Nachricht.\n- Fasse dich kurz und bleib beim Thema; Details, wenn ich danach frage.\n- Nutze Listen und Überschriften, wenn die Antwort dadurch leichter zu lesen ist.\n\n# Regeln\n- Ist die Anfrage unklar, frag nach, bevor du antwortest.\n- Erfinde keine Fakten: sag, wenn du dir nicht sicher bist.\n- Bevor du Dateien änderst oder Befehle ausführst, sag, was du vorhast.\n\n# Über mich\n- Beschreiben Sie sich hier: was Sie tun und was der Assistent berücksichtigen sollte.\n",
+    "profileFolder": "Ordner",
+    "profileFolderFixedHint": "Der Ordner ändert sich nicht, wenn das Profil umbenannt wird; Chats und Projektzugriff bleiben also erhalten.",
     "profileMemoryApplyCompact": "Anwenden",
     "profileMemoryCompact": "Komprimieren",
     "profileMemoryCompactNoChange": "Die Datei ist bereits optimal, keine Änderungen erforderlich",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "Der Ordner {path} befindet sich auf einem anderen Laufwerk. Möchtest du deine Dateien von {current} auf das andere Laufwerk verschieben?"
     },
     "variablesTab": "Variablen",
-    "vaultFolder": "Ordner",
-    "vaultFolderFixedHint": "Der Ordner ändert sich nicht, wenn das Profil umbenannt wird; Chats und Projektzugriff bleiben also erhalten.",
     "vision": "Bildeingabe",
     "voiceHold": {
       "voice": "Beim Diktieren Tastenkombination gedrückt halten (Push-to-Talk)",

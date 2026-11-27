@@ -61,7 +61,7 @@ pub fn default_desktop_snapshot(
             user_config: std::sync::Arc::new(user_config),
             session_state,
             user_data: UserDataState {
-                main_vault_id: None,
+                main_workspace_id: None,
                 path: String::new(),
                 default_path: String::new(),
                 is_default: true,

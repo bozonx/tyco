@@ -5,7 +5,7 @@ import {
   type AiProfile,
   type ProfileMemoryTopic,
   type UserConfig,
-  type VaultChatHistory,
+  type WorkspaceChatHistory,
 } from '@tyco/shared'
 import { computed } from 'vue'
 
@@ -50,7 +50,9 @@ export interface QuickAiRequestRuntimeDependencies {
 
   getUserConfig: () => UserConfig
   /** The chat history settings of the workspace of a profile */
-  getVaultChatHistory?: (profileId: string) => VaultChatHistory | undefined
+  getWorkspaceChatHistory?: (
+    profileId: string
+  ) => WorkspaceChatHistory | undefined
   updateUserConfig: (
     patch: Partial<UserConfig>
   ) => Promise<{ success: boolean; error?: unknown }>
@@ -279,7 +281,7 @@ export function createQuickAiRequestRuntime(
       isQuickRequestSavingEnabled(
         deps.getUserConfig(),
         profileId,
-        profileId ? deps.getVaultChatHistory?.(profileId) : undefined
+        profileId ? deps.getWorkspaceChatHistory?.(profileId) : undefined
       ),
     createId: deps.createId,
     chatId: session.chatId,

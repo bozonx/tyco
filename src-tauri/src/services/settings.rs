@@ -126,12 +126,12 @@ pub fn save_user_config(
     base: Value,
 ) -> Result<DesktopSnapshot, AppError> {
     let state = app.state::<AppState>();
-    let _vault = state.read_vault();
-    save_user_config_in_vault(app, next, base)
+    let _workspace = state.read_workspace();
+    save_user_config_in_workspace(app, next, base)
 }
 
-/// The caller holds vault access, including when relocation owns it exclusively.
-pub(crate) fn save_user_config_in_vault(
+/// The caller holds workspace access, including when relocation owns it exclusively.
+pub(crate) fn save_user_config_in_workspace(
     app: &AppHandle,
     next: Value,
     base: Value,
@@ -167,7 +167,7 @@ pub fn update_user_config(
 /// as a save, without rewriting the shared file or collecting device secrets.
 pub fn reload_external_config(app: &AppHandle) -> Result<(), AppError> {
     let state = app.state::<AppState>();
-    let _vault = state.read_vault();
+    let _workspace = state.read_workspace();
     let _settings = state.lock_settings_update();
     ensure_running(&state)?;
     let previous = state.user_config();

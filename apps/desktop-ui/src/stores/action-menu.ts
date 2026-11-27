@@ -124,7 +124,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     transformations: () => desktopStore.userConfig.transformations?.items,
     styling: () => desktopStore.userConfig.styling?.items,
     profiles: () => aiProfilesStore.profiles,
-    connectedVaultIds: () => aiProfilesStore.connectedVaultIds,
+    connectedWorkspaceIds: () => aiProfilesStore.connectedWorkspaceIds,
     areProfilesLoaded: () => aiProfilesStore.isLoaded,
     chatPrompts: () => desktopStore.userConfig.chatPrompts?.items,
     openProfileChat: async (profileId, text, newChat) => {

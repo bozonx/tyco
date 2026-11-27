@@ -355,9 +355,9 @@ export class FakeDesktopBackend {
     this.handle('discard_dialog_recording', noop)
 
     this.handle('list_ai_profiles', () => [])
-    this.handle('list_ai_vaults', () => [
+    this.handle('list_ai_workspaces', () => [
       {
-        vaultId: '',
+        workspaceId: '',
         name: '',
         path: '/home/tester/.local/share/tyco/ai',
         isMain: true,
@@ -367,7 +367,7 @@ export class FakeDesktopBackend {
       },
     ])
     this.handle('list_ai_projects', () => [])
-    // a fresh vault: profiles have no memory yet
+    // a fresh workspace: profiles have no memory yet
     this.handle('list_ai_profile_memory_topics', () => [])
     this.handle('read_ai_profile_memory', () => '')
     this.handle('peek_ai_profile_memory', () => '')

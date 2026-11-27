@@ -39,17 +39,17 @@ pub struct ChatsChangedEvent {
 pub struct StorageChangedEvent {
     /// Paths relative to the data folder, with `/`.
     pub paths: Vec<String>,
-    /// Files of the vaults, each with its vault.
-    pub vault_changes: Vec<VaultChange>,
+    /// Files of the workspaces, each with its workspace.
+    pub workspace_changes: Vec<WorkspaceChange>,
 }
 
-/// A file of a vault that changed.
+/// A file of a workspace that changed.
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub struct VaultChange {
-    /// The vault part of references: empty for the main vault.
-    pub vault_id: String,
-    /// Relative to the root of the vault, with `/`.
+pub struct WorkspaceChange {
+    /// The workspace part of references: empty for the main workspace.
+    pub workspace_id: String,
+    /// Relative to the root of the workspace, with `/`.
     pub path: String,
 }
 

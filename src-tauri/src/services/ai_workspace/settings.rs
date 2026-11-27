@@ -1,6 +1,6 @@
-//! The settings of a vault, `tyco-vault-settings.json` next to its marker:
-//! synced with the vault, so every device applies them. Kept apart from the
-//! marker, which names the vault and hardly ever changes, so that an edit of
+//! The settings of a workspace, `tyco-vault-settings.json` next to its marker:
+//! synced with the workspace, so every device applies them. Kept apart from the
+//! marker, which names the workspace and hardly ever changes, so that an edit of
 //! the settings never conflicts with it in a sync.
 //!
 //! Each setting is optional: a missing one follows the app-wide default
@@ -14,28 +14,28 @@ use std::path::Path;
 use crate::errors::AppError;
 use crate::services::atomic_file::write_private;
 
-pub const VAULT_SETTINGS_FILE: &str = "tyco-vault-settings.json";
+pub const WORKSPACE_SETTINGS_FILE: &str = "tyco-vault-settings.json";
 /// The layout of the settings file this build writes.
-pub const VAULT_SETTINGS_FORMAT_VERSION: u64 = 1;
+pub const WORKSPACE_SETTINGS_FORMAT_VERSION: u64 = 1;
 
-/// Where new chats of a vault's profiles are kept.
+/// Where new chats of a workspace's profiles are kept.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub enum VaultHistoryStorage {
+pub enum WorkspaceHistoryStorage {
     /// While TyCo is running: new chats live in memory only.
     Session,
     Disk,
 }
 
-/// The chat history of a vault's profiles, kept by the vault alone: a
+/// The chat history of a workspace's profiles, kept by the workspace alone: a
 /// missing field takes its default, saving chats forever with their quick
 /// requests.
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub struct VaultChatHistory {
+pub struct WorkspaceChatHistory {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
-    pub storage: Option<VaultHistoryStorage>,
+    pub storage: Option<WorkspaceHistoryStorage>,
     /// 0 keeps the chats forever.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -46,7 +46,7 @@ pub struct VaultChatHistory {
     pub is_quick_request_saving_enabled: Option<bool>,
 }
 
-impl VaultChatHistory {
+impl WorkspaceChatHistory {
     /// Reads leniently: a field of the wrong type is as if missing.
     fn from_value(value: Option<&Value>) -> Self {
         let Some(Value::Object(object)) = value else {
@@ -65,7 +65,7 @@ impl VaultChatHistory {
 }
 
 fn read_object(root: &Path) -> Result<Map<String, Value>, AppError> {
-    match fs::read_to_string(root.join(VAULT_SETTINGS_FILE)) {
+    match fs::read_to_string(root.join(WORKSPACE_SETTINGS_FILE)) {
         Ok(raw) => match serde_json::from_str(&raw) {
             Ok(Value::Object(object)) => Ok(object),
             Ok(_) | Err(_) => Err(AppError::InvalidInput(format!(
@@ -78,28 +78,28 @@ fn read_object(root: &Path) -> Result<Map<String, Value>, AppError> {
     }
 }
 
-/// The chat history settings of the vault at `root`. A missing, unreadable or
+/// The chat history settings of the workspace at `root`. A missing, unreadable or
 /// newer file gives the defaults: a broken file must not stop the chats.
-pub fn read_chat_history(root: &Path) -> VaultChatHistory {
+pub fn read_chat_history(root: &Path) -> WorkspaceChatHistory {
     match read_object(root) {
-        Ok(object) => VaultChatHistory::from_value(object.get("chatHistory")),
+        Ok(object) => WorkspaceChatHistory::from_value(object.get("chatHistory")),
         Err(error) => {
             log::warn!("{error}");
-            VaultChatHistory::default()
+            WorkspaceChatHistory::default()
         }
     }
 }
 
-/// Stores the chat history settings of the vault at `root`, keeping the
+/// Stores the chat history settings of the workspace at `root`, keeping the
 /// fields this build does not know. A file of a newer layout or one that
 /// cannot be read is refused rather than replaced.
-pub fn write_chat_history(root: &Path, chat_history: VaultChatHistory) -> Result<(), AppError> {
+pub fn write_chat_history(root: &Path, chat_history: WorkspaceChatHistory) -> Result<(), AppError> {
     let mut object = read_object(root)?;
     let version = object
         .get("formatVersion")
         .and_then(Value::as_u64)
-        .unwrap_or(VAULT_SETTINGS_FORMAT_VERSION);
-    if version > VAULT_SETTINGS_FORMAT_VERSION {
+        .unwrap_or(WORKSPACE_SETTINGS_FORMAT_VERSION);
+    if version > WORKSPACE_SETTINGS_FORMAT_VERSION {
         return Err(AppError::InvalidInput(format!(
             "The settings of the workspace {} were written by a newer version of TyCo",
             root.display()
@@ -107,7 +107,7 @@ pub fn write_chat_history(root: &Path, chat_history: VaultChatHistory) -> Result
     }
     object.insert(
         "formatVersion".into(),
-        Value::from(VAULT_SETTINGS_FORMAT_VERSION),
+        Value::from(WORKSPACE_SETTINGS_FORMAT_VERSION),
     );
     let mut history = match object.remove("chatHistory") {
         Some(Value::Object(history)) => history,
@@ -132,7 +132,7 @@ pub fn write_chat_history(root: &Path, chat_history: VaultChatHistory) -> Result
         object.insert("chatHistory".into(), Value::Object(history));
     }
     write_private(
-        &root.join(VAULT_SETTINGS_FILE),
+        &root.join(WORKSPACE_SETTINGS_FILE),
         &serde_json::to_string_pretty(&Value::Object(object))?,
     )
 }
@@ -143,28 +143,28 @@ mod tests {
     use crate::services::test_support::TestDir;
 
     #[test]
-    fn a_vault_without_settings_follows_the_defaults() {
-        let dir = TestDir::new("vault-settings-none");
-        assert_eq!(read_chat_history(&dir), VaultChatHistory::default());
+    fn a_workspace_without_settings_follows_the_defaults() {
+        let dir = TestDir::new("workspace-settings-none");
+        assert_eq!(read_chat_history(&dir), WorkspaceChatHistory::default());
     }
 
     #[test]
     fn chat_history_settings_round_trip_and_keep_unknown_fields() {
-        let dir = TestDir::new("vault-settings-round-trip");
+        let dir = TestDir::new("workspace-settings-round-trip");
         fs::write(
-            dir.join(VAULT_SETTINGS_FILE),
+            dir.join(WORKSPACE_SETTINGS_FILE),
             r#"{"formatVersion":1,"future":{"a":1},"chatHistory":{"other":true}}"#,
         )
         .unwrap();
-        let history = VaultChatHistory {
-            storage: Some(VaultHistoryStorage::Session),
+        let history = WorkspaceChatHistory {
+            storage: Some(WorkspaceHistoryStorage::Session),
             retention_days: Some(30),
             is_quick_request_saving_enabled: Some(false),
         };
         write_chat_history(&dir, history).unwrap();
         assert_eq!(read_chat_history(&dir), history);
         let raw: Value =
-            serde_json::from_str(&fs::read_to_string(dir.join(VAULT_SETTINGS_FILE)).unwrap())
+            serde_json::from_str(&fs::read_to_string(dir.join(WORKSPACE_SETTINGS_FILE)).unwrap())
                 .unwrap();
         assert_eq!(raw["future"]["a"], 1);
         assert_eq!(raw["chatHistory"]["other"], true);
@@ -172,42 +172,42 @@ mod tests {
 
     #[test]
     fn clearing_a_setting_brings_back_the_default() {
-        let dir = TestDir::new("vault-settings-clear");
+        let dir = TestDir::new("workspace-settings-clear");
         write_chat_history(
             &dir,
-            VaultChatHistory {
+            WorkspaceChatHistory {
                 storage: None,
                 retention_days: Some(7),
                 is_quick_request_saving_enabled: None,
             },
         )
         .unwrap();
-        write_chat_history(&dir, VaultChatHistory::default()).unwrap();
-        assert_eq!(read_chat_history(&dir), VaultChatHistory::default());
+        write_chat_history(&dir, WorkspaceChatHistory::default()).unwrap();
+        assert_eq!(read_chat_history(&dir), WorkspaceChatHistory::default());
         let raw: Value =
-            serde_json::from_str(&fs::read_to_string(dir.join(VAULT_SETTINGS_FILE)).unwrap())
+            serde_json::from_str(&fs::read_to_string(dir.join(WORKSPACE_SETTINGS_FILE)).unwrap())
                 .unwrap();
         assert!(raw.get("chatHistory").is_none());
     }
 
     #[test]
     fn a_wrong_field_is_read_as_missing() {
-        let dir = TestDir::new("vault-settings-lenient");
+        let dir = TestDir::new("workspace-settings-lenient");
         fs::write(
-            dir.join(VAULT_SETTINGS_FILE),
+            dir.join(WORKSPACE_SETTINGS_FILE),
             r#"{"chatHistory":{"storage":"bogus","retentionDays":"x"}}"#,
         )
         .unwrap();
-        assert_eq!(read_chat_history(&dir), VaultChatHistory::default());
+        assert_eq!(read_chat_history(&dir), WorkspaceChatHistory::default());
     }
 
     #[test]
     fn a_newer_or_broken_file_is_not_replaced() {
-        let dir = TestDir::new("vault-settings-newer");
-        fs::write(dir.join(VAULT_SETTINGS_FILE), r#"{"formatVersion":9}"#).unwrap();
-        assert!(write_chat_history(&dir, VaultChatHistory::default()).is_err());
-        fs::write(dir.join(VAULT_SETTINGS_FILE), "{").unwrap();
-        assert!(write_chat_history(&dir, VaultChatHistory::default()).is_err());
-        assert_eq!(read_chat_history(&dir), VaultChatHistory::default());
+        let dir = TestDir::new("workspace-settings-newer");
+        fs::write(dir.join(WORKSPACE_SETTINGS_FILE), r#"{"formatVersion":9}"#).unwrap();
+        assert!(write_chat_history(&dir, WorkspaceChatHistory::default()).is_err());
+        fs::write(dir.join(WORKSPACE_SETTINGS_FILE), "{").unwrap();
+        assert!(write_chat_history(&dir, WorkspaceChatHistory::default()).is_err());
+        assert_eq!(read_chat_history(&dir), WorkspaceChatHistory::default());
     }
 }

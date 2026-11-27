@@ -275,29 +275,30 @@ pub fn external_access(config: &Value) -> ExternalAccessConfig {
     section(config, "externalAccess")
 }
 
-/// A vault this device attached besides the main one, `aiVaults.attached`.
+/// A workspace this device attached besides the main one, `aiVaults.attached`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub struct AttachedVault {
+pub struct AttachedWorkspace {
     #[serde(default)]
     pub path: String,
     /// The id of its marker when it was attached, known while it is away.
     #[serde(default)]
-    pub vault_id: String,
+    #[serde(rename = "vaultId")]
+    pub workspace_id: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
-struct AiVaultsConfig {
+struct AiWorkspacesConfig {
     #[serde(default)]
-    attached: Vec<AttachedVault>,
+    attached: Vec<AttachedWorkspace>,
 }
 
-/// The vaults this device attached; entries without a path are skipped.
-pub fn attached_vaults(config: &Value) -> Vec<AttachedVault> {
-    section::<AiVaultsConfig>(config, "aiVaults")
+/// The workspaces this device attached; entries without a path are skipped.
+pub fn attached_workspaces(config: &Value) -> Vec<AttachedWorkspace> {
+    section::<AiWorkspacesConfig>(config, "aiVaults")
         .attached
         .into_iter()
-        .filter(|vault| !vault.path.trim().is_empty())
+        .filter(|workspace| !workspace.path.trim().is_empty())
         .collect()
 }
 

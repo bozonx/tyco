@@ -68,21 +68,21 @@ describe('portable user config schema', () => {
   )
 })
 
-it('canonicalizes main vault references identically to Rust without changing opaque plugin settings', async () => {
-  const { normalizeMainVaultReferences } = await import('@tyco/shared')
+it('canonicalizes main workspace references identically to Rust without changing opaque plugin settings', async () => {
+  const { normalizeMainWorkspaceReferences } = await import('@tyco/shared')
   const { default: fixture } =
     await import('../../../../../packages/shared/fixtures/profile-reference-normalization.json')
   const input = structuredClone(fixture.input)
-  normalizeMainVaultReferences(input, fixture.mainVaultId)
+  normalizeMainWorkspaceReferences(input, fixture.mainWorkspaceId)
   expect(input).toEqual(fixture.expected)
-  normalizeMainVaultReferences(input, fixture.mainVaultId)
+  normalizeMainWorkspaceReferences(input, fixture.mainWorkspaceId)
   expect(input).toEqual(fixture.expected)
 })
 
-it('drops the removed main-vault location and canonicalizes repaired config references', () => {
+it('drops the removed main-workspace location and canonicalizes repaired config references', () => {
   const config = normalizeUserConfig(
     {
-      aiVault: { path: '/old-vault' },
+      aiVault: { path: '/old-workspace' },
       actionPages: [
         {
           id: 'main',

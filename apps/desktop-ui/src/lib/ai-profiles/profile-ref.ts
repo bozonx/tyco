@@ -1,33 +1,33 @@
 /**
- * Profiles and projects are named by references `[vaultId:]id`: the vault part
- * is left out for the main vault, so its references are the bare ids. Ids never
- * hold the separator
+ * Profiles and projects are named by references `[workspaceId:]id`: the
+ * workspace part is left out for the main workspace, so its references are the
+ * bare ids. Ids never hold the separator
  */
 const REF_SEPARATOR = ':'
 
-export interface VaultRef {
-  /** Empty for the main vault */
-  vaultId: string
+export interface WorkspaceRef {
+  /** Empty for the main workspace */
+  workspaceId: string
   id: string
 }
 
-export function splitRef(key: string): VaultRef {
+export function splitRef(key: string): WorkspaceRef {
   const index = key.indexOf(REF_SEPARATOR)
   return index < 0
-    ? { vaultId: '', id: key }
-    : { vaultId: key.slice(0, index), id: key.slice(index + 1) }
+    ? { workspaceId: '', id: key }
+    : { workspaceId: key.slice(0, index), id: key.slice(index + 1) }
 }
 
-export const joinRef = (vaultId: string, id: string): string =>
-  vaultId ? `${vaultId}${REF_SEPARATOR}${id}` : id
+export const joinRef = (workspaceId: string, id: string): string =>
+  workspaceId ? `${workspaceId}${REF_SEPARATOR}${id}` : id
 
-/** The vault part of a reference, empty for the main vault */
-export const vaultOfRef = (key: string): string => splitRef(key).vaultId
+/** The workspace part of a reference, empty for the main workspace */
+export const workspaceOfRef = (key: string): string => splitRef(key).workspaceId
 
 /** A reference to a profile as `config.json` keeps it */
 export interface ConfigProfileRef {
   profileId: string
-  /** Absent or empty for the main vault */
+  /** Absent or empty for the main workspace */
   vaultId?: string
 }
 
@@ -36,10 +36,12 @@ export const configProfileKey = (ref: ConfigProfileRef): string =>
   joinRef(ref.vaultId ?? '', ref.profileId)
 
 /**
- * The fields the settings keep for a profile reference; no vault for the main
- * one
+ * The fields the settings keep for a profile reference; no workspace for the
+ * main one
  */
 export function configProfileFields(key: string): ConfigProfileRef {
-  const { vaultId, id } = splitRef(key)
-  return vaultId ? { profileId: id, vaultId } : { profileId: id }
+  const { workspaceId, id } = splitRef(key)
+  return workspaceId
+    ? { profileId: id, vaultId: workspaceId }
+    : { profileId: id }
 }

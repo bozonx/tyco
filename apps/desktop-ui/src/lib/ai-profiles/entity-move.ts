@@ -1,7 +1,7 @@
-import type { ProjectPermission, VaultInfo } from '@tyco/shared'
+import type { ProjectPermission, WorkspaceInfo } from '@tyco/shared'
 
 import { effectiveProjectAccessLevel } from './project-access'
-import { vaultOfRef } from './profile-ref'
+import { workspaceOfRef } from './profile-ref'
 
 interface Named {
   readonly id: string
@@ -12,15 +12,15 @@ interface WithPermissions extends Named {
   readonly projectPermissions: Readonly<Record<string, ProjectPermission>>
 }
 
-/** The workspaces an entity (a reference `[vaultId:]id`) can move to now */
+/** The workspaces an entity (a reference `[workspaceId:]id`) can move to now */
 export const moveTargets = (
   entityId: string,
-  vaults: readonly VaultInfo[]
-): VaultInfo[] =>
-  vaults.filter(
-    (vault) =>
-      (vault.isMain || vault.status === 'connected') &&
-      vault.vaultId !== vaultOfRef(entityId)
+  workspaces: readonly WorkspaceInfo[]
+): WorkspaceInfo[] =>
+  workspaces.filter(
+    (workspace) =>
+      (workspace.isMain || workspace.status === 'connected') &&
+      workspace.workspaceId !== workspaceOfRef(entityId)
   )
 
 /**
@@ -34,7 +34,7 @@ export const projectsLostByProfile = (
   projects
     .filter(
       (project) =>
-        vaultOfRef(project.id) === vaultOfRef(profile.id) &&
+        workspaceOfRef(project.id) === workspaceOfRef(profile.id) &&
         effectiveProjectAccessLevel(profile.projectPermissions, project.id)
     )
     .map((project) => project.name)
@@ -47,7 +47,7 @@ export const profilesLosingProject = (
   profiles
     .filter(
       (profile) =>
-        vaultOfRef(profile.id) === vaultOfRef(projectId) &&
+        workspaceOfRef(profile.id) === workspaceOfRef(projectId) &&
         effectiveProjectAccessLevel(profile.projectPermissions, projectId)
     )
     .map((profile) => profile.name)

@@ -5,7 +5,7 @@ import { splitRef } from '../ai-profiles/profile-ref'
 /**
  * The files of a chat history that changed, relative to its folder: the chats
  * of "Ask AI" (`profileKey` null) in the data folder, or those of a profile in
- * its vault
+ * its workspace
  */
 export function changedChatFiles(
   event: StorageChangedEvent,
@@ -15,11 +15,12 @@ export function changedChatFiles(
     return event.paths
       .filter((path) => path.startsWith('chats/'))
       .map((path) => path.slice('chats/'.length))
-  const { vaultId, id } = splitRef(profileKey)
+  const { workspaceId, id } = splitRef(profileKey)
   const prefix = `profiles/${id}/chats/`
-  return event.vaultChanges
+  return event.workspaceChanges
     .filter(
-      (change) => change.vaultId === vaultId && change.path.startsWith(prefix)
+      (change) =>
+        change.workspaceId === workspaceId && change.path.startsWith(prefix)
     )
     .map((change) => change.path.slice(prefix.length))
 }

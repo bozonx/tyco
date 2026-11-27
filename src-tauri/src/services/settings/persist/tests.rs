@@ -787,11 +787,11 @@ fn a_lossy_repair_does_not_overwrite_a_file_when_recovery_is_unavailable() {
 }
 
 #[test]
-fn main_vault_references_are_canonical_on_load_save_and_external_merge() {
-    let setup = Setup::new("config-main-vault-references");
+fn main_workspace_references_are_canonical_on_load_save_and_external_merge() {
+    let setup = Setup::new("config-main-workspace-references");
     let user_dir = setup.dir.join("user");
     crate::services::storage::user_data::write_marker(&user_dir).unwrap();
-    let main_id = crate::services::ai_vault::marker::main_vault_id(&user_dir);
+    let main_id = crate::services::ai_workspace::marker::main_workspace_id(&user_dir);
     let reference = json!({"type":"profileChat", "profileId":"writer", "vaultId":main_id});
     let mut config = default_user_config();
     config["actionPages"][0]["slots"]["q"] = reference.clone();

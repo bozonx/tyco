@@ -4,7 +4,7 @@ use std::path::Path;
 
 use super::files::*;
 use crate::errors::AppError;
-use crate::services::ai_vault::{
+use crate::services::ai_workspace::{
     self, AiProfile, AiProject, ProfileToolSettings, ProjectAccessMode, ProjectPermission,
     ToolSourceSettings,
 };
@@ -827,7 +827,7 @@ fn profile(tools: Option<ProfileToolSettings>) -> AiProfile {
             ),
         ]),
         tools,
-        memory_mode: ai_vault::ProfileMemoryMode::Auto,
+        memory_mode: ai_workspace::ProfileMemoryMode::Auto,
         created_at: 1,
         updated_at: 1,
         revision: None,
@@ -850,20 +850,20 @@ fn project(id: &str, created_at: u64) -> AiProject {
 
 #[test]
 fn a_profile_reaches_its_workspace_and_the_projects_it_was_not_denied() {
-    let vault = TestDir::new("ai_files_profile");
+    let workspace = TestDir::new("ai_files_profile");
     let device = crate::services::storage::device::DeviceStore::in_memory(Default::default());
-    let paths = ai_vault::ProjectPaths {
+    let paths = ai_workspace::ProjectPaths {
         device: &device,
-        vault_id: "v",
+        workspace_id: "v",
         protected_roots: Vec::new(),
     };
     let enabled = ProfileToolSettings::default();
-    ai_vault::create_profile(&vault, profile(Some(enabled)), "").unwrap();
+    ai_workspace::create_profile(&workspace, profile(Some(enabled)), "").unwrap();
     for (index, id) in ["book", "closed", "other"].iter().enumerate() {
-        ai_vault::create_project(&vault, &paths, project(id, index as u64)).unwrap();
+        ai_workspace::create_project(&workspace, &paths, project(id, index as u64)).unwrap();
     }
 
-    let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
+    let files = ConversationFiles::load(&workspace, &paths, "writer", Attachments::none()).unwrap();
     let roots: Vec<_> = files
         .roots()
         .iter()
@@ -901,11 +901,14 @@ fn a_profile_reaches_its_workspace_and_the_projects_it_was_not_denied() {
 
     // a profile does not switch file tools one by one: the projects decide
     let one_off = ProfileToolSettings {
-        tools: HashMap::from([("core:files:read_file".to_string(), ai_vault::ToolState::Off)]),
+        tools: HashMap::from([(
+            "core:files:read_file".to_string(),
+            ai_workspace::ToolState::Off,
+        )]),
         ..Default::default()
     };
-    ai_vault::save_profile(&vault, profile(Some(one_off)), None).unwrap();
-    let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
+    ai_workspace::save_profile(&workspace, profile(Some(one_off)), None).unwrap();
+    let files = ConversationFiles::load(&workspace, &paths, "writer", Attachments::none()).unwrap();
     let outcome = run(
         &files,
         serde_json::json!({"operation": "readFile", "path": "workspace/a.md"}),
@@ -925,32 +928,32 @@ fn a_profile_reaches_its_workspace_and_the_projects_it_was_not_denied() {
         )]),
         ..Default::default()
     };
-    ai_vault::save_profile(&vault, profile(Some(files_off)), None).unwrap();
-    let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
+    ai_workspace::save_profile(&workspace, profile(Some(files_off)), None).unwrap();
+    let files = ConversationFiles::load(&workspace, &paths, "writer", Attachments::none()).unwrap();
     assert_eq!(files.roots().len(), 3);
 }
 
 #[test]
 fn an_external_project_without_its_folder_here_is_named_and_refused() {
-    let vault = TestDir::new("ai_files_unconnected_project");
+    let workspace = TestDir::new("ai_files_unconnected_project");
     let device = crate::services::storage::device::DeviceStore::in_memory(Default::default());
-    let paths = ai_vault::ProjectPaths {
+    let paths = ai_workspace::ProjectPaths {
         device: &device,
-        vault_id: "v",
+        workspace_id: "v",
         protected_roots: Vec::new(),
     };
     let enabled = ProfileToolSettings::default();
-    ai_vault::create_profile(&vault, profile(Some(enabled)), "").unwrap();
+    ai_workspace::create_profile(&workspace, profile(Some(enabled)), "").unwrap();
     // made on another device: the description is synced, the folder is not
-    let dir = vault.join("projects/book");
+    let dir = workspace.join("projects/book");
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(
-        dir.join(ai_vault::PROJECT_FILE),
+        dir.join(ai_workspace::PROJECT_FILE),
         r#"{"id":"book","name":"Book","isExternal":true,"targetPath":"/elsewhere","createdAt":1,"updatedAt":1}"#,
     )
     .unwrap();
 
-    let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
+    let files = ConversationFiles::load(&workspace, &paths, "writer", Attachments::none()).unwrap();
     let book = &files.roots()[1];
     assert_eq!(book.path, "projects/book");
     assert!(book.unavailable.is_some());
@@ -1307,7 +1310,7 @@ fn a_file_tool_off_in_the_profile_is_ignored() {
     fs::write(dir.join("workspace/b.txt"), "b").unwrap();
     let settings = ProfileToolSettings {
         sources: HashMap::new(),
-        tools: HashMap::from([("core:files:read_file".into(), ai_vault::ToolState::Off)]),
+        tools: HashMap::from([("core:files:read_file".into(), ai_workspace::ToolState::Off)]),
         picked_command_ids: None,
     };
     let files = ConversationFiles::with_attachments(

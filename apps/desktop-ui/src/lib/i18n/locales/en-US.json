@@ -410,7 +410,7 @@
     "unsupportedConfig": "The settings were saved by a newer version of the app",
     "userDataUnavailable": "The data folder is unavailable",
     "variableNotSet": "A variable has no value on this device",
-    "vaultUnavailable": "The workspace is not connected on this device",
+    "workspaceUnavailable": "The workspace is not connected on this device",
     "projectUnavailable": "The project folder is not set on this device",
     "alreadyExists": "It exists already",
     "staleRevision": "The file was changed on another device or outside TyCo",
@@ -749,7 +749,7 @@
     "aiCommands": "AI commands",
     "aiProfilesHint": "Separate assistants with their own instruction, model, tools and chats. Each profile is a tab in the top bar.",
     "aiProfilesTab": "AI Profiles",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "Attach workspace…",
       "attachedDeviceScopedHint": "Attached workspaces are set separately on each computer; the main one is synced with the data folder.",
       "detach": "Remove from list",
@@ -757,7 +757,7 @@
       "hint": "A workspace is a folder of profiles, projects, their chats and memory. The main one is in the data folder; attach others, e.g. a work one synced on its own. A profile reaches only the projects of its workspace.",
       "main": "Main",
       "name": "Name",
-      "newVault": "New workspace",
+      "newWorkspace": "New workspace",
       "newer": "Made by a newer TyCo",
       "notConnected": "Not connected on this device",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "Rename workspace",
       "title": "Workspace",
       "useSubfolder": "The folder holds other files. Make the workspace in {path}?",
-      "vault": "Workspace",
+      "workspace": "Workspace",
       "writableByOthers": "Other users of this computer may write to the workspace {name}: its profiles run the commands of this device."
     },
     "allPluginsTab": "All plugins",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "Each workspace can keep its chats in its own way on the tab",
     "profileCopyName": "{name} (copy)",
     "profileDefaultSoul": "# Role\nYou are my personal assistant. You help with everyday tasks: answer questions, write and edit texts, plan and think problems through.\n\n# Style\n- Answer in the language of my message.\n- Be brief and to the point; go into detail when I ask.\n- Use lists and headings when they make the answer easier to read.\n\n# Rules\n- If the request is unclear, ask before answering.\n- Do not make up facts: say when you are not sure.\n- Before changing files or running commands, say what you are going to do.\n\n# About me\n- Describe yourself here: what you do and what the assistant should take into account.\n",
+    "profileFolder": "Folder",
+    "profileFolderFixedHint": "The folder does not change when the profile is renamed, so its chats and project access stay with it.",
     "profileMemoryApplyCompact": "Apply",
     "profileMemoryCompact": "Compact",
     "profileMemoryCompactNoChange": "The file is already optimal, no changes needed",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "The folder {path} is on another drive. Confirm moving your files from {current} to the new drive?"
     },
     "variablesTab": "Variables",
-    "vaultFolder": "Folder",
-    "vaultFolderFixedHint": "The folder does not change when the profile is renamed, so its chats and project access stay with it.",
     "vision": "Image input",
     "voiceHold": {
       "voice": "Hold the hotkey while dictating (Push-to-Talk)",

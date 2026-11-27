@@ -53,7 +53,7 @@ pub enum AppError {
     /// The folder of the AI profiles is set on this device but not there,
     /// e.g. a disk that is not mounted.
     #[error("{0}")]
-    VaultUnavailable(String),
+    WorkspaceUnavailable(String),
     /// An external project has no folder on this device.
     #[error("{0}")]
     ProjectUnavailable(String),
@@ -133,7 +133,7 @@ error_codes! {
     /// A command refers to a variable without a value on this device.
     VariableNotSet,
     /// The folder of the AI profiles is not there on this device.
-    VaultUnavailable,
+    WorkspaceUnavailable,
     /// An external project has no folder on this device.
     ProjectUnavailable,
     /// The request was made for a state that has changed since.
@@ -167,7 +167,7 @@ impl AppError {
             Self::UnsupportedConfig(_) => ErrorCode::UnsupportedConfig,
             Self::UserDataUnavailable(_) => ErrorCode::UserDataUnavailable,
             Self::VariableNotSet(_) => ErrorCode::VariableNotSet,
-            Self::VaultUnavailable(_) => ErrorCode::VaultUnavailable,
+            Self::WorkspaceUnavailable(_) => ErrorCode::WorkspaceUnavailable,
             Self::ProjectUnavailable(_) => ErrorCode::ProjectUnavailable,
             Self::Stale(_) => ErrorCode::Stale,
             Self::AlreadyExists(_) => ErrorCode::AlreadyExists,
@@ -256,8 +256,8 @@ mod tests {
                 "variableNotSet",
             ),
             (
-                AppError::VaultUnavailable("No vault".into()),
-                "vaultUnavailable",
+                AppError::WorkspaceUnavailable("No workspace".into()),
+                "workspaceUnavailable",
             ),
             (
                 AppError::ProjectUnavailable("No folder".into()),

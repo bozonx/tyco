@@ -410,7 +410,7 @@
     "unsupportedConfig": "Le impostazioni sono state salvate da una versione più recente dell’app",
     "userDataUnavailable": "La cartella dati non è disponibile",
     "variableNotSet": "Una variabile non ha un valore su questo dispositivo",
-    "vaultUnavailable": "L’area di lavoro non è collegata su questo dispositivo",
+    "workspaceUnavailable": "L’area di lavoro non è collegata su questo dispositivo",
     "projectUnavailable": "La cartella del progetto non è impostata su questo dispositivo",
     "alreadyExists": "Esiste già",
     "staleRevision": "Il file è stato modificato su un altro dispositivo o fuori da TyCo",
@@ -749,7 +749,7 @@
     "aiCommands": "Comandi IA",
     "aiProfilesHint": "Assistenti separati con istruzione, modello, strumenti e chat propri. Ogni profilo è una scheda nella barra superiore.",
     "aiProfilesTab": "Profili IA",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "Collega area di lavoro…",
       "attachedDeviceScopedHint": "Le aree di lavoro collegate si impostano su ogni computer separatamente; quella principale è sincronizzata con la cartella dei dati.",
       "detach": "Rimuovi dall’elenco",
@@ -757,7 +757,7 @@
       "hint": "Un’area di lavoro è una cartella di profili, progetti, delle loro chat e memoria. Quella principale è nella cartella dei dati; collegane altre, ad esempio una di lavoro sincronizzata a parte. Un profilo raggiunge solo i progetti della sua area di lavoro.",
       "main": "Principale",
       "name": "Nome",
-      "newVault": "Nuova area di lavoro",
+      "newWorkspace": "Nuova area di lavoro",
       "newer": "Creato da un TyCo più recente",
       "notConnected": "Non collegato su questo dispositivo",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "Rinomina area di lavoro",
       "title": "Area di lavoro",
       "useSubfolder": "La cartella contiene altri file. Creare l’area di lavoro in {path}?",
-      "vault": "Area di lavoro",
+      "workspace": "Area di lavoro",
       "writableByOthers": "Altri utenti di questo computer possono scrivere nell’area di lavoro {name}: i suoi profili eseguono i comandi di questo dispositivo."
     },
     "allPluginsTab": "Tutti i plugin",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "Ogni area di lavoro può conservare le sue chat a modo suo nella scheda",
     "profileCopyName": "{name} (copia)",
     "profileDefaultSoul": "# Ruolo\nSei il mio assistente personale. Mi aiuti nelle attività quotidiane: rispondi alle domande, scrivi e correggi testi, aiuti a pianificare e a ragionare sulle soluzioni.\n\n# Stile\n- Rispondi nella lingua del mio messaggio.\n- Sii breve e preciso; entra nei dettagli quando te lo chiedo.\n- Usa elenchi e titoli quando rendono la risposta più leggibile.\n\n# Regole\n- Se la richiesta non è chiara, chiedi prima di rispondere.\n- Non inventare fatti: dillo quando non sei sicuro.\n- Prima di modificare file o eseguire comandi, di’ cosa stai per fare.\n\n# Su di me\n- Descriviti qui: di cosa ti occupi e di cosa l’assistente deve tenere conto.\n",
+    "profileFolder": "Cartella",
+    "profileFolderFixedHint": "La cartella non cambia quando il profilo viene rinominato, così chat e accessi ai progetti restano con esso.",
     "profileMemoryApplyCompact": "Applica",
     "profileMemoryCompact": "Compatta",
     "profileMemoryCompactNoChange": "Il file è già ottimale, nessuna modifica necessaria",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "La cartella {path} si trova su un altro disco. Confermi lo spostamento dei file da {current} all’altro disco?"
     },
     "variablesTab": "Variabili",
-    "vaultFolder": "Cartella",
-    "vaultFolderFixedHint": "La cartella non cambia quando il profilo viene rinominato, così chat e accessi ai progetti restano con esso.",
     "vision": "Input di immagini",
     "voiceHold": {
       "voice": "Tieni premuta la scorciatoia durante la dettatura (Push-to-Talk)",

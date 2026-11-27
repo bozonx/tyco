@@ -4,144 +4,148 @@ use tauri::Manager;
 use super::run_blocking;
 use crate::{
     errors::AppError,
-    services::ai_vault::{
+    services::ai_workspace::{
         self, AiProfile, AiProject, ProfileMemoryChange, ProfileMemorySearchResult,
-        ProfileMemoryTopic, ProfileSoul, ProjectConversion, ProjectTransferPreview, VaultFolder,
-        VaultInfo,
+        ProfileMemoryTopic, ProfileSoul, ProjectConversion, ProjectTransferPreview,
+        WorkspaceFolder, WorkspaceInfo,
     },
     services::storage,
 };
 
-// Profiles and projects are named by references `[vaultId:]id`: the vault
-// part is empty for the main vault, see `ai_vault::split_ref`.
+// Profiles and projects are named by references `[workspaceId:]id`: the workspace
+// part is empty for the main workspace, see `ai_workspace::split_ref`.
 
-/// Shows a vault, or one profile folder in it, in the file manager. The path
+/// Shows a workspace, or one profile folder in it, in the file manager. The path
 /// is built here: the webview never names a folder to open.
 #[tauri::command]
-pub async fn open_ai_vault_location(
+pub async fn open_ai_workspace_location(
     app: AppHandle,
-    vault_id: Option<String>,
+    workspace_id: Option<String>,
     profile_id: Option<String>,
 ) -> Result<(), AppError> {
     run_blocking(move || {
-        let (vault_id, profile_id) = match profile_id.as_deref().map(ai_vault::split_ref) {
-            Some((vault_id, id)) => (vault_id.to_owned(), Some(id.to_owned())),
-            None => (vault_id.unwrap_or_default(), None),
+        let (workspace_id, profile_id) = match profile_id.as_deref().map(ai_workspace::split_ref) {
+            Some((workspace_id, id)) => (workspace_id.to_owned(), Some(id.to_owned())),
+            None => (workspace_id.unwrap_or_default(), None),
         };
-        ai_vault::with_vault(&app, &vault_id, |dir| {
-            let target = ai_vault::vault_dir_to_open(dir, profile_id.as_deref())?;
+        ai_workspace::with_workspace(&app, &workspace_id, |dir| {
+            let target = ai_workspace::workspace_dir_to_open(dir, profile_id.as_deref())?;
             crate::services::platform::open_dir(&target)
         })
     })
     .await?
 }
 
-/// The main vault and the attached ones of this device.
+/// The main workspace and the attached ones of this device.
 #[tauri::command]
-pub async fn list_ai_vaults(app: AppHandle) -> Result<Vec<VaultInfo>, AppError> {
-    run_blocking(move || ai_vault::list_vaults(&app)).await?
+pub async fn list_ai_workspaces(app: AppHandle) -> Result<Vec<WorkspaceInfo>, AppError> {
+    run_blocking(move || ai_workspace::list_workspaces(&app)).await?
 }
 
-/// What a folder holds as a vault to attach.
+/// What a folder holds as a workspace to attach.
 #[tauri::command]
-pub async fn inspect_ai_vault_folder(
+pub async fn inspect_ai_workspace_folder(
     app: AppHandle,
     path: String,
-) -> Result<VaultFolder, AppError> {
-    run_blocking(move || ai_vault::inspect_vault_folder(&app, &path)).await?
+) -> Result<WorkspaceFolder, AppError> {
+    run_blocking(move || ai_workspace::inspect_workspace_folder(&app, &path)).await?
 }
 
-/// Attaches a folder as a vault of this device; an empty one gets a new
-/// vault named `name`.
+/// Attaches a folder as a workspace of this device; an empty one gets a new
+/// workspace named `name`.
 #[tauri::command]
-pub async fn attach_ai_vault(
+pub async fn attach_ai_workspace(
     app: AppHandle,
     path: String,
     name: String,
-) -> Result<VaultInfo, AppError> {
-    run_blocking(move || ai_vault::attach_vault(&app, &path, &name)).await?
+) -> Result<WorkspaceInfo, AppError> {
+    run_blocking(move || ai_workspace::attach_workspace(&app, &path, &name)).await?
 }
 
-/// Points an attached vault to the folder it has on this device now.
+/// Points an attached workspace to the folder it has on this device now.
 #[tauri::command]
-pub async fn relink_ai_vault(
+pub async fn relink_ai_workspace(
     app: AppHandle,
-    vault_id: String,
+    workspace_id: String,
     path: String,
-) -> Result<VaultInfo, AppError> {
-    run_blocking(move || ai_vault::relink_vault(&app, &vault_id, &path)).await?
+) -> Result<WorkspaceInfo, AppError> {
+    run_blocking(move || ai_workspace::relink_workspace(&app, &workspace_id, &path)).await?
 }
 
-/// Removes a vault from this device; its files stay.
+/// Removes a workspace from this device; its files stay.
 #[tauri::command]
-pub async fn detach_ai_vault(app: AppHandle, vault_id: String) -> Result<(), AppError> {
-    run_blocking(move || ai_vault::detach_vault(&app, &vault_id)).await?
+pub async fn detach_ai_workspace(app: AppHandle, workspace_id: String) -> Result<(), AppError> {
+    run_blocking(move || ai_workspace::detach_workspace(&app, &workspace_id)).await?
 }
 
-/// Renames an attached vault on every device.
+/// Renames an attached workspace on every device.
 #[tauri::command]
-pub async fn rename_ai_vault(
+pub async fn rename_ai_workspace(
     app: AppHandle,
-    vault_id: String,
+    workspace_id: String,
     name: String,
 ) -> Result<(), AppError> {
-    run_blocking(move || ai_vault::rename_vault(&app, &vault_id, &name)).await?
+    run_blocking(move || ai_workspace::rename_workspace(&app, &workspace_id, &name)).await?
 }
 
-/// Stores the chat history settings of a vault and brings its chats in line
+/// Stores the chat history settings of a workspace and brings its chats in line
 /// with them in the background.
 #[tauri::command]
-pub async fn set_ai_vault_chat_history(
+pub async fn set_ai_workspace_chat_history(
     app: AppHandle,
-    vault_id: String,
-    chat_history: ai_vault::VaultChatHistory,
+    workspace_id: String,
+    chat_history: ai_workspace::WorkspaceChatHistory,
 ) -> Result<(), AppError> {
-    run_blocking(move || ai_vault::set_vault_chat_history(&app, &vault_id, chat_history)).await?
+    run_blocking(move || {
+        ai_workspace::set_workspace_chat_history(&app, &workspace_id, chat_history)
+    })
+    .await?
 }
 
-/// Moves a profile with its chats, memory and files to another vault.
+/// Moves a profile with its chats, memory and files to another workspace.
 #[tauri::command]
 pub async fn move_ai_profile(
     app: AppHandle,
     id: String,
-    vault_id: String,
-) -> Result<ai_vault::MovedEntity, AppError> {
-    run_blocking(move || ai_vault::move_profile_to_vault(&app, &id, &vault_id)).await?
+    workspace_id: String,
+) -> Result<ai_workspace::MovedEntity, AppError> {
+    run_blocking(move || ai_workspace::move_profile_to_workspace(&app, &id, &workspace_id)).await?
 }
 
-/// Moves a project to another vault.
+/// Moves a project to another workspace.
 #[tauri::command]
 pub async fn move_ai_project(
     app: AppHandle,
     id: String,
-    vault_id: String,
-) -> Result<ai_vault::MovedEntity, AppError> {
-    run_blocking(move || ai_vault::move_project_to_vault(&app, &id, &vault_id)).await?
+    workspace_id: String,
+) -> Result<ai_workspace::MovedEntity, AppError> {
+    run_blocking(move || ai_workspace::move_project_to_workspace(&app, &id, &workspace_id)).await?
 }
 
-/// The profiles of every vault that is there.
+/// The profiles of every workspace that is there.
 #[tauri::command]
 pub async fn list_ai_profiles(app: AppHandle) -> Result<Vec<AiProfile>, AppError> {
-    run_blocking(move || ai_vault::list_all_profiles(&app)).await?
+    run_blocking(move || ai_workspace::list_all_profiles(&app)).await?
 }
 
 #[tauri::command]
 pub async fn get_ai_profile(app: AppHandle, id: String) -> Result<AiProfile, AppError> {
     run_blocking(move || {
-        let (vault_id, id) = ai_vault::split_ref(&id);
-        ai_vault::with_vault_of(&app, vault_id, |vault| {
-            // the main vault named by its own id still gets the bare reference
-            let vault_ref = ai_vault::canonical_vault_ref(&app, vault_id, vault);
-            Ok(ai_vault::profile_to_ref(
-                &vault_ref,
-                ai_vault::get_profile(&vault.root, id)?,
+        let (workspace_id, id) = ai_workspace::split_ref(&id);
+        ai_workspace::with_workspace_of(&app, workspace_id, |workspace| {
+            // the main workspace named by its own id still gets the bare reference
+            let workspace_ref =
+                ai_workspace::canonical_workspace_ref(&app, workspace_id, workspace);
+            Ok(ai_workspace::profile_to_ref(
+                &workspace_ref,
+                ai_workspace::get_profile(&workspace.root, id)?,
             ))
         })
     })
     .await?
 }
 
-/// Creates the profile in the vault its reference names.
+/// Creates the profile in the workspace its reference names.
 #[tauri::command]
 pub async fn create_ai_profile(
     app: AppHandle,
@@ -149,10 +153,10 @@ pub async fn create_ai_profile(
     soul: String,
 ) -> Result<String, AppError> {
     run_blocking(move || {
-        let vault_id = ai_vault::split_ref(&profile.id).0.to_owned();
-        let profile = ai_vault::profile_from_ref(&vault_id, profile)?;
-        ai_vault::with_vault(&app, &vault_id, |dir| {
-            ai_vault::create_profile(dir, profile, &soul)
+        let workspace_id = ai_workspace::split_ref(&profile.id).0.to_owned();
+        let profile = ai_workspace::profile_from_ref(&workspace_id, profile)?;
+        ai_workspace::with_workspace(&app, &workspace_id, |dir| {
+            ai_workspace::create_profile(dir, profile, &soul)
         })
     })
     .await?
@@ -167,10 +171,10 @@ pub async fn save_ai_profile(
     expected_revision: Option<String>,
 ) -> Result<String, AppError> {
     run_blocking(move || {
-        let vault_id = ai_vault::split_ref(&profile.id).0.to_owned();
-        let profile = ai_vault::profile_from_ref(&vault_id, profile)?;
-        ai_vault::with_vault(&app, &vault_id, |dir| {
-            ai_vault::save_profile(dir, profile, expected_revision.as_deref())
+        let workspace_id = ai_workspace::split_ref(&profile.id).0.to_owned();
+        let profile = ai_workspace::profile_from_ref(&workspace_id, profile)?;
+        ai_workspace::with_workspace(&app, &workspace_id, |dir| {
+            ai_workspace::save_profile(dir, profile, expected_revision.as_deref())
         })
     })
     .await?
@@ -180,20 +184,22 @@ pub async fn save_ai_profile(
 #[tauri::command]
 pub async fn delete_ai_profile(app: AppHandle, id: String) -> Result<(), AppError> {
     run_blocking(move || {
-        let (vault_id, id) = ai_vault::split_ref(&id);
-        ai_vault::with_vault_of(&app, vault_id, |vault| {
-            // Vault access is already held; do not acquire it recursively.
-            storage::while_chats_locked_in_vault(&app, || {
-                ai_vault::delete_profile(
-                    &vault.root,
-                    &app.state::<ai_vault::MemoryReadVersions>(),
+        let (workspace_id, id) = ai_workspace::split_ref(&id);
+        ai_workspace::with_workspace_of(&app, workspace_id, |workspace| {
+            // Workspace access is already held; do not acquire it recursively.
+            storage::while_chats_locked_in_workspace(&app, || {
+                ai_workspace::delete_profile(
+                    &workspace.root,
+                    &app.state::<ai_workspace::MemoryReadVersions>(),
                     id,
                 )
             })?;
-            let profile_ref =
-                ai_vault::join_ref(&ai_vault::canonical_vault_ref(&app, vault_id, vault), id);
+            let profile_ref = ai_workspace::join_ref(
+                &ai_workspace::canonical_workspace_ref(&app, workspace_id, workspace),
+                id,
+            );
             storage::move_session_chats(&app, &profile_ref, None);
-            if let Err(error) = storage::remove_profile_index(&app, &vault.id, id) {
+            if let Err(error) = storage::remove_profile_index(&app, &workspace.id, id) {
                 log::warn!("Could not remove the chat index of the profile {id}: {error}");
             }
             Ok(())
@@ -205,9 +211,9 @@ pub async fn delete_ai_profile(app: AppHandle, id: String) -> Result<(), AppErro
 #[tauri::command]
 pub async fn read_ai_profile_soul(app: AppHandle, id: String) -> Result<ProfileSoul, AppError> {
     run_blocking(move || {
-        let (vault_id, id) = ai_vault::split_ref(&id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::read_profile_soul_revision(dir, id)
+        let (workspace_id, id) = ai_workspace::split_ref(&id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::read_profile_soul_revision(dir, id)
         })
     })
     .await?
@@ -223,26 +229,26 @@ pub async fn write_ai_profile_soul(
     expected_revision: Option<String>,
 ) -> Result<String, AppError> {
     run_blocking(move || {
-        let (vault_id, id) = ai_vault::split_ref(&id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::write_profile_soul(dir, id, &content, expected_revision.as_deref())
+        let (workspace_id, id) = ai_workspace::split_ref(&id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::write_profile_soul(dir, id, &content, expected_revision.as_deref())
         })
     })
     .await?
 }
 
-/// The projects of every vault that is there.
+/// The projects of every workspace that is there.
 #[tauri::command]
 pub async fn list_ai_projects(app: AppHandle) -> Result<Vec<AiProject>, AppError> {
-    run_blocking(move || ai_vault::list_all_projects(&app)).await?
+    run_blocking(move || ai_workspace::list_all_projects(&app)).await?
 }
 
 #[tauri::command]
 pub async fn create_ai_project(app: AppHandle, project: AiProject) -> Result<String, AppError> {
     run_blocking(move || {
-        let vault_id = ai_vault::split_ref(&project.id).0.to_owned();
-        ai_vault::with_projects(&app, &vault_id, |dir, paths| {
-            ai_vault::create_project(dir, paths, ai_vault::project_from_ref(project))
+        let workspace_id = ai_workspace::split_ref(&project.id).0.to_owned();
+        ai_workspace::with_projects(&app, &workspace_id, |dir, paths| {
+            ai_workspace::create_project(dir, paths, ai_workspace::project_from_ref(project))
         })
     })
     .await?
@@ -257,12 +263,12 @@ pub async fn save_ai_project(
     expected_revision: Option<String>,
 ) -> Result<String, AppError> {
     run_blocking(move || {
-        let vault_id = ai_vault::split_ref(&project.id).0.to_owned();
-        ai_vault::with_projects(&app, &vault_id, |dir, paths| {
-            ai_vault::save_project(
+        let workspace_id = ai_workspace::split_ref(&project.id).0.to_owned();
+        ai_workspace::with_projects(&app, &workspace_id, |dir, paths| {
+            ai_workspace::save_project(
                 dir,
                 paths,
-                ai_vault::project_from_ref(project),
+                ai_workspace::project_from_ref(project),
                 expected_revision.as_deref(),
             )
         })
@@ -279,9 +285,9 @@ pub async fn inspect_ai_project_transfer(
     target_path: Option<String>,
 ) -> Result<ProjectTransferPreview, AppError> {
     run_blocking(move || {
-        let (vault_id, project_id) = ai_vault::split_ref(&id);
-        ai_vault::with_projects(&app, vault_id, |dir, paths| {
-            ai_vault::inspect_project_transfer(dir, paths, project_id, target_path.as_deref())
+        let (workspace_id, project_id) = ai_workspace::split_ref(&id);
+        ai_workspace::with_projects(&app, workspace_id, |dir, paths| {
+            ai_workspace::inspect_project_transfer(dir, paths, project_id, target_path.as_deref())
         })
     })
     .await?
@@ -301,19 +307,19 @@ pub async fn convert_ai_project(
     expected_revision: Option<String>,
 ) -> Result<ProjectConversion, AppError> {
     run_blocking(move || {
-        let (vault_id, project_id) = ai_vault::split_ref(&id);
+        let (workspace_id, project_id) = ai_workspace::split_ref(&id);
         let to_trash = |path: &std::path::Path| {
             trash::delete(path)
                 .map_err(|error| AppError::Failed(format!("Could not move to the trash: {error}")))
         };
-        ai_vault::with_projects(&app, vault_id, |dir, paths| {
-            ai_vault::convert_project(
+        ai_workspace::with_projects(&app, workspace_id, |dir, paths| {
+            ai_workspace::convert_project(
                 dir,
                 paths,
                 project_id,
                 target_path.as_deref(),
                 transfer_files,
-                trash_source.then_some(&to_trash as &ai_vault::DiscardFolder),
+                trash_source.then_some(&to_trash as &ai_workspace::DiscardFolder),
                 expected_revision.as_deref(),
             )
         })
@@ -321,15 +327,15 @@ pub async fn convert_ai_project(
     .await?
 }
 
-/// Shows the folder of the project in the file manager: its vault folder,
+/// Shows the folder of the project in the file manager: its workspace folder,
 /// or the folder of an external project on this device. The path is
 /// resolved here: the webview never names a folder to open.
 #[tauri::command]
 pub async fn open_ai_project_location(app: AppHandle, id: String) -> Result<(), AppError> {
     run_blocking(move || {
-        let (vault_id, project_id) = ai_vault::split_ref(&id);
-        ai_vault::with_projects(&app, vault_id, |dir, paths| {
-            let folder = ai_vault::project_folder_on_device(dir, paths, project_id)?;
+        let (workspace_id, project_id) = ai_workspace::split_ref(&id);
+        ai_workspace::with_projects(&app, workspace_id, |dir, paths| {
+            let folder = ai_workspace::project_folder_on_device(dir, paths, project_id)?;
             crate::services::platform::open_dir(&folder)
         })
     })
@@ -339,9 +345,9 @@ pub async fn open_ai_project_location(app: AppHandle, id: String) -> Result<(), 
 #[tauri::command]
 pub async fn delete_ai_project(app: AppHandle, id: String) -> Result<(), AppError> {
     run_blocking(move || {
-        let (vault_id, id) = ai_vault::split_ref(&id);
-        ai_vault::with_projects(&app, vault_id, |dir, paths| {
-            ai_vault::delete_project(dir, paths, id)
+        let (workspace_id, id) = ai_workspace::split_ref(&id);
+        ai_workspace::with_projects(&app, workspace_id, |dir, paths| {
+            ai_workspace::delete_project(dir, paths, id)
         })
     })
     .await?
@@ -354,9 +360,9 @@ pub async fn list_ai_profile_memory_topics(
     profile_id: String,
 ) -> Result<Vec<ProfileMemoryTopic>, AppError> {
     run_blocking(move || {
-        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::list_profile_memory_topics(dir, profile_id)
+        let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::list_profile_memory_topics(dir, profile_id)
         })
     })
     .await?
@@ -372,11 +378,11 @@ pub async fn read_ai_profile_memory(
     file: String,
 ) -> Result<String, AppError> {
     run_blocking(move || {
-        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::read_profile_memory(
+        let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::read_profile_memory(
                 dir,
-                &app.state::<ai_vault::MemoryReadVersions>(),
+                &app.state::<ai_workspace::MemoryReadVersions>(),
                 profile_id,
                 chat_id.as_deref(),
                 &file,
@@ -395,9 +401,9 @@ pub async fn peek_ai_profile_memory(
     file: String,
 ) -> Result<String, AppError> {
     run_blocking(move || {
-        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::peek_profile_memory(dir, profile_id, &file)
+        let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::peek_profile_memory(dir, profile_id, &file)
         })
     })
     .await?
@@ -414,11 +420,11 @@ pub async fn save_ai_profile_memory(
     expected_content: Option<String>,
 ) -> Result<(), AppError> {
     run_blocking(move || {
-        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::save_profile_memory(
+        let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::save_profile_memory(
                 dir,
-                &app.state::<ai_vault::MemoryReadVersions>(),
+                &app.state::<ai_workspace::MemoryReadVersions>(),
                 profile_id,
                 &file,
                 &content,
@@ -437,9 +443,9 @@ pub async fn search_ai_profile_memory(
     query: String,
 ) -> Result<Vec<ProfileMemorySearchResult>, AppError> {
     run_blocking(move || {
-        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::search_profile_memory(dir, profile_id, &query)
+        let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::search_profile_memory(dir, profile_id, &query)
         })
     })
     .await?
@@ -457,15 +463,15 @@ pub async fn add_ai_profile_memory_fact(
     description: Option<String>,
 ) -> Result<ProfileMemoryChange, AppError> {
     run_blocking(move || {
-        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::add_profile_memory_fact(
+        let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::add_profile_memory_fact(
                 dir,
-                &app.state::<ai_vault::MemoryReadVersions>(),
+                &app.state::<ai_workspace::MemoryReadVersions>(),
                 profile_id,
                 chat_id.as_deref(),
                 &file,
-                ai_vault::MemoryEntry {
+                ai_workspace::MemoryEntry {
                     fact: &fact,
                     section: section.as_deref(),
                     description: description.as_deref(),
@@ -487,11 +493,11 @@ pub async fn replace_ai_profile_memory(
     new_text: String,
 ) -> Result<ProfileMemoryChange, AppError> {
     run_blocking(move || {
-        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::replace_profile_memory(
+        let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::replace_profile_memory(
                 dir,
-                &app.state::<ai_vault::MemoryReadVersions>(),
+                &app.state::<ai_workspace::MemoryReadVersions>(),
                 profile_id,
                 chat_id.as_deref(),
                 &file,
@@ -513,11 +519,11 @@ pub async fn rewrite_ai_profile_memory(
     content: String,
 ) -> Result<ProfileMemoryChange, AppError> {
     run_blocking(move || {
-        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::rewrite_profile_memory(
+        let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::rewrite_profile_memory(
                 dir,
-                &app.state::<ai_vault::MemoryReadVersions>(),
+                &app.state::<ai_workspace::MemoryReadVersions>(),
                 profile_id,
                 chat_id.as_deref(),
                 &file,
@@ -537,11 +543,11 @@ pub async fn undo_ai_profile_memory(
     file: String,
 ) -> Result<ProfileMemoryChange, AppError> {
     run_blocking(move || {
-        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::undo_profile_memory(
+        let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::undo_profile_memory(
                 dir,
-                &app.state::<ai_vault::MemoryReadVersions>(),
+                &app.state::<ai_workspace::MemoryReadVersions>(),
                 profile_id,
                 chat_id.as_deref(),
                 &file,
@@ -559,11 +565,11 @@ pub async fn delete_ai_profile_memory_file(
     file: String,
 ) -> Result<(), AppError> {
     run_blocking(move || {
-        let (vault_id, profile_id) = ai_vault::split_ref(&profile_id);
-        ai_vault::with_vault(&app, vault_id, |dir| {
-            ai_vault::delete_profile_memory_file(
+        let (workspace_id, profile_id) = ai_workspace::split_ref(&profile_id);
+        ai_workspace::with_workspace(&app, workspace_id, |dir| {
+            ai_workspace::delete_profile_memory_file(
                 dir,
-                &app.state::<ai_vault::MemoryReadVersions>(),
+                &app.state::<ai_workspace::MemoryReadVersions>(),
                 profile_id,
                 &file,
             )

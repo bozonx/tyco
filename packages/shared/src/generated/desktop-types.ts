@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 108a4041c865cfd5b8c8dcf16ff69d036d84364ca54d3ed0d88a5e9a8c0cac7b
+// Source hash: 88e4418162668bc5003729e0dbaa707ac3c3de96a4d8132cdeb7d541c8b1dd6b
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -218,8 +218,8 @@ export type AiProject = {
    */
   revision?: string
   /**
-   * The folder of an external project lies inside the data folder or a vault
-   * and is synced with it; never stored in the file.
+   * The folder of an external project lies inside the data folder or a
+   * workspace and is synced with it; never stored in the file.
    */
   isInsideSyncedFolder?: boolean
 }
@@ -526,7 +526,7 @@ export type DesktopErrorCode =
   | 'unsupportedConfig'
   | 'userDataUnavailable'
   | 'variableNotSet'
-  | 'vaultUnavailable'
+  | 'workspaceUnavailable'
   | 'projectUnavailable'
   | 'stale'
   | 'alreadyExists'
@@ -837,8 +837,8 @@ export type KeySender = 'ydotool' | 'portal' | 'system'
 export type KeysState = 'ready' | 'needsPermission' | 'unavailable'
 
 /**
- * Where a moved entity landed: its id in the destination vault, which is the
- * old one unless that was taken there.
+ * Where a moved entity landed: its id in the destination workspace, which is
+ * the old one unless that was taken there.
  */
 export type MovedEntity = { id: string }
 
@@ -947,7 +947,7 @@ export type ProjectPermission = {
  */
 export type ProjectTransferPreview = {
   /**
-   * The files that would be transferred: those of the vault folder of an
+   * The files that would be transferred: those of the workspace folder of an
    * internal project, or of the folder of an external one on this device.
    */
   files: TreeSummary
@@ -955,7 +955,7 @@ export type ProjectTransferPreview = {
   takenNames: Array<string>
   /** The files go to another disk: they are copied byte by byte. */
   isOtherDisk: boolean
-  /** Other projects of this device, in any vault, with the same folder. */
+  /** Other projects of this device, in any workspace, with the same folder. */
   sharedFolderCount: number
 }
 
@@ -1120,8 +1120,8 @@ export type StatusOverlayRequest = {
 export type StorageChangedEvent = {
   /** Paths relative to the data folder, with `/`. */
   paths: Array<string>
-  /** Files of the vaults, each with its vault. */
-  vaultChanges: Array<VaultChange>
+  /** Files of the workspaces, each with its workspace. */
+  workspaceChanges: Array<WorkspaceChange>
 }
 
 export type StorageInfo = {
@@ -1264,10 +1264,10 @@ export type UserDataRelocationMode =
  */
 export type UserDataState = {
   /**
-   * Marker identity of the main vault; absent while the data folder is
+   * Marker identity of the main workspace; absent while the data folder is
    * unavailable.
    */
-  mainVaultId?: string
+  mainWorkspaceId?: string
   path: string
   /** The folder the data is in when the user has chosen none. */
   defaultPath: string
@@ -1306,61 +1306,8 @@ export type UserDataTargetKind =
   | { kind: 'occupied'; subfolderPath: string }
   | { kind: 'forbidden' }
 
-/** A file of a vault that changed. */
-export type VaultChange = {
-  /** The vault part of references: empty for the main vault. */
-  vaultId: string
-  /** Relative to the root of the vault, with `/`. */
-  path: string
-}
-
-/**
- * The chat history of a vault's profiles, kept by the vault alone: a missing
- * field takes its default, saving chats forever with their quick requests.
- */
-export type VaultChatHistory = {
-  storage?: VaultHistoryStorage
-  /** 0 keeps the chats forever. */
-  retentionDays?: number
-  /** Quick requests to the profiles are saved with the chats. */
-  isQuickRequestSavingEnabled?: boolean
-}
-
-export type VaultFolder = { path: string; kind: VaultFolderKind }
-
-/** What a folder offered for a vault holds. */
-export type VaultFolderKind =
-  | { kind: 'vault'; name: string }
-  | { kind: 'empty' }
-  | { kind: 'occupied'; subfolder: string }
-  | { kind: 'duplicate' }
-  | { kind: 'nested'; message: string }
-
-/** Where new chats of a vault's profiles are kept. */
-export type VaultHistoryStorage = 'session' | 'disk'
-
-/** A vault as the settings show it. */
-export type VaultInfo = {
-  /**
-   * The vault part of the references of its profiles and projects; empty for
-   * the main vault.
-   */
-  vaultId: string
-  name: string
-  path: string
-  isMain: boolean
-  status: VaultStatus
-  /** Others may write to it: its profiles run the commands of this device. */
-  isWritableByOthers: boolean
-  /** The chat history settings of its profiles; empty when not connected. */
-  chatHistory: VaultChatHistory
-}
-
 /** Whether the system credential store can be reached. */
 export type VaultState = 'available' | 'unavailable'
-
-/** Where an attached vault stands on this device. */
-export type VaultStatus = 'connected' | 'notConnected' | 'newer'
 
 export type VoiceAudioLevelPayload = {
   level: number
@@ -1416,6 +1363,60 @@ export type WindowGeometry = {
  */
 export type WindowProfile = 'panel' | 'sheet'
 
+/** A file of a workspace that changed. */
+export type WorkspaceChange = {
+  /** The workspace part of references: empty for the main workspace. */
+  workspaceId: string
+  /** Relative to the root of the workspace, with `/`. */
+  path: string
+}
+
+/**
+ * The chat history of a workspace's profiles, kept by the workspace alone: a
+ * missing field takes its default, saving chats forever with their quick
+ * requests.
+ */
+export type WorkspaceChatHistory = {
+  storage?: WorkspaceHistoryStorage
+  /** 0 keeps the chats forever. */
+  retentionDays?: number
+  /** Quick requests to the profiles are saved with the chats. */
+  isQuickRequestSavingEnabled?: boolean
+}
+
+export type WorkspaceFolder = { path: string; kind: WorkspaceFolderKind }
+
+/** What a folder offered for a workspace holds. */
+export type WorkspaceFolderKind =
+  | { kind: 'workspace'; name: string }
+  | { kind: 'empty' }
+  | { kind: 'occupied'; subfolder: string }
+  | { kind: 'duplicate' }
+  | { kind: 'nested'; message: string }
+
+/** Where new chats of a workspace's profiles are kept. */
+export type WorkspaceHistoryStorage = 'session' | 'disk'
+
+/** A workspace as the settings show it. */
+export type WorkspaceInfo = {
+  /**
+   * The workspace part of the references of its profiles and projects; empty
+   * for the main workspace.
+   */
+  workspaceId: string
+  name: string
+  path: string
+  isMain: boolean
+  status: WorkspaceStatus
+  /** Others may write to it: its profiles run the commands of this device. */
+  isWritableByOthers: boolean
+  /** The chat history settings of its profiles; empty when not connected. */
+  chatHistory: WorkspaceChatHistory
+}
+
+/** Where an attached workspace stands on this device. */
+export type WorkspaceStatus = 'connected' | 'notConnected' | 'newer'
+
 /** Every code a failed desktop command reports. */
 export const DESKTOP_ERROR_CODES = [
   'operationFailed',
@@ -1431,7 +1432,7 @@ export const DESKTOP_ERROR_CODES = [
   'unsupportedConfig',
   'userDataUnavailable',
   'variableNotSet',
-  'vaultUnavailable',
+  'workspaceUnavailable',
   'projectUnavailable',
   'stale',
   'alreadyExists',

@@ -88,13 +88,13 @@ pub const USER_DATA_ENTRIES: [&str; 6] = [
     "dialogs",
     "plugins",
 ];
-/// The vault of the default location, which goes along when it is in use.
-pub const VAULT_ENTRY: &str = "ai-vault";
+/// The workspace of the default location, which goes along when it is in use.
+pub const WORKSPACE_ENTRY: &str = "ai-vault";
 
 pub fn has_known_entries(dir: &Path) -> bool {
     USER_DATA_ENTRIES
         .iter()
-        .chain([&VAULT_ENTRY])
+        .chain([&WORKSPACE_ENTRY])
         .any(|entry| fs::symlink_metadata(dir.join(entry)).is_ok())
 }
 
@@ -185,11 +185,11 @@ impl UserData {
     pub fn state(&self) -> UserDataState {
         let status = self.current_status();
         UserDataState {
-            main_vault_id: (!matches!(
+            main_workspace_id: (!matches!(
                 status,
                 UserDataStatus::NotConnected | UserDataStatus::NotInitialized
             ))
-            .then(|| crate::services::ai_vault::marker::main_vault_id(&self.dir)),
+            .then(|| crate::services::ai_workspace::marker::main_workspace_id(&self.dir)),
             path: self.dir.to_string_lossy().into_owned(),
             default_path: self.default_dir.to_string_lossy().into_owned(),
             is_default: self.is_default(),

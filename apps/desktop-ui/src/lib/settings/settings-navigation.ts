@@ -289,12 +289,12 @@ const pluginNavigationItem =
 
 /**
  * Whether a tab can be shown. A profile or project tab is accepted while the
- * vault is still being read, since its entity may not be known yet
+ * workspace is still being read, since its entity may not be known yet
  */
 export function isSettingsTabAvailable(
   tab: string,
   sources: Omit<SettingsNavigationSources, 'translate'> & {
-    isVaultLoaded: boolean
+    isWorkspaceLoaded: boolean
   }
 ): boolean {
   const parsed = parseSettingsTab(tab)
@@ -317,13 +317,13 @@ export function isSettingsTabAvailable(
       )
     case 'ai-profile':
       return (
-        !sources.isVaultLoaded ||
+        !sources.isWorkspaceLoaded ||
         parsed.profileId === NEW_ENTITY_ID ||
         sources.profiles.some((profile) => profile.id === parsed.profileId)
       )
     case 'ai-project':
       return (
-        !sources.isVaultLoaded ||
+        !sources.isWorkspaceLoaded ||
         parsed.projectId === NEW_ENTITY_ID ||
         sources.projects.some((project) => project.id === parsed.projectId)
       )

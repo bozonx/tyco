@@ -37,7 +37,7 @@ pub struct DeviceFile {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub plugin_command_paths: BTreeMap<String, String>,
     /// The folder of an external project of the AI profiles on this
-    /// device: by the id of its vault (see `ai_vault::marker`), then by the
+    /// device: by the id of its workspace (see `ai_workspace::marker`), then by the
     /// project id.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub ai_project_paths: BTreeMap<String, BTreeMap<String, String>>,

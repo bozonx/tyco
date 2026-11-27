@@ -14,7 +14,7 @@ use super::files::{
     EntryKind, Resolved, SearchMatch,
 };
 use crate::errors::AppError;
-use crate::services::ai_vault::ProjectAccessMode;
+use crate::services::ai_workspace::ProjectAccessMode;
 
 pub const MAX_LIST_ENTRIES: usize = 500;
 pub const MAX_LIST_DEPTH: usize = 5;

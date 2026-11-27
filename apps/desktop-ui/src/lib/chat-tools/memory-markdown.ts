@@ -1,5 +1,5 @@
 // Mirrors `append_memory_bullet` and topic creation in
-// `src-tauri/src/services/ai_vault/memory.rs` so previews match the write.
+// `src-tauri/src/services/ai_workspace/memory.rs` so previews match the write.
 
 /**
  * Indents the lines after the first under the bullet and escapes a heading

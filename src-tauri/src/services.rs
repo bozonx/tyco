@@ -3,7 +3,7 @@ pub(crate) mod test_support;
 
 pub mod activation;
 pub mod ai_tools;
-pub mod ai_vault;
+pub mod ai_workspace;
 pub mod atomic_file;
 pub mod background;
 pub mod chat_images;

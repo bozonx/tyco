@@ -1,13 +1,13 @@
 import {
   DESKTOP_EVENTS,
   type ProjectTransferPreview,
-  type VaultChatHistory,
-  type VaultFolder,
-  type VaultInfo,
+  type WorkspaceChatHistory,
+  type WorkspaceFolder,
+  type WorkspaceInfo,
 } from '@tyco/shared'
 
 import { clientLogger } from '../lib/logger'
-import { joinRef, vaultOfRef } from '../lib/ai-profiles/profile-ref'
+import { joinRef, workspaceOfRef } from '../lib/ai-profiles/profile-ref'
 import { defineStore } from 'pinia'
 import { computed, onScopeDispose, readonly, ref, watch } from 'vue'
 import { desktopClient } from '../lib/desktop/client'
@@ -84,24 +84,26 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     pickExternalFolder: async () => resultOrThrow(await call('pick_directory')),
   })
 
-  /** The main vault and the attached ones of this device */
-  const vaults = ref<VaultInfo[]>([])
-  /** The attached vaults that are there now */
-  const connectedVaultIds = computed(() =>
-    vaults.value
-      .filter((vault) => !vault.isMain && vault.status === 'connected')
-      .map((vault) => vault.vaultId)
+  /** The main workspace and the attached ones of this device */
+  const workspaces = ref<WorkspaceInfo[]>([])
+  /** The attached workspaces that are there now */
+  const connectedWorkspaceIds = computed(() =>
+    workspaces.value
+      .filter(
+        (workspace) => !workspace.isMain && workspace.status === 'connected'
+      )
+      .map((workspace) => workspace.workspaceId)
   )
-  const loadVaults = async () => {
-    vaults.value = resultOrThrow(await call('list_ai_vaults'))
+  const loadWorkspaces = async () => {
+    workspaces.value = resultOrThrow(await call('list_ai_workspaces'))
   }
 
-  /** Why the vault cannot be read, e.g. its configured folder is unavailable */
-  const vaultError = ref('')
+  /** Why the workspace cannot be read, e.g. its configured folder is unavailable */
+  const workspaceError = ref('')
   const isLoaded = ref(false)
 
   let loadRequest = 0
-  /** Reads the vault anew; a load started later wins */
+  /** Reads the workspace anew; a load started later wins */
   const loadAll = async (): Promise<void> => {
     const request = ++loadRequest
     let active = true
@@ -110,17 +112,21 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
       await Promise.all([
         profilesModel.loadProfiles(isCurrent),
         projectsModel.loadProjects(isCurrent),
-        loadVaults().catch((error) =>
-          clientLogger.error('Could not list AI vaults', error, 'ai-profiles')
+        loadWorkspaces().catch((error) =>
+          clientLogger.error(
+            'Could not list AI workspaces',
+            error,
+            'ai-profiles'
+          )
         ),
       ])
       if (request !== loadRequest) return
-      vaultError.value = ''
+      workspaceError.value = ''
     } catch (error) {
       if (request !== loadRequest) return
       profilesModel.profiles.value = []
       projectsModel.projects.value = []
-      vaultError.value = describeError(error, translate)
+      workspaceError.value = describeError(error, translate)
     } finally {
       active = false
       if (request === loadRequest) isLoaded.value = true
@@ -132,18 +138,18 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   let stopStorageListening: (() => void) | undefined
   if (desktopClient.isAvailable()) {
     void desktopClient
-      .listen(DESKTOP_EVENTS.STORAGE_CHANGED, ({ vaultChanges }) => {
-        for (const change of vaultChanges) {
+      .listen(DESKTOP_EVENTS.STORAGE_CHANGED, ({ workspaceChanges }) => {
+        for (const change of workspaceChanges) {
           const match = /^profiles\/([^/]+)\/(profile\.json|SOUL\.md)$/.exec(
             change.path
           )
           if (match) {
-            const key = joinRef(change.vaultId, match[1]!)
+            const key = joinRef(change.workspaceId, match[1]!)
             profileStorageRevisions.value[key] =
               (profileStorageRevisions.value[key] ?? 0) + 1
           }
         }
-        if (vaultChanges.length) void loadAll()
+        if (workspaceChanges.length) void loadAll()
       })
       .then((stop) => {
         if (disposed) stop()
@@ -151,13 +157,13 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
       })
       .catch((error) =>
         clientLogger.error(
-          'Could not follow vault changes',
+          'Could not follow workspace changes',
           error,
           'ai-profiles'
         )
       )
   }
-  // vaults attached or removed, here or in another window
+  // workspaces attached or removed, here or in another window
   watch(
     () => JSON.stringify(desktopStore.userConfig?.aiVaults?.attached ?? []),
     (attached, previous) => {
@@ -170,11 +176,13 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     loadRequest += 1
   })
 
-  const openVaultDir = async (
+  const openWorkspaceDir = async (
     profileId?: string,
-    vaultId?: string
+    workspaceId?: string
   ): Promise<void> => {
-    resultOrThrow(await call('open_ai_vault_location', { profileId, vaultId }))
+    resultOrThrow(
+      await call('open_ai_workspace_location', { profileId, workspaceId })
+    )
   }
 
   /** Shows the folder of a project on this device in the file manager */
@@ -194,65 +202,78 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
       await call('inspect_ai_project_transfer', { id: projectId, targetPath })
     )
 
-  /** What a folder holds as a vault to attach */
-  const inspectVaultFolder = async (path: string): Promise<VaultFolder> =>
-    resultOrThrow(await call('inspect_ai_vault_folder', { path }))
+  /** What a folder holds as a workspace to attach */
+  const inspectWorkspaceFolder = async (
+    path: string
+  ): Promise<WorkspaceFolder> =>
+    resultOrThrow(await call('inspect_ai_workspace_folder', { path }))
 
-  /** Changes the vaults of this device, then reads everything anew */
-  const changeVaults = async (change: () => Promise<unknown>) => {
+  /** Changes the workspaces of this device, then reads everything anew */
+  const changeWorkspaces = async (change: () => Promise<unknown>) => {
     await change()
     await loadAll()
   }
-  const attachVault = (path: string, name: string) =>
-    changeVaults(async () =>
-      resultOrThrow(await call('attach_ai_vault', { path, name }))
+  const attachWorkspace = (path: string, name: string) =>
+    changeWorkspaces(async () =>
+      resultOrThrow(await call('attach_ai_workspace', { path, name }))
     )
-  const relinkVault = (vaultId: string, path: string) =>
-    changeVaults(async () =>
-      resultOrThrow(await call('relink_ai_vault', { vaultId, path }))
+  const relinkWorkspace = (workspaceId: string, path: string) =>
+    changeWorkspaces(async () =>
+      resultOrThrow(await call('relink_ai_workspace', { workspaceId, path }))
     )
-  const detachVault = (vaultId: string) =>
-    changeVaults(async () =>
-      resultOrThrow(await call('detach_ai_vault', { vaultId }))
+  const detachWorkspace = (workspaceId: string) =>
+    changeWorkspaces(async () =>
+      resultOrThrow(await call('detach_ai_workspace', { workspaceId }))
     )
-  const renameVault = (vaultId: string, name: string) =>
-    changeVaults(async () =>
-      resultOrThrow(await call('rename_ai_vault', { vaultId, name }))
+  const renameWorkspace = (workspaceId: string, name: string) =>
+    changeWorkspaces(async () =>
+      resultOrThrow(await call('rename_ai_workspace', { workspaceId, name }))
     )
 
-  /** The chat history settings of the vault of a profile reference */
-  const vaultChatHistoryOf = (
+  /** The chat history settings of the workspace of a profile reference */
+  const workspaceChatHistoryOf = (
     profileId: string | null | undefined
-  ): VaultChatHistory | undefined =>
+  ): WorkspaceChatHistory | undefined =>
     profileId
-      ? vaults.value.find((vault) => vault.vaultId === vaultOfRef(profileId))
-          ?.chatHistory
+      ? workspaces.value.find(
+          (workspace) => workspace.workspaceId === workspaceOfRef(profileId)
+        )?.chatHistory
       : undefined
 
-  /** Stores how the chats of a vault's profiles are kept, on every device */
-  const setVaultChatHistory = async (
-    vaultId: string,
-    chatHistory: VaultChatHistory
+  /** Stores how the chats of a workspace's profiles are kept, on every device */
+  const setWorkspaceChatHistory = async (
+    workspaceId: string,
+    chatHistory: WorkspaceChatHistory
   ) => {
     resultOrThrow(
-      await call('set_ai_vault_chat_history', { vaultId, chatHistory })
+      await call('set_ai_workspace_chat_history', { workspaceId, chatHistory })
     )
-    await loadVaults()
+    await loadWorkspaces()
   }
 
   /**
-   * Moves a profile to another vault; the backend points the settings that name
-   * it to where it landed. Returns its new reference
+   * Moves a profile to another workspace; the backend points the settings that
+   * name it to where it landed. Returns its new reference
    */
-  const moveProfile = async (id: string, vaultId: string): Promise<string> => {
-    const moved = resultOrThrow(await call('move_ai_profile', { id, vaultId }))
+  const moveProfile = async (
+    id: string,
+    workspaceId: string
+  ): Promise<string> => {
+    const moved = resultOrThrow(
+      await call('move_ai_profile', { id, workspaceId })
+    )
     await loadAll()
     return moved.id
   }
 
-  /** Moves a project to another vault. Returns its new reference */
-  const moveProject = async (id: string, vaultId: string): Promise<string> => {
-    const moved = resultOrThrow(await call('move_ai_project', { id, vaultId }))
+  /** Moves a project to another workspace. Returns its new reference */
+  const moveProject = async (
+    id: string,
+    workspaceId: string
+  ): Promise<string> => {
+    const moved = resultOrThrow(
+      await call('move_ai_project', { id, workspaceId })
+    )
     await loadAll()
     return moved.id
   }
@@ -267,10 +288,10 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     storageFor: (id) => createIpcChatSessionStorageDriver(ipcStore, id),
   })
 
-  const profileIdsOf = (vaultId: string) =>
+  const profileIdsOf = (workspaceId: string) =>
     profilesModel.profiles.value
       .map(({ id }) => id)
-      .filter((id) => vaultOfRef(id) === vaultId)
+      .filter((id) => workspaceOfRef(id) === workspaceId)
 
   /** Removing a project removes the profiles' permissions for it as well */
   const deleteProject = async (id: string): Promise<void> => {
@@ -324,7 +345,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   return {
     profiles: readonly(profilesModel.profiles),
     projects: readonly(projectsModel.projects),
-    vaultError: readonly(vaultError),
+    workspaceError: readonly(workspaceError),
     /** Gives an external project its folder on this device */
     setProjectFolder: async (id: string): Promise<boolean> => {
       const project = projectsModel.getProject(id)
@@ -335,18 +356,18 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     },
     isLoaded: readonly(isLoaded),
     loadAll,
-    openVaultDir,
+    openWorkspaceDir,
     openProjectFolder,
     inspectProjectTransfer,
-    vaults: readonly(vaults),
-    connectedVaultIds,
-    inspectVaultFolder,
-    attachVault,
-    relinkVault,
-    detachVault,
-    renameVault,
-    setVaultChatHistory,
-    vaultChatHistoryOf,
+    workspaces: readonly(workspaces),
+    connectedWorkspaceIds,
+    inspectWorkspaceFolder,
+    attachWorkspace,
+    relinkWorkspace,
+    detachWorkspace,
+    renameWorkspace,
+    setWorkspaceChatHistory,
+    workspaceChatHistoryOf,
     moveProfile,
     moveProject,
     pickFolder: projectsModel.pickExternalFolder,
@@ -360,10 +381,10 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     countChats,
     countAllProfileChats: () => profileChats.countAll(),
     clearAllProfileChats: () => profileChats.clearAll(),
-    countVaultChats: (vaultId: string) =>
-      profileChats.countAll(profileIdsOf(vaultId)),
-    clearVaultChats: (vaultId: string) =>
-      profileChats.clearAll(profileIdsOf(vaultId)),
+    countWorkspaceChats: (workspaceId: string) =>
+      profileChats.countAll(profileIdsOf(workspaceId)),
+    clearWorkspaceChats: (workspaceId: string) =>
+      profileChats.clearAll(profileIdsOf(workspaceId)),
     setProjectAccess: profilesModel.setProjectAccess,
     readSoul: profilesModel.readSoul,
     readSoulWithRevision,

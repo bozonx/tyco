@@ -410,7 +410,7 @@
     "unsupportedConfig": "设置由更新版本的应用保存",
     "userDataUnavailable": "数据文件夹不可用",
     "variableNotSet": "变量在此设备上没有值",
-    "vaultUnavailable": "工作区未在此设备上连接",
+    "workspaceUnavailable": "工作区未在此设备上连接",
     "projectUnavailable": "项目文件夹未在此设备上设置",
     "alreadyExists": "已存在",
     "staleRevision": "文件已在其他设备上或 TyCo 之外被更改",
@@ -749,7 +749,7 @@
     "aiCommands": "AI 命令",
     "aiProfilesHint": "独立的助手，拥有各自的指令、模型、工具和对话。每个配置文件是顶部栏中的一个选项卡。",
     "aiProfilesTab": "AI 配置文件",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "连接工作区…",
       "attachedDeviceScopedHint": "连接的工作区在每台电脑上分别设置；主工作区随数据文件夹同步。",
       "detach": "从列表中移除",
@@ -757,7 +757,7 @@
       "hint": "工作区是存放配置文件、项目及其聊天和记忆的文件夹。主工作区位于数据文件夹中；还可以连接其他工作区，例如单独同步的工作用工作区。配置文件只能访问其所在工作区的项目。",
       "main": "主库",
       "name": "名称",
-      "newVault": "新工作区",
+      "newWorkspace": "新工作区",
       "newer": "由更新版本的 TyCo 创建",
       "notConnected": "此设备上未连接",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "重命名工作区",
       "title": "工作区",
       "useSubfolder": "该文件夹中有其他文件。要在 {path} 中创建工作区吗？",
-      "vault": "工作区",
+      "workspace": "工作区",
       "writableByOthers": "此电脑的其他用户可以写入工作区 {name}：其配置文件会运行此设备的命令。"
     },
     "allPluginsTab": "所有插件",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "每个工作区都可以在以下选项卡中按自己的方式保存聊天：",
     "profileCopyName": "{name} (副本)",
     "profileDefaultSoul": "# 角色\n你是我的个人助手。帮我处理日常事务：回答问题，撰写和修改文字，帮我做计划、思考解决方案。\n\n# 风格\n- 用我消息所用的语言回答。\n- 简洁扼要；我要求时再展开细节。\n- 如果列表和标题能让回答更易读，就使用它们。\n\n# 规则\n- 如果请求不清楚，先提问再回答。\n- 不要编造事实：不确定时要说明。\n- 在修改文件或运行命令之前，先说明你要做什么。\n\n# 关于我\n- 在这里介绍你自己：你做什么工作，助手需要注意什么。\n",
+    "profileFolder": "文件夹",
+    "profileFolderFixedHint": "重命名配置文件时文件夹不会改变，因此聊天和项目访问会保留。",
     "profileMemoryApplyCompact": "应用",
     "profileMemoryCompact": "压缩优化",
     "profileMemoryCompactNoChange": "文件已处于最佳状态，无需更改",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "文件夹 {path} 位于另一个磁盘上。确认将文件从 {current} 移动到该磁盘吗？"
     },
     "variablesTab": "变量",
-    "vaultFolder": "文件夹",
-    "vaultFolderFixedHint": "重命名配置文件时文件夹不会改变，因此聊天和项目访问会保留。",
     "vision": "图像输入",
     "voiceHold": {
       "voice": "听写时按住快捷键 (Push-to-Talk)",

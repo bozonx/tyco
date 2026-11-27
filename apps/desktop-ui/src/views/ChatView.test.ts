@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
   goToConfig: vi.fn(),
   aiProfiles: {
     isLoaded: true,
-    vaultError: '',
+    workspaceError: '',
     profiles: [{ id: 'writer', name: 'Writer' }],
     loadAll: vi.fn(),
     getProfile(id: string) {

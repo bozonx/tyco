@@ -19,7 +19,7 @@ use serde::Serialize;
 use super::data_root_relocation::{is_nested, normalized, relocate_with, RootMove};
 use super::user_data::{
     has_known_entries, has_marker, init_dir, marker_version, USER_DATA_ENTRIES,
-    USER_FORMAT_VERSION, USER_MARKER_FILE, VAULT_ENTRY,
+    USER_FORMAT_VERSION, USER_MARKER_FILE, WORKSPACE_ENTRY,
 };
 use crate::errors::AppError;
 use crate::models::{UserDataRelocationMode, UserDataStatus};
@@ -63,7 +63,7 @@ pub struct UserDataTarget {
 }
 
 /// The folders of the app the user data must stay out of: the device, state,
-/// cache and log folders, and an external AI vault.
+/// cache and log folders, and an external AI workspace.
 pub struct Forbidden<'a>(pub Vec<&'a Path>);
 
 /// What `target` holds, as seen from the user data folder at `current`.
@@ -232,16 +232,16 @@ fn refusal(target: &Path, kind: &UserDataTargetKind) -> AppError {
 }
 
 /// Carries out a checked plan: moves the data when it asks, then `commit`s
-/// the new folder; a failed commit moves the data back. `moves_vault` takes
-/// the default vault along.
+/// the new folder; a failed commit moves the data back. `moves_workspace` takes
+/// the default workspace along.
 pub fn execute(
     plan: &RelocationPlan,
     current: &Path,
     commit: impl FnOnce(&Path) -> Result<(), AppError>,
 ) -> Result<(), AppError> {
-    // the main vault is always inside the data folder and moves with it
+    // the main workspace is always inside the data folder and moves with it
     let mut entries: Vec<&str> = USER_DATA_ENTRIES.to_vec();
-    entries.push(VAULT_ENTRY);
+    entries.push(WORKSPACE_ENTRY);
     match plan {
         RelocationPlan::Move { to } => relocate_with(
             Some(RootMove {
@@ -274,13 +274,13 @@ pub fn execute(
     }
 }
 
-/// Refuses a data folder inside an attached vault or holding one.
-fn check_against_vaults(config: &serde_json::Value, target: &Path) -> Result<(), AppError> {
+/// Refuses a data folder inside an attached workspace or holding one.
+fn check_against_workspaces(config: &serde_json::Value, target: &Path) -> Result<(), AppError> {
     use super::sync_roots::{check_sync_roots, SyncRootKind};
-    let vaults = crate::models::user_config::attached_vaults(config);
-    let roots: Vec<(PathBuf, SyncRootKind)> = vaults
+    let workspaces = crate::models::user_config::attached_workspaces(config);
+    let roots: Vec<(PathBuf, SyncRootKind)> = workspaces
         .iter()
-        .map(|vault| (PathBuf::from(&vault.path), SyncRootKind::Vault))
+        .map(|workspace| (PathBuf::from(&workspace.path), SyncRootKind::Workspace))
         .collect();
     let others: Vec<(&Path, SyncRootKind)> = roots
         .iter()
@@ -310,7 +310,7 @@ pub fn inspect(app: &tauri::AppHandle, path: Option<&str>) -> Result<UserDataTar
         .map(str::trim)
         .filter(|path| !path.is_empty())
         .map_or_else(|| data.default_dir.clone(), PathBuf::from);
-    check_against_vaults(
+    check_against_workspaces(
         &app.state::<crate::state::AppState>().user_config(),
         &target,
     )?;
@@ -328,7 +328,7 @@ pub fn inspect(app: &tauri::AppHandle, path: Option<&str>) -> Result<UserDataTar
 }
 
 /// Changes the user data folder as the user asked, writes it into the device
-/// file and restarts the app. Every vault, settings and history operation
+/// file and restarts the app. Every workspace, settings and history operation
 /// waits meanwhile; the webview saves its drafts and stops the dialog before
 /// it asks. A running dialog refuses the change: its recording goes into the
 /// data folder once it stops, which would be the folder left behind.
@@ -351,14 +351,14 @@ pub fn relocate(
     let device = app.state::<super::device::DeviceStore>();
     let paths = super::app_paths::AppPaths::resolve(app)?;
     {
-        let _vault = state.write_vault();
+        let _workspace = state.write_workspace();
         let _settings = state.lock_settings_update();
         let forbidden = app_folders(&paths);
         let target = path
             .map(str::trim)
             .filter(|path| !path.is_empty())
             .map(PathBuf::from);
-        check_against_vaults(
+        check_against_workspaces(
             &state.user_config(),
             target.as_deref().unwrap_or(&data.default_dir),
         )?;

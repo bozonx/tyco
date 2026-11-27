@@ -145,15 +145,15 @@ describe('profile chats', () => {
     updatedAt: 1,
   }
 
-  /** The vault holds one profile; its files may change between requests */
-  function mockVault(files: { soul: string; profile: AiProfile }) {
+  /** The workspace holds one profile; its files may change between requests */
+  function mockWorkspace(files: { soul: string; profile: AiProfile }) {
     const ipc = useIpcStore()
     return vi.spyOn(ipc, 'call').mockImplementation((async (name: string) => {
       switch (name) {
         case 'list_ai_profiles':
           return { success: true, result: [files.profile] }
         case 'list_ai_projects':
-        case 'list_ai_vaults':
+        case 'list_ai_workspaces':
           return { success: true, result: [] }
         case 'get_ai_profile':
           return { success: true, result: files.profile }
@@ -181,7 +181,7 @@ describe('profile chats', () => {
   }
 
   it('keeps the conversation of a profile apart from "Ask AI"', async () => {
-    const call = mockVault({ soul: '# Writer', profile: writer })
+    const call = mockWorkspace({ soul: '# Writer', profile: writer })
     await useAiProfilesStore().loadAll()
     const profileChat = useProfileChatStore('writer')
 
@@ -202,7 +202,7 @@ describe('profile chats', () => {
 
   it('asks with the SOUL.md and settings read just before the request', async () => {
     const files = { soul: '# Old', profile: writer }
-    mockVault(files)
+    mockWorkspace(files)
     await useAiProfilesStore().loadAll()
     const desktopStore = useDesktopStore()
     desktopStore.desktopState.userConfig.llm!.tasks.chat.rule = 'Ask AI rules'
@@ -238,7 +238,7 @@ describe('profile chats', () => {
   })
 
   it('keeps answering in a profile while "Ask AI" is opened', async () => {
-    mockVault({ soul: '', profile: writer })
+    mockWorkspace({ soul: '', profile: writer })
     await useAiProfilesStore().loadAll()
     let finish!: (text: string) => void
     ai.sendChatMessage.mockImplementationOnce(
@@ -261,7 +261,7 @@ describe('profile chats', () => {
   })
 
   it('keeps the model picked in a profile in the profile', async () => {
-    const call = mockVault({ soul: '', profile: writer })
+    const call = mockWorkspace({ soul: '', profile: writer })
     await useAiProfilesStore().loadAll()
     const desktopStore = useDesktopStore()
     const profileChat = useProfileChatStore('writer')
@@ -277,7 +277,7 @@ describe('profile chats', () => {
   })
 
   it('opens a profile chat on the profile route', async () => {
-    mockVault({ soul: '', profile: writer })
+    mockWorkspace({ soul: '', profile: writer })
     await useAiProfilesStore().loadAll()
     vi.spyOn(appNavigation, 'isCurrent').mockReturnValue(false)
     const goToProfileChat = vi
@@ -291,7 +291,7 @@ describe('profile chats', () => {
   })
 
   it('forgets the chat and input draft of a removed profile', async () => {
-    mockVault({ soul: '', profile: writer })
+    mockWorkspace({ soul: '', profile: writer })
     await useAiProfilesStore().loadAll()
     const before = useProfileChatStore('writer')
     before.currentChatParams.title = 'Draft'
@@ -306,7 +306,7 @@ describe('profile chats', () => {
   })
 
   it('preserves the draft and running answer when deleting a profile fails', async () => {
-    const call = mockVault({ soul: '', profile: writer })
+    const call = mockWorkspace({ soul: '', profile: writer })
     await useAiProfilesStore().loadAll()
     const store = useProfileChatStore('writer')
     const input = useProfileChatInputStore('writer')
@@ -334,7 +334,7 @@ describe('profile chats', () => {
   })
 
   it('discards a running answer without writing into a deleted profile', async () => {
-    const call = mockVault({ soul: '', profile: writer })
+    const call = mockWorkspace({ soul: '', profile: writer })
     await useAiProfilesStore().loadAll()
     let finish!: (text: string) => void
     ai.sendChatMessage.mockImplementationOnce(
@@ -364,7 +364,7 @@ describe('profile chats', () => {
   })
 
   it('forgets the chat of a profile once the profile is removed', async () => {
-    mockVault({ soul: '', profile: writer })
+    mockWorkspace({ soul: '', profile: writer })
     await useAiProfilesStore().loadAll()
     const before = useProfileChatStore('writer')
     before.currentChatParams.title = 'Draft'

@@ -2,7 +2,7 @@ import { ref, type Ref } from 'vue'
 import type { AiProject, ProjectConversion } from '@tyco/shared'
 
 import { isIpcErrorCode } from '../ipc/ipc-model'
-import { createWithFreshId } from './vault-id'
+import { createWithFreshId } from './workspace-id'
 
 export interface AiProjectsModelDependencies {
   listProjects: () => Promise<AiProject[]>
@@ -32,8 +32,8 @@ export interface AiProjectsModelDependencies {
 
 export interface CreateProjectData {
   name: string
-  /** The vault the project goes to; the main one when unset */
-  vaultId?: string
+  /** The workspace the project goes to; the main one when unset */
+  workspaceId?: string
   description?: string
   isExternal: boolean
   targetPath?: string
@@ -45,7 +45,7 @@ export interface ConvertProjectOptions {
    * an external one
    */
   targetPath?: string
-  /** An external project copies the files of its folder into the vault */
+  /** An external project copies the files of its folder into the workspace */
   transferFiles: boolean
   /** Then its folder goes to the trash */
   trashSource: boolean
@@ -118,7 +118,7 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
         return { ...newProject, revision }
       },
       deps.randomSuffix,
-      data.vaultId
+      data.workspaceId
     )
     projects.value = [...projects.value, created]
     return created

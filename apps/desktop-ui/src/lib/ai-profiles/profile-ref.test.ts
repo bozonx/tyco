@@ -8,14 +8,14 @@ import {
 } from './profile-ref'
 
 describe('profile references', () => {
-  it('name the vault except the main one', () => {
+  it('name the workspace except the main one', () => {
     expect(joinRef('', 'writer')).toBe('writer')
     expect(joinRef('w1', 'writer')).toBe('w1:writer')
-    expect(splitRef('w1:writer')).toEqual({ vaultId: 'w1', id: 'writer' })
-    expect(splitRef('writer')).toEqual({ vaultId: '', id: 'writer' })
+    expect(splitRef('w1:writer')).toEqual({ workspaceId: 'w1', id: 'writer' })
+    expect(splitRef('writer')).toEqual({ workspaceId: '', id: 'writer' })
   })
 
-  it('are kept in the settings with an optional vault', () => {
+  it('are kept in the settings with an optional workspace', () => {
     expect(configProfileFields('writer')).toEqual({ profileId: 'writer' })
     expect(configProfileFields('w1:writer')).toEqual({
       profileId: 'writer',

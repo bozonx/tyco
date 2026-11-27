@@ -410,7 +410,7 @@
     "unsupportedConfig": "As configurações foram salvas por uma versão mais nova do app",
     "userDataUnavailable": "A pasta de dados não está disponível",
     "variableNotSet": "Uma variável não tem valor neste dispositivo",
-    "vaultUnavailable": "O espaço de trabalho não está conectado neste dispositivo",
+    "workspaceUnavailable": "O espaço de trabalho não está conectado neste dispositivo",
     "projectUnavailable": "A pasta do projeto não está definida neste dispositivo",
     "alreadyExists": "Já existe",
     "staleRevision": "O arquivo foi alterado em outro dispositivo ou fora do TyCo",
@@ -749,7 +749,7 @@
     "aiCommands": "Comandos de IA",
     "aiProfilesHint": "Assistentes separados, cada um com sua própria instrução, modelo, ferramentas e chats. Cada perfil é uma aba na barra superior.",
     "aiProfilesTab": "Perfis de IA",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "Conectar espaço de trabalho…",
       "attachedDeviceScopedHint": "Os espaços de trabalho conectados são definidos em cada computador separadamente; o principal é sincronizado com a pasta de dados.",
       "detach": "Remover da lista",
@@ -757,7 +757,7 @@
       "hint": "Um espaço de trabalho é uma pasta de perfis, projetos, seus chats e memória. O principal fica na pasta de dados; conecte outros, por exemplo um de trabalho sincronizado à parte. Um perfil só alcança os projetos do seu espaço de trabalho.",
       "main": "Principal",
       "name": "Nome",
-      "newVault": "Novo espaço de trabalho",
+      "newWorkspace": "Novo espaço de trabalho",
       "newer": "Criado por um TyCo mais novo",
       "notConnected": "Não conectado neste dispositivo",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "Renomear espaço de trabalho",
       "title": "Espaço de trabalho",
       "useSubfolder": "A pasta contém outros arquivos. Criar o espaço de trabalho em {path}?",
-      "vault": "Espaço de trabalho",
+      "workspace": "Espaço de trabalho",
       "writableByOthers": "Outros usuários deste computador podem gravar no espaço de trabalho {name}: seus perfis executam os comandos deste dispositivo."
     },
     "allPluginsTab": "Todos os plugins",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "Cada espaço de trabalho pode guardar seus chats do seu jeito na aba",
     "profileCopyName": "{name} (cópia)",
     "profileDefaultSoul": "# Papel\nVocê é meu assistente pessoal. Ajuda nas tarefas do dia a dia: responde perguntas, escreve e revisa textos, ajuda a planejar e a pensar em soluções.\n\n# Estilo\n- Responda no idioma da minha mensagem.\n- Seja breve e direto; dê detalhes quando eu pedir.\n- Use listas e títulos quando deixarem a resposta mais fácil de ler.\n\n# Regras\n- Se o pedido não estiver claro, pergunte antes de responder.\n- Não invente fatos: diga quando não tiver certeza.\n- Antes de alterar arquivos ou executar comandos, diga o que vai fazer.\n\n# Sobre mim\n- Descreva-se aqui: o que você faz e o que o assistente deve levar em conta.\n",
+    "profileFolder": "Pasta",
+    "profileFolderFixedHint": "A pasta não muda quando o perfil é renomeado, então os chats e o acesso aos projetos continuam com ele.",
     "profileMemoryApplyCompact": "Aplicar",
     "profileMemoryCompact": "Compactar",
     "profileMemoryCompactNoChange": "O arquivo já está otimizado, nenhuma alteração necessária",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "A pasta {path} está em outro disco. Confirma a movimentação dos seus arquivos de {current} para o outro disco?"
     },
     "variablesTab": "Variáveis",
-    "vaultFolder": "Pasta",
-    "vaultFolderFixedHint": "A pasta não muda quando o perfil é renomeado, então os chats e o acesso aos projetos continuam com ele.",
     "vision": "Entrada de imagens",
     "voiceHold": {
       "voice": "Manter o atalho pressionado ao ditar (Push-to-Talk)",

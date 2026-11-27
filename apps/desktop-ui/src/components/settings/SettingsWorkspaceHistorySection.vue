@@ -38,7 +38,9 @@
       inline
     >
       <FieldSwitch
-        :model-value="vault.chatHistory.isQuickRequestSavingEnabled !== false"
+        :model-value="
+          workspace.chatHistory.isQuickRequestSavingEnabled !== false
+        "
         data-testid="workspace-history-quick-requests"
         @update:model-value="setQuickRequestSaving"
       />
@@ -70,15 +72,15 @@ import SettingsHistoryClear from './SettingsHistoryClear.vue'
 import SettingsSection from './SettingsSection.vue'
 import {
   DESKTOP_EVENTS,
-  type VaultChatHistory,
-  type VaultInfo,
+  type WorkspaceChatHistory,
+  type WorkspaceInfo,
 } from '@tyco/shared'
 
 /**
  * How the chats of the profiles of one workspace are kept. The workspace
  * decides alone; a missing value saves the chats forever
  */
-const props = defineProps<{ vault: VaultInfo }>()
+const props = defineProps<{ workspace: WorkspaceInfo }>()
 
 const { t } = useI18n()
 const { toastError } = useToast()
@@ -86,8 +88,8 @@ const { effectiveAppLanguage } = useSettingsContext()
 const store = useAiProfilesStore()
 
 const kept = computed<KeptHistoryConfig>(() => ({
-  storage: props.vault.chatHistory.storage ?? 'disk',
-  retentionDays: props.vault.chatHistory.retentionDays || undefined,
+  storage: props.workspace.chatHistory.storage ?? 'disk',
+  retentionDays: props.workspace.chatHistory.retentionDays || undefined,
 }))
 
 const periodName = (days: number) =>
@@ -99,7 +101,7 @@ const periodName = (days: number) =>
 
 const keepingOptions = computed(() =>
   historyKeepingOptions(
-    chatHistoryRetentionChoices(props.vault.chatHistory.retentionDays),
+    chatHistoryRetentionChoices(props.workspace.chatHistory.retentionDays),
     {
       session: t('settings.editorHistoryStorageSession'),
       forever: t('settings.editorHistoryRetentionForever'),
@@ -108,9 +110,9 @@ const keepingOptions = computed(() =>
   )
 )
 
-async function save(history: VaultChatHistory) {
+async function save(history: WorkspaceChatHistory) {
   try {
-    await store.setVaultChatHistory(props.vault.vaultId, history)
+    await store.setWorkspaceChatHistory(props.workspace.workspaceId, history)
   } catch (error) {
     toastError(error)
   }
@@ -119,7 +121,7 @@ async function save(history: VaultChatHistory) {
 function setKeeping(value: string | number | undefined) {
   const next = { ...kept.value }
   if (!applyHistoryKeeping(next, value)) return
-  const { retentionDays: _days, ...rest } = props.vault.chatHistory
+  const { retentionDays: _days, ...rest } = props.workspace.chatHistory
   void save({
     ...rest,
     storage: next.storage,
@@ -129,7 +131,7 @@ function setKeeping(value: string | number | undefined) {
 
 function setQuickRequestSaving(isEnabled: boolean) {
   const { isQuickRequestSavingEnabled: _saving, ...rest } =
-    props.vault.chatHistory
+    props.workspace.chatHistory
   void save(isEnabled ? rest : { ...rest, isQuickRequestSavingEnabled: false })
 }
 
@@ -139,14 +141,17 @@ let countRequest = 0
 async function refreshCount() {
   const request = ++countRequest
   try {
-    const count = await store.countVaultChats(props.vault.vaultId)
+    const count = await store.countWorkspaceChats(props.workspace.workspaceId)
     if (request === countRequest) chatCount.value = count
   } catch {
     // the count stays as last read
   }
 }
 watch(
-  () => [props.vault.vaultId, store.profiles.map(({ id }) => id).join('\n')],
+  () => [
+    props.workspace.workspaceId,
+    store.profiles.map(({ id }) => id).join('\n'),
+  ],
   () => void refreshCount(),
   { immediate: true }
 )
@@ -170,7 +175,7 @@ onBeforeUnmount(() => {
 
 async function clearChats() {
   try {
-    await store.clearVaultChats(props.vault.vaultId)
+    await store.clearWorkspaceChats(props.workspace.workspaceId)
   } finally {
     void refreshCount()
   }

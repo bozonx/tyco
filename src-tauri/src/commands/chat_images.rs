@@ -52,7 +52,7 @@ fn chat_owner(window: &WebviewWindow, profile_id: Option<&str>) -> Result<String
     match profile_id {
         None => Ok(window.label().to_string()),
         Some(id) => {
-            crate::services::ai_vault::validate_id(id)?;
+            crate::services::ai_workspace::validate_id(id)?;
             Ok(format!("{}/profile/{id}", window.label()))
         }
     }

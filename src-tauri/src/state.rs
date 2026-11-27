@@ -14,7 +14,7 @@ pub struct AppState {
     snapshot: Mutex<DesktopSnapshot>,
     pub(crate) history: crate::services::storage::HistoryStorageCoordinator,
     settings_update_lock: Mutex<()>,
-    vault_access: RwLock<()>,
+    workspace_access: RwLock<()>,
     phase: AtomicU8,
 }
 
@@ -24,7 +24,7 @@ impl AppState {
             snapshot: Mutex::new(initial_snapshot),
             history: crate::services::storage::HistoryStorageCoordinator::default(),
             settings_update_lock: Mutex::new(()),
-            vault_access: RwLock::new(()),
+            workspace_access: RwLock::new(()),
             phase: AtomicU8::new(PHASE_RUNNING),
         }
     }
@@ -34,14 +34,14 @@ impl AppState {
         self.settings_update_lock.locked()
     }
 
-    /// Acquire before settings/history locks and before resolving the vault path.
-    pub fn read_vault(&self) -> RwLockReadGuard<'_, ()> {
-        self.vault_access.read_locked()
+    /// Acquire before settings/history locks and before resolving the workspace path.
+    pub fn read_workspace(&self) -> RwLockReadGuard<'_, ()> {
+        self.workspace_access.read_locked()
     }
 
     /// Relocation retains exclusive access through config publication or rollback.
-    pub fn write_vault(&self) -> RwLockWriteGuard<'_, ()> {
-        self.vault_access.write_locked()
+    pub fn write_workspace(&self) -> RwLockWriteGuard<'_, ()> {
+        self.workspace_access.write_locked()
     }
 
     pub fn snapshot(&self) -> DesktopSnapshot {
@@ -97,19 +97,19 @@ mod tests {
     use crate::services::settings::defaults::default_desktop_snapshot;
 
     #[test]
-    fn vault_relocation_excludes_io_until_the_new_path_is_published() {
+    fn workspace_relocation_excludes_io_until_the_new_path_is_published() {
         let state = AppState::new(default_desktop_snapshot(
             serde_json::json!({"language": {"ui": "old"}}),
             SessionState::default(),
         ));
-        let operation = state.read_vault();
-        assert!(state.vault_access.try_write().is_err());
+        let operation = state.read_workspace();
+        assert!(state.workspace_access.try_write().is_err());
         drop(operation);
-        let relocating = state.write_vault();
-        assert!(state.vault_access.try_read().is_err());
+        let relocating = state.write_workspace();
+        assert!(state.workspace_access.try_read().is_err());
         std::thread::scope(|scope| {
             let reader = scope.spawn(|| {
-                let _access = state.read_vault();
+                let _access = state.read_workspace();
                 state.user_config()["language"]["ui"].clone()
             });
             state.update_snapshot(|snapshot| {

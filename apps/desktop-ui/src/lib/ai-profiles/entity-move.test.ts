@@ -1,4 +1,4 @@
-import type { VaultInfo } from '@tyco/shared'
+import type { WorkspaceInfo } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -7,18 +7,24 @@ import {
   projectsLostByProfile,
 } from './entity-move'
 
-const vault = (vaultId: string, status: VaultInfo['status'] = 'connected') =>
-  ({ vaultId, isMain: !vaultId, status }) as VaultInfo
+const workspace = (
+  workspaceId: string,
+  status: WorkspaceInfo['status'] = 'connected'
+) => ({ workspaceId, isMain: !workspaceId, status }) as WorkspaceInfo
 
 describe('entity move', () => {
   it('offers the other workspaces that are connected', () => {
-    const vaults = [vault(''), vault('w'), vault('away', 'notConnected')]
-    expect(moveTargets('profile-a', vaults).map((v) => v.vaultId)).toEqual([
-      'w',
-    ])
-    expect(moveTargets('w:profile-a', vaults).map((v) => v.vaultId)).toEqual([
-      '',
-    ])
+    const workspaces = [
+      workspace(''),
+      workspace('w'),
+      workspace('away', 'notConnected'),
+    ]
+    expect(
+      moveTargets('profile-a', workspaces).map((v) => v.workspaceId)
+    ).toEqual(['w'])
+    expect(
+      moveTargets('w:profile-a', workspaces).map((v) => v.workspaceId)
+    ).toEqual([''])
   })
 
   it('lists the access a move takes away: by default every project', () => {

@@ -1,7 +1,7 @@
-//! Moving a profile or a project to another vault. The entity is copied into
+//! Moving a profile or a project to another workspace. The entity is copied into
 //! a hidden folder of the destination and moved into place whole; the source
 //! is removed only then, so a failure never loses it. Links inside the entity
-//! are copied as links; one leading out of it refuses the move. Vaults are kept apart:
+//! are copied as links; one leading out of it refuses the move. Workspaces are kept apart:
 //! a moved profile drops its permissions for the projects it leaves behind,
 //! and the profiles left behind drop theirs for a moved project.
 use serde::Serialize;
@@ -11,14 +11,14 @@ use std::path::{Path, PathBuf};
 
 use super::entity_files::{check_links, copy_tree};
 use super::operations::{
-    create_entity_dir, delete_project, ensure_vault_dirs, existing_profile_dir, profile_dir,
+    create_entity_dir, delete_project, ensure_workspace_dirs, existing_profile_dir, profile_dir,
     project_dir, read_project, remove_stale_staging, ProjectPaths, PROFILE_FILE, PROJECT_FILE,
     STAGING_PREFIX,
 };
 use crate::errors::AppError;
 use crate::services::atomic_file::write_private;
 
-/// Where a moved entity landed: its id in the destination vault, which is
+/// Where a moved entity landed: its id in the destination workspace, which is
 /// the old one unless that was taken there.
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
@@ -113,7 +113,7 @@ fn place_copy(
     Ok(target)
 }
 
-fn check_other_vault(from_root: &Path, to_root: &Path) -> Result<(), AppError> {
+fn check_other_workspace(from_root: &Path, to_root: &Path) -> Result<(), AppError> {
     let same = match (fs::canonicalize(from_root), fs::canonicalize(to_root)) {
         (Ok(from), Ok(to)) => from == to,
         _ => from_root == to_root,
@@ -127,15 +127,15 @@ fn check_other_vault(from_root: &Path, to_root: &Path) -> Result<(), AppError> {
 }
 
 /// Moves the profile `id` with its instructions, memory, files and chats from
-/// the vault at `from_root` to the one at `to_root`. Its permissions for the
-/// projects of the old vault are dropped. The caller holds the locks of both
-/// vaults and of the chat history, and forgets the memory reads and the chat
+/// the workspace at `from_root` to the one at `to_root`. Its permissions for the
+/// projects of the old workspace are dropped. The caller holds the locks of both
+/// workspaces and of the chat history, and forgets the memory reads and the chat
 /// index of the old profile.
 pub fn move_profile(from_root: &Path, to_root: &Path, id: &str) -> Result<MovedEntity, AppError> {
-    check_other_vault(from_root, to_root)?;
+    check_other_workspace(from_root, to_root)?;
     let source = existing_profile_dir(from_root, id)?;
     check_links(&source)?;
-    ensure_vault_dirs(to_root)?;
+    ensure_workspace_dirs(to_root)?;
     let new_id = free_id(id, |id| profile_dir(to_root, id))?;
     place_copy(&to_root.join("profiles"), &new_id, Some(&source), |copy| {
         rewrite_description(copy, PROFILE_FILE, &new_id, |profile| {
@@ -145,16 +145,16 @@ pub fn move_profile(from_root: &Path, to_root: &Path, id: &str) -> Result<MovedE
             );
         })
     })?;
-    // the copy is in place: a failure now leaves the profile in both vaults,
+    // the copy is in place: a failure now leaves the profile in both workspaces,
     // never in none
     crate::services::storage::watcher::remove_tree(&source)?;
     Ok(MovedEntity { id: new_id })
 }
 
-/// Moves the project `id` from the vault of `from_paths` to that of
+/// Moves the project `id` from the workspace of `from_paths` to that of
 /// `to_paths`. An internal project brings its files; an external one keeps
-/// its folder, which this device now knows under the new vault (other devices
-/// set it again). The profiles of the old vault drop their permissions for it.
+/// its folder, which this device now knows under the new workspace (other devices
+/// set it again). The profiles of the old workspace drop their permissions for it.
 pub fn move_project(
     from_root: &Path,
     from_paths: &ProjectPaths,
@@ -162,7 +162,7 @@ pub fn move_project(
     to_paths: &ProjectPaths,
     id: &str,
 ) -> Result<MovedEntity, AppError> {
-    check_other_vault(from_root, to_root)?;
+    check_other_workspace(from_root, to_root)?;
     let source = project_dir(from_root, id)?;
     if !source.join(PROJECT_FILE).is_file() {
         return Err(AppError::NotFound(format!("Project not found: {id}")));
@@ -171,7 +171,7 @@ pub fn move_project(
     if !project.is_external {
         check_links(&source)?;
     }
-    ensure_vault_dirs(to_root)?;
+    ensure_workspace_dirs(to_root)?;
     let new_id = free_id(id, |id| project_dir(to_root, id))?;
     let description = fs::read_to_string(source.join(PROJECT_FILE))?;
     let copied_source = (!project.is_external).then_some(source.as_path());
@@ -193,7 +193,7 @@ pub fn move_project(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::ai_vault::{
+    use crate::services::ai_workspace::{
         create_profile, create_project, get_profile, list_profiles, list_projects, save_profile,
         AiProfile, AiProject, ProfileMemoryMode, ProjectAccessMode, ProjectPermission,
     };
@@ -232,10 +232,10 @@ mod tests {
         }
     }
 
-    fn paths<'a>(device: &'a DeviceStore, vault_id: &'a str) -> ProjectPaths<'a> {
+    fn paths<'a>(device: &'a DeviceStore, workspace_id: &'a str) -> ProjectPaths<'a> {
         ProjectPaths {
             device,
-            vault_id,
+            workspace_id,
             protected_roots: Vec::new(),
         }
     }
@@ -292,7 +292,7 @@ mod tests {
     }
 
     #[test]
-    fn moving_into_the_same_vault_is_refused() {
+    fn moving_into_the_same_workspace_is_refused() {
         let dir = TestDir::new("transfer-same");
         let from = dir.join("from");
         create_profile(&from, profile("profile-aaaaaaaa"), "").unwrap();

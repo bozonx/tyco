@@ -42,10 +42,10 @@ export interface DescribeChatPromptsOptions {
    */
   areProfilesLoaded: boolean
   /**
-   * The attached vaults that are there; the prompts of a profile of another one
-   * are hidden until it is back. Unset: every vault counts
+   * The attached workspaces that are there; the prompts of a profile of another
+   * one are hidden until it is back. Unset: every workspace counts
    */
-  connectedVaultIds?: readonly string[]
+  connectedWorkspaceIds?: readonly string[]
 }
 
 /** The label of a prompt: its name, or the start of its text */
@@ -85,7 +85,7 @@ export function describeChatPrompts(
   items: readonly ChatPromptConfig[] | undefined,
   options: DescribeChatPromptsOptions
 ): ChatPromptView[] {
-  const connected = options.connectedVaultIds
+  const connected = options.connectedWorkspaceIds
   return (items ?? [])
     .filter((prompt) => prompt.rule.trim())
     .filter(

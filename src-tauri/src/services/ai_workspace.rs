@@ -10,10 +10,10 @@ pub mod settings;
 pub mod transfer;
 pub mod types;
 
-pub use marker::Vault;
+pub use marker::Workspace;
 pub use memory::*;
 pub use operations::*;
-pub use settings::{VaultChatHistory, VaultHistoryStorage};
+pub use settings::{WorkspaceChatHistory, WorkspaceHistoryStorage};
 pub use transfer::MovedEntity;
 pub use types::*;
 
@@ -26,133 +26,137 @@ mod locking;
 mod registry;
 pub use registry::*;
 
-/// The folder of the main vault inside the user data folder.
-pub const VAULT_DIR_NAME: &str = "ai-vault";
+/// The folder of the main workspace inside the user data folder.
+pub const WORKSPACE_DIR_NAME: &str = "ai-vault";
 
-/// Separates the vault from the id in a reference `[vaultId:]id` the webview
+/// Separates the workspace from the id in a reference `[workspaceId:]id` the webview
 /// uses for a profile or a project: ids never hold it.
 pub const REF_SEPARATOR: char = ':';
 
-/// The vault and the id of a reference; an empty vault is the main one.
+/// The workspace and the id of a reference; an empty workspace is the main one.
 pub fn split_ref(key: &str) -> (&str, &str) {
     key.split_once(REF_SEPARATOR).unwrap_or(("", key))
 }
 
-/// The reference of `id` in the vault `vault_id`, empty for the main one.
-pub fn join_ref(vault_id: &str, id: &str) -> String {
-    if vault_id.is_empty() {
+/// The reference of `id` in the workspace `workspace_id`, empty for the main one.
+pub fn join_ref(workspace_id: &str, id: &str) -> String {
+    if workspace_id.is_empty() {
         id.to_owned()
     } else {
-        format!("{vault_id}{REF_SEPARATOR}{id}")
+        format!("{workspace_id}{REF_SEPARATOR}{id}")
     }
 }
 
-/// The main vault of the app: always `ai-vault` inside the user data folder,
+/// The main workspace of the app: always `ai-vault` inside the user data folder,
 /// moved only with it.
-pub fn main_vault(app: &AppHandle) -> Result<Vault, AppError> {
+pub fn main_workspace(app: &AppHandle) -> Result<Workspace, AppError> {
     let user_dir = crate::services::storage::user_data::user_dir_for(
         app,
         crate::services::storage::UserDirAccess::Read,
     )
     .map_err(|_| AppError::UserDataUnavailable("The data folder is not connected".into()))?;
-    marker::open_default(&user_dir.join(VAULT_DIR_NAME))
+    marker::open_default(&user_dir.join(WORKSPACE_DIR_NAME))
 }
 
-/// The vault a reference names: empty for the main one, else one this
-/// device attached. A vault not attached, or not there now, is an error;
+/// The workspace a reference names: empty for the main one, else one this
+/// device attached. A workspace not attached, or not there now, is an error;
 /// nothing is made in its place.
-pub fn resolve_vault(app: &AppHandle, vault_id: &str) -> Result<Vault, AppError> {
+pub fn resolve_workspace(app: &AppHandle, workspace_id: &str) -> Result<Workspace, AppError> {
     let config = app.state::<crate::state::AppState>().user_config();
-    resolve_vault_in(
-        main_vault(app),
-        &crate::models::user_config::attached_vaults(&config),
-        vault_id,
+    resolve_workspace_in(
+        main_workspace(app),
+        &crate::models::user_config::attached_workspaces(&config),
+        workspace_id,
     )
 }
 
-/// [`resolve_vault`] over the main vault as it opened and the vaults this
+/// [`resolve_workspace`] over the main workspace as it opened and the workspaces this
 /// device attached.
-pub fn resolve_vault_in(
-    main: Result<Vault, AppError>,
-    attached: &[crate::models::user_config::AttachedVault],
-    vault_id: &str,
-) -> Result<Vault, AppError> {
-    if vault_id.is_empty() {
+pub fn resolve_workspace_in(
+    main: Result<Workspace, AppError>,
+    attached: &[crate::models::user_config::AttachedWorkspace],
+    workspace_id: &str,
+) -> Result<Workspace, AppError> {
+    if workspace_id.is_empty() {
         return main;
     }
-    // the main vault named by its own id, e.g. in a reference written by hand
+    // the main workspace named by its own id, e.g. in a reference written by hand
     if let Ok(main) = main {
-        if main.id == vault_id {
+        if main.id == workspace_id {
             return Ok(main);
         }
     }
     let attached = attached
         .iter()
-        .find(|vault| vault.vault_id == vault_id)
+        .find(|workspace| workspace.workspace_id == workspace_id)
         .ok_or_else(|| {
-            AppError::VaultUnavailable(format!(
-                "The workspace {vault_id} is not attached on this device"
+            AppError::WorkspaceUnavailable(format!(
+                "The workspace {workspace_id} is not attached on this device"
             ))
         })?;
-    let vault = marker::open_attached(std::path::Path::new(&attached.path))?;
-    if vault.id != vault_id {
-        return Err(AppError::VaultUnavailable(format!(
+    let workspace = marker::open_attached(std::path::Path::new(&attached.path))?;
+    if workspace.id != workspace_id {
+        return Err(AppError::WorkspaceUnavailable(format!(
             "The folder {} holds another workspace now",
             attached.path
         )));
     }
-    Ok(vault)
+    Ok(workspace)
 }
 
-/// The vault part of the references to `vault`, reached by `vault_id`: empty
-/// for the main vault, also when it is named by its own id.
-pub fn canonical_vault_ref(app: &AppHandle, vault_id: &str, vault: &Vault) -> String {
-    if vault_id.is_empty() || main_vault(app).is_ok_and(|main| main.id == vault.id) {
+/// The workspace part of the references to `workspace`, reached by `workspace_id`: empty
+/// for the main workspace, also when it is named by its own id.
+pub fn canonical_workspace_ref(
+    app: &AppHandle,
+    workspace_id: &str,
+    workspace: &Workspace,
+) -> String {
+    if workspace_id.is_empty() || main_workspace(app).is_ok_and(|main| main.id == workspace.id) {
         String::new()
     } else {
-        vault_id.to_owned()
+        workspace_id.to_owned()
     }
 }
 
-/// Runs `operation` on the root of the vault `vault_id` (empty: the main one);
+/// Runs `operation` on the root of the workspace `workspace_id` (empty: the main one);
 /// access is held until all I/O using the path has completed.
-pub fn with_vault<T>(
+pub fn with_workspace<T>(
     app: &AppHandle,
-    vault_id: &str,
+    workspace_id: &str,
     operation: impl FnOnce(&std::path::Path) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
-    with_vault_of(app, vault_id, |vault| operation(&vault.root))
+    with_workspace_of(app, workspace_id, |workspace| operation(&workspace.root))
 }
 
-/// [`with_vault`] with the vault and its id.
-pub fn with_vault_of<T>(
+/// [`with_workspace`] with the workspace and its id.
+pub fn with_workspace_of<T>(
     app: &AppHandle,
-    vault_id: &str,
-    operation: impl FnOnce(&Vault) -> Result<T, AppError>,
+    workspace_id: &str,
+    operation: impl FnOnce(&Workspace) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<crate::state::AppState>();
-    let _access = state.read_vault();
-    let vault = resolve_vault(app, vault_id)?;
-    let lock = locking::vault_lock(&vault.root);
+    let _access = state.read_workspace();
+    let workspace = resolve_workspace(app, workspace_id)?;
+    let lock = locking::workspace_lock(&workspace.root);
     use crate::locks::MutexExt;
     let _io = lock.locked();
-    operation(&vault)
+    operation(&workspace)
 }
 
-/// [`with_vault`] with the folders the external projects of the vault have
+/// [`with_workspace`] with the folders the external projects of the workspace have
 /// on this device.
 pub fn with_projects<T>(
     app: &AppHandle,
-    vault_id: &str,
+    workspace_id: &str,
     operation: impl FnOnce(&std::path::Path, &ProjectPaths) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
-    with_vault_of(app, vault_id, |vault| {
+    with_workspace_of(app, workspace_id, |workspace| {
         let device = app.state::<crate::services::storage::device::DeviceStore>();
         operation(
-            &vault.root,
+            &workspace.root,
             &ProjectPaths {
                 device: &device,
-                vault_id: &vault.id,
+                workspace_id: &workspace.id,
                 protected_roots: protected_roots(app),
             },
         )
@@ -160,28 +164,28 @@ pub fn with_projects<T>(
 }
 
 /// [`with_projects`] for work that may take long, such as a file tool
-/// searching a large project: `load` runs under the lock of the vault,
-/// `then` only with the vault access held, so that it holds up no other
-/// work on the vault while the folders cannot move away.
+/// searching a large project: `load` runs under the lock of the workspace,
+/// `then` only with the workspace access held, so that it holds up no other
+/// work on the workspace while the folders cannot move away.
 pub fn with_projects_then<L, T>(
     app: &AppHandle,
-    vault_id: &str,
+    workspace_id: &str,
     load: impl FnOnce(&std::path::Path, &ProjectPaths) -> Result<L, AppError>,
     then: impl FnOnce(L) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<crate::state::AppState>();
-    let _access = state.read_vault();
-    let vault = resolve_vault(app, vault_id)?;
+    let _access = state.read_workspace();
+    let workspace = resolve_workspace(app, workspace_id)?;
     let loaded = {
-        let lock = locking::vault_lock(&vault.root);
+        let lock = locking::workspace_lock(&workspace.root);
         use crate::locks::MutexExt;
         let _io = lock.locked();
         let device = app.state::<crate::services::storage::device::DeviceStore>();
         load(
-            &vault.root,
+            &workspace.root,
             &ProjectPaths {
                 device: &device,
-                vault_id: &vault.id,
+                workspace_id: &workspace.id,
                 protected_roots: protected_roots(app),
             },
         )?
@@ -189,20 +193,20 @@ pub fn with_projects_then<L, T>(
     then(loaded)
 }
 
-/// Runs `operation` on two different vaults, each locked as by
-/// [`with_vault_of`]; the locks are taken in the order of their folders, so
+/// Runs `operation` on two different workspaces, each locked as by
+/// [`with_workspace_of`]; the locks are taken in the order of their folders, so
 /// two moves in opposite directions cannot wait on each other.
-fn with_two_vaults<T>(
+fn with_two_workspaces<T>(
     app: &AppHandle,
     from_id: &str,
     to_id: &str,
-    operation: impl FnOnce(&Vault, &Vault) -> Result<T, AppError>,
+    operation: impl FnOnce(&Workspace, &Workspace) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     use crate::locks::MutexExt;
     let state = app.state::<crate::state::AppState>();
-    let _access = state.read_vault();
-    let from = resolve_vault(app, from_id)?;
-    let to = resolve_vault(app, to_id)?;
+    let _access = state.read_workspace();
+    let from = resolve_workspace(app, from_id)?;
+    let to = resolve_workspace(app, to_id)?;
     if from.id == to.id {
         return Err(AppError::InvalidInput(
             "The destination is the workspace the item is in already".into(),
@@ -213,24 +217,24 @@ fn with_two_vaults<T>(
     } else {
         (&to, &from)
     };
-    let first_lock = locking::vault_lock(&first.root);
-    let second_lock = locking::vault_lock(&second.root);
+    let first_lock = locking::workspace_lock(&first.root);
+    let second_lock = locking::workspace_lock(&second.root);
     let _first = first_lock.locked();
     let _second = second_lock.locked();
     operation(&from, &to)
 }
 
-/// Moves a profile, named by its reference, to the vault `to_id` (empty: the
+/// Moves a profile, named by its reference, to the workspace `to_id` (empty: the
 /// main one). Returns its reference there; the webview rewrites the
 /// references in the settings.
-pub fn move_profile_to_vault(
+pub fn move_profile_to_workspace(
     app: &AppHandle,
     profile_ref: &str,
     to_id: &str,
 ) -> Result<MovedEntity, AppError> {
     let (from_id, id) = split_ref(profile_ref);
-    let (from_ref, moved) = with_two_vaults(app, from_id, to_id, |from, to| {
-        let moved = crate::services::storage::while_chats_locked_in_vault(app, || {
+    let (from_ref, moved) = with_two_workspaces(app, from_id, to_id, |from, to| {
+        let moved = crate::services::storage::while_chats_locked_in_workspace(app, || {
             transfer::move_profile(&from.root, &to.root, id)
         })?;
         app.state::<MemoryReadVersions>()
@@ -239,14 +243,14 @@ pub fn move_profile_to_vault(
             log::warn!("Could not remove the chat index of the profile {id}: {error}");
         }
         Ok((
-            join_ref(&canonical_vault_ref(app, from_id, from), id),
+            join_ref(&canonical_workspace_ref(app, from_id, from), id),
             MovedEntity {
-                id: join_ref(&canonical_vault_ref(app, to_id, to), &moved.id),
+                id: join_ref(&canonical_workspace_ref(app, to_id, to), &moved.id),
             },
         ))
     })?;
     crate::services::storage::move_session_chats(app, &from_ref, Some(&moved.id));
-    // after the vault locks are released: a settings save takes vault access
+    // after the workspace locks are released: a settings save takes workspace access
     // itself. The profile is moved already, so a failure here is only logged
     // and leaves the settings naming a profile that is gone.
     let mut probe = Value::clone(&app.state::<crate::state::AppState>().user_config());
@@ -261,29 +265,29 @@ pub fn move_profile_to_vault(
     Ok(moved)
 }
 
-/// Moves a project, named by its reference, to the vault `to_id` (empty: the
+/// Moves a project, named by its reference, to the workspace `to_id` (empty: the
 /// main one). Returns its reference there.
-pub fn move_project_to_vault(
+pub fn move_project_to_workspace(
     app: &AppHandle,
     project_ref: &str,
     to_id: &str,
 ) -> Result<MovedEntity, AppError> {
     let (from_id, id) = split_ref(project_ref);
-    with_two_vaults(app, from_id, to_id, |from, to| {
+    with_two_workspaces(app, from_id, to_id, |from, to| {
         let device = app.state::<crate::services::storage::device::DeviceStore>();
         let from_paths = ProjectPaths {
             device: &device,
-            vault_id: &from.id,
+            workspace_id: &from.id,
             protected_roots: protected_roots(app),
         };
         let to_paths = ProjectPaths {
             device: &device,
-            vault_id: &to.id,
+            workspace_id: &to.id,
             protected_roots: protected_roots(app),
         };
         let moved = transfer::move_project(&from.root, &from_paths, &to.root, &to_paths, id)?;
         Ok(MovedEntity {
-            id: join_ref(&canonical_vault_ref(app, to_id, to), &moved.id),
+            id: join_ref(&canonical_workspace_ref(app, to_id, to), &moved.id),
         })
     })
 }

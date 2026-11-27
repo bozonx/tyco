@@ -6,17 +6,17 @@ use serde_json::{Map, Value};
 /// Sections whose content belongs to plugins and is never rewritten.
 const OPAQUE_SECTIONS: [&str; 1] = ["plugins"];
 
-/// The reference `[vaultId:]id` an object of the config names, if any.
+/// The reference `[workspaceId:]id` an object of the config names, if any.
 fn named_ref(object: &Map<String, Value>) -> Option<String> {
     let profile_id = object.get("profileId")?.as_str()?;
     if profile_id.is_empty() {
         return None;
     }
-    let vault_id = object
+    let workspace_id = object
         .get("vaultId")
         .and_then(Value::as_str)
         .unwrap_or_default();
-    Some(super::join_ref(vault_id, profile_id))
+    Some(super::join_ref(workspace_id, profile_id))
 }
 
 fn rewrite(value: &mut Value, from: &str, to: &str) -> bool {
@@ -32,13 +32,13 @@ fn rewrite(value: &mut Value, from: &str, to: &str) -> bool {
         Value::Object(object) => {
             let mut changed = false;
             if named_ref(object).as_deref() == Some(from) {
-                let (vault_id, profile_id) = super::split_ref(to);
+                let (workspace_id, profile_id) = super::split_ref(to);
                 object.insert("profileId".into(), Value::from(profile_id));
-                // the main vault is named by leaving the vault out
-                if vault_id.is_empty() {
+                // the main workspace is named by leaving the workspace out
+                if workspace_id.is_empty() {
                     object.remove("vaultId");
                 } else {
-                    object.insert("vaultId".into(), Value::from(vault_id));
+                    object.insert("vaultId".into(), Value::from(workspace_id));
                 }
                 changed = true;
             }
@@ -92,7 +92,7 @@ mod tests {
             config["grid"]["items"][0],
             json!({ "kind": "profileChat", "profileId": "p9", "vaultId": "w2" })
         );
-        // another vault's profile of the same id is not the moved one
+        // another workspace's profile of the same id is not the moved one
         assert_eq!(config["grid"]["items"][1]["vaultId"], "w1");
         assert_eq!(config["grid"]["items"][1]["profileId"], "p1");
         assert_eq!(config["grid"]["items"][2]["profileId"], "p2");
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn a_move_to_the_main_vault_drops_the_vault_part() {
+    fn a_move_to_the_main_workspace_drops_the_workspace_part() {
         let mut config = json!({ "grid": [{ "profileId": "p1", "vaultId": "w1" }] });
         assert!(rewrite_profile_refs(&mut config, "w1:p1", "p1"));
         assert_eq!(config["grid"][0], json!({ "profileId": "p1" }));

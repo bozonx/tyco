@@ -410,7 +410,7 @@
     "unsupportedConfig": "Setările au fost salvate de o versiune mai nouă a aplicației",
     "userDataUnavailable": "Folderul de date nu este disponibil",
     "variableNotSet": "O variabilă nu are valoare pe acest dispozitiv",
-    "vaultUnavailable": "Spațiul de lucru nu este conectat pe acest dispozitiv",
+    "workspaceUnavailable": "Spațiul de lucru nu este conectat pe acest dispozitiv",
     "projectUnavailable": "Dosarul proiectului nu este setat pe acest dispozitiv",
     "alreadyExists": "Există deja",
     "staleRevision": "Fișierul a fost modificat pe alt dispozitiv sau în afara TyCo",
@@ -749,7 +749,7 @@
     "aiCommands": "Comenzi AI",
     "aiProfilesHint": "Asistenți separați, cu propria instrucțiune, model, instrumente și chaturi. Fiecare profil este o filă în bara de sus.",
     "aiProfilesTab": "Profiluri AI",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "Atașează spațiu de lucru…",
       "attachedDeviceScopedHint": "Spațiile de lucru atașate se setează pe fiecare computer separat; cel principal se sincronizează cu dosarul de date.",
       "detach": "Elimină din listă",
@@ -757,7 +757,7 @@
       "hint": "Un spațiu de lucru este un dosar cu profiluri, proiecte, conversațiile și memoria lor. Cel principal e în dosarul de date; atașați altele, de exemplu unul de serviciu sincronizat separat. Un profil ajunge doar la proiectele spațiului său de lucru.",
       "main": "Principal",
       "name": "Nume",
-      "newVault": "Spațiu de lucru nou",
+      "newWorkspace": "Spațiu de lucru nou",
       "newer": "Creat de un TyCo mai nou",
       "notConnected": "Neconectat pe acest dispozitiv",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "Redenumește spațiul de lucru",
       "title": "Spațiu de lucru",
       "useSubfolder": "Dosarul conține alte fișiere. Creați spațiul de lucru în {path}?",
-      "vault": "Spațiu de lucru",
+      "workspace": "Spațiu de lucru",
       "writableByOthers": "Alți utilizatori ai acestui computer pot scrie în spațiul de lucru {name}: profilurile lui rulează comenzile acestui dispozitiv."
     },
     "allPluginsTab": "Toate pluginurile",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "Fiecare spațiu de lucru își poate păstra conversațiile în felul său în fila",
     "profileCopyName": "{name} (copie)",
     "profileDefaultSoul": "# Rol\nEști asistentul meu personal. Mă ajuți cu sarcinile de zi cu zi: răspunzi la întrebări, scrii și corectezi texte, ajuți la planificare și la gândirea soluțiilor.\n\n# Stil\n- Răspunde în limba mesajului meu.\n- Fii scurt și la obiect; dă detalii când le cer.\n- Folosește liste și titluri când fac răspunsul mai ușor de citit.\n\n# Reguli\n- Dacă cererea nu e clară, întreabă înainte să răspunzi.\n- Nu inventa fapte: spune când nu ești sigur.\n- Înainte să modifici fișiere sau să rulezi comenzi, spune ce urmează să faci.\n\n# Despre mine\n- Descrie-te aici: cu ce te ocupi și ce ar trebui să ia în seamă asistentul.\n",
+    "profileFolder": "Dosar",
+    "profileFolderFixedHint": "Dosarul nu se schimbă la redenumirea profilului, așa că conversațiile și accesul la proiecte rămân cu el.",
     "profileMemoryApplyCompact": "Aplică",
     "profileMemoryCompact": "Compactează",
     "profileMemoryCompactNoChange": "Fișierul este deja optim, nu sunt necesare modificări",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "Folderul {path} se află pe alt disc. Confirmi mutarea fișierelor din {current} pe celălalt disc?"
     },
     "variablesTab": "Variabile",
-    "vaultFolder": "Dosar",
-    "vaultFolderFixedHint": "Dosarul nu se schimbă la redenumirea profilului, așa că conversațiile și accesul la proiecte rămân cu el.",
     "vision": "Intrare de imagini",
     "voiceHold": {
       "voice": "Țineți apăsată comanda rapidă în timpul dictării (Push-to-Talk)",

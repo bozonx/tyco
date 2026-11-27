@@ -213,7 +213,10 @@ export interface ChatPromptConfig {
    * which runs as the plain quick AI request outside a chat
    */
   profileId: string
-  /** The vault of a profile of an attached one; absent for the main vault */
+  /**
+   * The workspace of a profile of an attached one; absent for the main
+   * workspace
+   */
   vaultId?: string
 }
 
@@ -296,7 +299,7 @@ export interface UserConfig {
   styling: StylingsConfig
   chatPrompts: ChatPromptsConfig
   favorites: FavoritesConfig
-  aiVaults: AiVaultsConfig
+  aiVaults: AiWorkspacesConfig
   markdown: MarkdownConfig
   plugins: Record<string, PluginEntryConfig>
   /** The tool sources switched off everywhere, see `ToolCatalogSettings` */
@@ -306,15 +309,15 @@ export interface UserConfig {
   dialog: DialogConfig
 }
 
-/** The vaults this device has attached besides the main one */
-export interface AiVaultsConfig {
-  attached: AttachedVaultConfig[]
+/** The workspaces this device has attached besides the main one */
+export interface AiWorkspacesConfig {
+  attached: AttachedWorkspaceConfig[]
 }
 
-export interface AttachedVaultConfig {
-  /** The folder of the vault on this device */
+export interface AttachedWorkspaceConfig {
+  /** The folder of the workspace on this device */
   path: string
-  /** The id its marker had when it was attached, for a vault not there now */
+  /** The id its marker had when it was attached, for a workspace not there now */
   vaultId: string
 }
 

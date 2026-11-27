@@ -315,7 +315,7 @@ const isChatHistoryInSession = computed(
     !isChatHistoryOnDisk(
       desktopStore.userConfig,
       chatStore.profileId,
-      aiProfilesStore.vaultChatHistoryOf(chatStore.profileId)
+      aiProfilesStore.workspaceChatHistoryOf(chatStore.profileId)
     )
 )
 

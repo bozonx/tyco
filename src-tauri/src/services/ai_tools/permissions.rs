@@ -13,7 +13,7 @@ use serde_json::Value;
 
 use crate::errors::AppError;
 use crate::models::user_config;
-use crate::services::ai_vault::{AiProfile, ToolState};
+use crate::services::ai_workspace::{AiProfile, ToolState};
 
 /// The kind of the built-in tool sources.
 pub const CORE_SOURCE_KIND: &str = "core";
@@ -206,7 +206,7 @@ pub const TOOL_COMMANDS: &[&str] = &[
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::ai_vault::{ProfileToolSettings, ToolSourceSettings};
+    use crate::services::ai_workspace::{ProfileToolSettings, ToolSourceSettings};
     use serde_json::json;
     use std::collections::HashMap;
 

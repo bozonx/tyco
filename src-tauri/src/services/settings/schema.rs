@@ -476,22 +476,22 @@ pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
 }
 
 /// Repairs untrusted disk input; IPC saves reject invalid input instead.
-/// Canonicalizes references to the main vault using its marker identity.
+/// Canonicalizes references to the main workspace using its marker identity.
 /// Only config-owned profile reference collections are traversed.
-pub fn normalize_profile_references(config: &mut Value, main_vault_id: &str) {
-    fn canonicalize(value: &mut Value, main_vault_id: &str, is_slot: bool) {
+pub fn normalize_profile_references(config: &mut Value, main_workspace_id: &str) {
+    fn canonicalize(value: &mut Value, main_workspace_id: &str, is_slot: bool) {
         if is_slot && !matches!(value["type"].as_str(), Some("profile" | "profileChat")) {
             return;
         }
         if let Some(fields) = value.as_object_mut() {
             if fields.get("profileId").is_some_and(Value::is_string)
-                && fields.get("vaultId").and_then(Value::as_str) == Some(main_vault_id)
+                && fields.get("vaultId").and_then(Value::as_str) == Some(main_workspace_id)
             {
                 fields.remove("vaultId");
             }
         }
     }
-    if main_vault_id.is_empty() {
+    if main_workspace_id.is_empty() {
         return;
     }
     for page in config
@@ -502,7 +502,7 @@ pub fn normalize_profile_references(config: &mut Value, main_vault_id: &str) {
     {
         if let Some(slots) = page.get_mut("slots").and_then(Value::as_object_mut) {
             for slot in slots.values_mut() {
-                canonicalize(slot, main_vault_id, true);
+                canonicalize(slot, main_workspace_id, true);
             }
         }
     }
@@ -513,7 +513,7 @@ pub fn normalize_profile_references(config: &mut Value, main_vault_id: &str) {
         .flatten()
     {
         if let Some(action) = slot.get_mut("action") {
-            canonicalize(action, main_vault_id, true);
+            canonicalize(action, main_workspace_id, true);
         }
     }
     if let Some(items) = config
@@ -521,7 +521,7 @@ pub fn normalize_profile_references(config: &mut Value, main_vault_id: &str) {
         .and_then(Value::as_array_mut)
     {
         for prompt in items {
-            canonicalize(prompt, main_vault_id, false);
+            canonicalize(prompt, main_workspace_id, false);
         }
     }
 }
@@ -1400,25 +1400,25 @@ mod tests {
 }
 
 #[cfg(test)]
-mod vault_reference_tests {
+mod workspace_reference_tests {
     use super::*;
 
     #[test]
-    fn main_vault_references_have_one_form_and_opaque_plugin_settings_are_untouched() {
+    fn main_workspace_references_have_one_form_and_opaque_plugin_settings_are_untouched() {
         let fixture: Value = serde_json::from_str(include_str!(
             "../../../../packages/shared/fixtures/profile-reference-normalization.json"
         ))
         .unwrap();
         let mut config = fixture["input"].clone();
-        normalize_profile_references(&mut config, fixture["mainVaultId"].as_str().unwrap());
+        normalize_profile_references(&mut config, fixture["mainWorkspaceId"].as_str().unwrap());
         assert_eq!(config, fixture["expected"]);
-        normalize_profile_references(&mut config, fixture["mainVaultId"].as_str().unwrap());
+        normalize_profile_references(&mut config, fixture["mainWorkspaceId"].as_str().unwrap());
         assert_eq!(config, fixture["expected"]);
     }
 
     #[test]
-    fn the_removed_main_vault_location_is_discarded() {
-        let mut config = json!({ "aiVault": { "path": "/old-vault" } });
+    fn the_removed_main_workspace_location_is_discarded() {
+        let mut config = json!({ "aiVault": { "path": "/old-workspace" } });
         normalize_user_config(&mut config);
         assert!(config.get("aiVault").is_none());
     }

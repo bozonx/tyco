@@ -1,4 +1,4 @@
-//! Moving a root folder of data, the user data folder or the AI vault, to
+//! Moving a root folder of data, the user data folder or the AI workspace, to
 //! another place. Each entry is renamed, or across disks copied, checked and
 //! only then removed; when a step fails, the entries moved so far go back.
 //! The caller decides which entries a root has, checks the target, and
@@ -269,7 +269,7 @@ mod tests {
 
     #[test]
     fn failed_moves_never_remove_an_existing_destination() {
-        let root = TestDir::new("vault-existing-destination");
+        let root = TestDir::new("workspace-existing-destination");
         let source = root.join("source");
         let destination = root.join("destination");
         fs::create_dir(&source).unwrap();
@@ -291,8 +291,8 @@ mod tests {
     }
 
     #[test]
-    fn failed_config_commit_restores_the_original_vault() {
-        let root = TestDir::new("vault-config-rollback");
+    fn failed_config_commit_restores_the_original_workspace() {
+        let root = TestDir::new("workspace-config-rollback");
         let source = root.join("source");
         let destination = root.join("destination");
         fs::create_dir(&source).unwrap();
@@ -319,7 +319,7 @@ mod tests {
 
     #[test]
     fn failed_rollback_reports_both_locations_without_removing_new_files() {
-        let root = TestDir::new("vault-config-rollback-conflict");
+        let root = TestDir::new("workspace-config-rollback-conflict");
         let source = root.join("source");
         let destination = root.join("destination");
         fs::create_dir(&source).unwrap();
@@ -355,7 +355,7 @@ mod tests {
     #[test]
     fn copying_readonly_folders_populates_them_before_restoring_permissions() {
         use std::os::unix::fs::PermissionsExt;
-        let root = TestDir::new("vault-readonly-copy");
+        let root = TestDir::new("workspace-readonly-copy");
         let source = root.join("source");
         let destination = root.join("destination");
         fs::create_dir(&source).unwrap();
@@ -406,7 +406,7 @@ mod tests {
 
     #[test]
     fn completed_copy_move_keeps_bytes_and_removes_source() {
-        let root = TestDir::new("vault-staged-copy");
+        let root = TestDir::new("workspace-staged-copy");
         let source = root.join("source");
         let destination = root.join("destination");
         fs::write(&source, "original").unwrap();

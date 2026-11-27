@@ -65,7 +65,7 @@ import {
   profilesLosingProject,
   projectsLostByProfile,
 } from '../../lib/ai-profiles/entity-move'
-import { vaultLabel } from '../../lib/ai-profiles/vault-groups'
+import { workspaceLabel } from '../../lib/ai-profiles/workspace-groups'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import BaseDialog from '../common/BaseDialog.vue'
 import Button from '../common/Button.vue'
@@ -80,26 +80,26 @@ const props = defineProps<{
   isSubmitting?: boolean
 }>()
 
-const emit = defineEmits<{ close: []; confirm: [vaultId: string] }>()
+const emit = defineEmits<{ close: []; confirm: [workspaceId: string] }>()
 
 const { t } = useI18n()
 const titleId = useId()
 const store = useAiProfilesStore()
 
 const targets = computed(() =>
-  props.entity ? moveTargets(props.entity.id, store.vaults) : []
+  props.entity ? moveTargets(props.entity.id, store.workspaces) : []
 )
 const targetOptions = computed(() =>
-  targets.value.map((vault) => ({
-    id: vault.vaultId,
-    name: vaultLabel(vault, t('settings.aiVaults.main')),
+  targets.value.map((workspace) => ({
+    id: workspace.workspaceId,
+    name: workspaceLabel(workspace, t('settings.aiWorkspaces.main')),
   }))
 )
 const targetId = ref('')
 watch(
   () => props.entity?.id,
   () => {
-    targetId.value = targets.value[0]?.vaultId ?? ''
+    targetId.value = targets.value[0]?.workspaceId ?? ''
   },
   { immediate: true }
 )

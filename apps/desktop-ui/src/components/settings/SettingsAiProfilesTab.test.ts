@@ -19,9 +19,9 @@ vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastError }),
 }))
 
-const vault = vi.hoisted(() => ({ store: null as unknown }))
+const workspace = vi.hoisted(() => ({ store: null as unknown }))
 vi.mock('../../stores/ai-profiles', () => ({
-  useAiProfilesStore: () => vault.store,
+  useAiProfilesStore: () => workspace.store,
 }))
 vi.mock('../../stores/secrets', () => ({
   useSecretsStore: () => ({ secrets: {} }),
@@ -40,18 +40,18 @@ function createStore() {
   return reactive({
     profiles: [] as AiProfile[],
     projects: [] as Array<Record<string, unknown>>,
-    vaultError: '',
-    vaults: [
+    workspaceError: '',
+    workspaces: [
       {
-        vaultId: '',
+        workspaceId: '',
         name: '',
-        path: '/vault',
+        path: '/workspace',
         isMain: true,
         status: 'connected',
         isWritableByOthers: false,
       },
     ],
-    connectedVaultIds: [] as string[],
+    connectedWorkspaceIds: [] as string[],
     setProjectFolder: vi.fn(async () => true),
     openProjectFolder: vi.fn(async () => {}),
     inspectProjectTransfer: vi.fn(async () => ({
@@ -61,7 +61,9 @@ function createStore() {
       sharedFolderCount: 0,
     })),
     loadAll: vi.fn(async () => {}),
-    openVaultDir: vi.fn(async () => {}),
+    openWorkspaceDir: vi.fn(async () => {}),
+    renameWorkspace: vi.fn(async () => {}),
+    detachWorkspace: vi.fn(async () => {}),
     pickFolder: vi.fn(async (): Promise<string | null> => '/elsewhere'),
     duplicateProfile: vi.fn(async () => ({ id: 'writer-copy' })),
     countChats: vi.fn(async () => 5),
@@ -93,17 +95,17 @@ describe('SettingsAiProfilesTab.vue', () => {
   let context: ReturnType<typeof createTestSettingsContext>
   beforeEach(() => {
     store = createStore()
-    vault.store = store
+    workspace.store = store
     context = createTestSettingsContext()
   })
   afterEach(() => toastError.mockReset())
 
-  const mountTab = () =>
+  const mountTab = (stubWorkspaceSection = true) =>
     mount(SettingsAiProfilesTab, {
       global: {
         provide: context.provide,
         stubs: {
-          SettingsWorkspaceSection: true,
+          SettingsWorkspaceSection: stubWorkspaceSection,
           SettingsWorkspaceHistorySection: true,
           SettingsWorkspaceAttach: true,
           SettingsCreateEntityModal: {
@@ -132,11 +134,64 @@ describe('SettingsAiProfilesTab.vue', () => {
   const button = (wrapper: ReturnType<typeof mountTab>, label: string) =>
     wrapper.findAll('button').find((item) => item.text().includes(label))!
 
-  it('loads the vault and tells when it is empty', () => {
+  it('loads the workspace and tells when it is empty', () => {
     const wrapper = mountTab()
     expect(store.loadAll).toHaveBeenCalledOnce()
+    const tabs = wrapper.get('[data-testid="workspace-switcher"]')
+    const options = tabs.findAll('input[type="radio"]')
+    expect(options).toHaveLength(1)
+    expect(options[0]!.attributes('aria-label')).toBe(
+      'settings.aiWorkspaces.main'
+    )
+    expect((options[0]!.element as HTMLInputElement).checked).toBe(true)
     expect(wrapper.text()).toContain('settings.noProfilesYet')
     expect(wrapper.text()).toContain('settings.noProjectsYet')
+  })
+
+  it('shows rename and remove under the attached workspace path', async () => {
+    store.workspaces.push({
+      workspaceId: 'work',
+      name: 'Work',
+      path: '/work',
+      isMain: false,
+      status: 'connected',
+      isWritableByOthers: false,
+    })
+    const wrapper = mountTab(false)
+    const buttonsIn = (id: string) =>
+      wrapper.get(`[data-testid="workspace-${id}"]`).findAll('button')
+    expect(buttonsIn('main').map((button) => button.text())).not.toContain(
+      'settings.aiWorkspaces.detach'
+    )
+
+    await wrapper.get('input[aria-label="Work"]').setValue()
+    const buttons = buttonsIn('work')
+    const rename = buttons.find(
+      (button) => button.text() === 'settings.aiWorkspaces.rename'
+    )!
+    const remove = buttons.find(
+      (button) => button.text() === 'settings.aiWorkspaces.detach'
+    )!
+    await rename.trigger('click')
+    const modal = wrapper
+      .findAllComponents({ name: 'SettingsCreateEntityModal' })
+      .find(
+        (dialog) => dialog.props('title') === 'settings.aiWorkspaces.rename'
+      )!
+    expect(modal.props('open')).toBe(true)
+    modal.vm.$emit('submit', 'Renamed')
+    expect(store.renameWorkspace).toHaveBeenCalledWith('work', 'Renamed')
+
+    await remove.trigger('click')
+    const confirmation = wrapper.get(
+      '[data-title="settings.aiWorkspaces.detach"]'
+    )
+    expect(confirmation.attributes('data-open')).toBe('true')
+    await confirmation.get('button').trigger('click')
+    expect(store.detachWorkspace).toHaveBeenCalledWith('work')
+    await wrapper
+      .get('input[aria-label="settings.aiWorkspaces.main"]')
+      .setValue()
   })
 
   it('describes each profile with its custom folder or none, and opens it', async () => {
@@ -179,7 +234,7 @@ describe('SettingsAiProfilesTab.vue', () => {
 
     expect(store.createProfile).toHaveBeenCalledWith({
       name: 'New Writer',
-      vaultId: '',
+      workspaceId: '',
       soul: expect.any(String),
       settings: {},
     })
@@ -203,7 +258,7 @@ describe('SettingsAiProfilesTab.vue', () => {
 
     expect(store.createProject).toHaveBeenCalledWith({
       name: 'New Workspace',
-      vaultId: '',
+      workspaceId: '',
       isExternal: false,
     })
     expect(context.navigate).toHaveBeenCalledWith('ai-project:created-project')
@@ -230,7 +285,7 @@ describe('SettingsAiProfilesTab.vue', () => {
     await flushPromises()
     expect(store.createProject).toHaveBeenCalledWith({
       name: 'Site',
-      vaultId: '',
+      workspaceId: '',
       isExternal: true,
       targetPath: '/elsewhere',
     })

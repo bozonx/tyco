@@ -5,14 +5,14 @@ const defaultRandomSuffix = () =>
   crypto.randomUUID().replace(/-/g, '').slice(0, 8)
 
 /** How many fresh ids a creation tries before it gives up */
-export const MAX_VAULT_ID_ATTEMPTS = 5
+export const MAX_WORKSPACE_ID_ATTEMPTS = 5
 
 /**
  * The folder of a new profile or project: `<kind>-<8 hex>`, never made from the
  * name, so two devices that create a profile of one name before a sync never
  * write into one folder. Taken ids get another suffix.
  */
-export function createVaultId(
+export function createWorkspaceId(
   kind: 'profile' | 'project',
   takenIds: readonly string[],
   randomSuffix: () => string = defaultRandomSuffix
@@ -34,14 +34,14 @@ export async function createWithFreshId<T>(
   takenIds: readonly string[],
   create: (id: string) => Promise<T>,
   randomSuffix?: () => string,
-  /** The vault the entity goes to; empty for the main one */
-  vaultId = ''
+  /** The workspace the entity goes to; empty for the main one */
+  workspaceId = ''
 ): Promise<T> {
   const taken = [...takenIds]
   for (let attempt = 1; ; attempt++) {
     const id = joinRef(
-      vaultId,
-      createVaultId(
+      workspaceId,
+      createWorkspaceId(
         kind,
         taken.map((key) => key.slice(key.lastIndexOf(':') + 1)),
         randomSuffix
@@ -51,7 +51,7 @@ export async function createWithFreshId<T>(
       return await create(id)
     } catch (error) {
       if (
-        attempt >= MAX_VAULT_ID_ATTEMPTS ||
+        attempt >= MAX_WORKSPACE_ID_ATTEMPTS ||
         !isIpcErrorCode(error, 'alreadyExists')
       )
         throw error

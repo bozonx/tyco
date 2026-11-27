@@ -12,7 +12,7 @@ use super::{
     MAX_READ_BYTES,
 };
 use crate::errors::AppError;
-use crate::services::ai_vault::ProjectAccessMode;
+use crate::services::ai_workspace::ProjectAccessMode;
 
 pub const ATTACHMENTS_ROOT: &str = "attachments";
 const MAX_NAME_LENGTH: usize = 255;

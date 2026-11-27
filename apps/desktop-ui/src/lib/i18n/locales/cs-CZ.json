@@ -410,7 +410,7 @@
     "unsupportedConfig": "Nastavení uložila novější verze aplikace",
     "userDataUnavailable": "Složka dat není dostupná",
     "variableNotSet": "Proměnná nemá na tomto zařízení hodnotu",
-    "vaultUnavailable": "Prostor není na tomto zařízení připojen",
+    "workspaceUnavailable": "Prostor není na tomto zařízení připojen",
     "projectUnavailable": "Složka projektu není na tomto zařízení nastavena",
     "alreadyExists": "Již existuje",
     "staleRevision": "Soubor byl změněn na jiném zařízení nebo mimo TyCo",
@@ -749,7 +749,7 @@
     "aiCommands": "AI příkazy",
     "aiProfilesHint": "Samostatní asistenti s vlastní instrukcí, modelem, nástroji a chaty. Každý profil je karta v horní liště.",
     "aiProfilesTab": "Profily AI",
-    "aiVaults": {
+    "aiWorkspaces": {
       "attach": "Připojit prostor…",
       "attachedDeviceScopedHint": "Připojené prostory se nastavují na každém počítači zvlášť; hlavní se synchronizuje se složkou dat.",
       "detach": "Odebrat ze seznamu",
@@ -757,7 +757,7 @@
       "hint": "Prostor je složka s profily, projekty, jejich chaty a pamětí. Hlavní je ve složce dat; připojte další, třeba pracovní, který se synchronizuje zvlášť. Profil vidí jen projekty svého prostoru.",
       "main": "Hlavní",
       "name": "Název",
-      "newVault": "Nový prostor",
+      "newWorkspace": "Nový prostor",
       "newer": "Vytvořeno novějším TyCo",
       "notConnected": "Na tomto zařízení nepřipojeno",
       "refused": {
@@ -769,7 +769,7 @@
       "rename": "Přejmenovat prostor",
       "title": "Prostor",
       "useSubfolder": "Složka obsahuje jiné soubory. Vytvořit prostor v {path}?",
-      "vault": "Prostor",
+      "workspace": "Prostor",
       "writableByOthers": "Do prostoru {name} mohou zapisovat i jiní uživatelé počítače: jeho profily spouštějí příkazy tohoto zařízení."
     },
     "allPluginsTab": "Všechny pluginy",
@@ -1059,6 +1059,8 @@
     "profileChatHistoryLink": "Každý prostor může ukládat chaty po svém na kartě",
     "profileCopyName": "{name} (kopie)",
     "profileDefaultSoul": "# Role\nJsi můj osobní asistent. Pomáháš s každodenními úkoly: odpovídáš na otázky, píšeš a upravuješ texty, pomáháš plánovat a promýšlet řešení.\n\n# Styl\n- Odpovídej v jazyce mé zprávy.\n- Piš stručně a k věci; podrobnosti, když o ně požádám.\n- Používej seznamy a nadpisy, když se tak odpověď lépe čte.\n\n# Pravidla\n- Pokud je požadavek nejasný, zeptej se, než odpovíš.\n- Nevymýšlej si fakta: řekni, když si nejsi jistý.\n- Než změníš soubory nebo spustíš příkazy, řekni, co se chystáš udělat.\n\n# O mně\n- Popište zde sebe: čím se zabýváte a co by asistent měl brát v úvahu.\n",
+    "profileFolder": "Složka",
+    "profileFolderFixedHint": "Složka se při přejmenování profilu nemění, takže chaty i přístup k projektům zůstávají u něj.",
     "profileMemoryApplyCompact": "Použít",
     "profileMemoryCompact": "Zhutnit",
     "profileMemoryCompactNoChange": "Soubor je již optimální, nejsou třeba žádné změny",
@@ -1320,8 +1322,6 @@
       "crossDiskConfirm": "Složka {path} je na jiném disku. Potvrzujete přesun souborů z {current} na jiný disk?"
     },
     "variablesTab": "Proměnné",
-    "vaultFolder": "Složka",
-    "vaultFolderFixedHint": "Složka se při přejmenování profilu nemění, takže chaty i přístup k projektům zůstávají u něj.",
     "vision": "Vstup obrázků",
     "voiceHold": {
       "voice": "Při diktování držet zkratku (Push-to-Talk)",
