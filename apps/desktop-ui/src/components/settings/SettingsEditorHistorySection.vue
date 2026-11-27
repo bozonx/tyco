@@ -1,8 +1,14 @@
 <template>
-  <SettingsSection :title="sectionTitle">
+  <SettingsSection :title="t('settings.sectionEditorHistory')">
     <template #actions>
       <SettingsHistoryClear
-        :is-empty="entryCount === 0"
+        :count="entryCount"
+        :label-keys="{
+          one: 'settings.deleteAllEntries.one',
+          few: 'settings.deleteAllEntries.few',
+          many: 'settings.deleteAllEntries.many',
+          other: 'settings.deleteAllEntries.other',
+        }"
         :confirm-title="t('settings.clearEditorHistoryConfirmTitle')"
         :confirm-message="t('settings.clearEditorHistoryConfirmDialog')"
         :clear="() => historyStore.clearEditorHistory()"
@@ -32,15 +38,6 @@
         @update:model-value="history.isSecretSanitizingEnabled = $event"
       />
     </FieldRow>
-    <ConfirmModal
-      :open="pendingChange !== null"
-      :title="t('settings.historyDeleteConfirmTitle')"
-      :message="pendingChange?.message ?? ''"
-      :confirm-text="t('common.delete')"
-      danger
-      @confirm="confirmChange"
-      @cancel="cancelChange"
-    />
   </SettingsSection>
 </template>
 
@@ -53,14 +50,13 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import { editorHistoryRetentionChoices } from '../../lib/history/editor-history-storage'
 import { historyRetentionOptions } from '../../lib/history/history-retention'
 import {
-  createHistoryKeepingModel,
+  applyHistoryKeeping,
   historyKeepingChoice,
   historyKeepingOptions,
 } from '../../lib/history/history-settings-model'
 import { toHtmlLang } from '../../lib/locale/language'
 import { clientLogger } from '../../lib/logger'
 import { useHistoryStore } from '../../stores/history'
-import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
@@ -78,11 +74,6 @@ const history = computed(() => userConfig.value.editor.history)
  * tells that there is something to clear
  */
 const entryCount = computed(() => historyStore.editorHistory.length)
-
-const sectionTitle = computed(
-  () =>
-    `${t('settings.sectionEditorHistory')} (${t('settings.editorHistoryCount', { count: entryCount.value })})`
-)
 
 const loadEntries = async () => {
   try {
@@ -105,12 +96,9 @@ const periodName = (days: number) =>
     t('settings.editorHistoryRetentionForever')
   )[0]!.name
 
-const { pendingChange, confirmChange, cancelChange, setKeeping } =
-  createHistoryKeepingModel({
-    getHistory: () => history.value,
-    retentionMessage: (days) =>
-      t('settings.editorHistoryRetentionConfirm', { period: periodName(days) }),
-  })
+function setKeeping(value: string | number | undefined) {
+  applyHistoryKeeping(history.value, value)
+}
 
 const keepingOptions = computed(() =>
   historyKeepingOptions(

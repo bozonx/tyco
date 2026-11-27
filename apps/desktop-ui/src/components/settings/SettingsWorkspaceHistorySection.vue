@@ -1,56 +1,49 @@
 <template>
   <SettingsSection
-    :title="sectionTitle"
+    :title="t('settings.workspaceHistory.title')"
     :info="t('settings.workspaceHistory.hint')"
   >
     <template #actions>
       <SettingsHistoryClear
-        :is-empty="chatCount === 0"
+        :count="chatCount"
+        :label-keys="{
+          one: 'settings.deleteAllChats.one',
+          few: 'settings.deleteAllChats.few',
+          many: 'settings.deleteAllChats.many',
+          other: 'settings.deleteAllChats.other',
+        }"
         :confirm-title="t('history.clearConfirmTitle')"
         :confirm-message="t('settings.workspaceHistory.clearConfirm')"
         :clear="clearChats"
       />
     </template>
     <FieldRow
-      :label="t('settings.chatHistoryEnabled')"
+      :label="t('settings.chatHistoryKeeping')"
       :info="t('settings.workspaceHistory.syncedHint')"
       inline
     >
       <FieldSelect
         size="sm"
-        class="w-56 shrink-0"
-        :model-value="savingChoice(vault.chatHistory)"
-        :options="savingOptions"
-        data-testid="workspace-history-saving"
-        @update:model-value="setSaving"
+        class="w-44 shrink-0"
+        :model-value="historyKeepingChoice(kept)"
+        :options="keepingOptions"
+        data-testid="workspace-history-keeping"
+        @update:model-value="setKeeping"
       />
     </FieldRow>
 
     <FieldRow
-      v-if="isSaving"
-      :label="t('settings.chatHistoryRetentionDays')"
-      :info="t('settings.chatHistoryRetentionDaysHint')"
+      v-if="kept.storage !== 'off'"
+      :label="t('settings.chatQuickRequestsSaved')"
+      :info="t('settings.chatQuickRequestsSavedInfo')"
       inline
     >
-      <FieldSelect
-        size="sm"
-        class="w-56 shrink-0"
-        :model-value="retentionChoice(vault.chatHistory)"
-        :options="retentionOptions"
-        data-testid="workspace-history-retention"
-        @update:model-value="setRetention"
+      <FieldSwitch
+        :model-value="vault.chatHistory.isQuickRequestSavingEnabled !== false"
+        data-testid="workspace-history-quick-requests"
+        @update:model-value="setQuickRequestSaving"
       />
     </FieldRow>
-
-    <ConfirmModal
-      :open="pendingHistory !== null"
-      :title="t('settings.historyDeleteConfirmTitle')"
-      :message="pendingMessage"
-      :confirm-text="t('common.delete')"
-      danger
-      @confirm="confirmPending"
-      @cancel="pendingHistory = null"
-    />
   </SettingsSection>
 </template>
 
@@ -60,76 +53,56 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
-import {
-  WORKSPACE_DEFAULT,
-  type WorkspaceSavingChoice,
-  isDefaultSaving,
-  isWorkspaceSaving,
-  retentionChoice,
-  savingChoice,
-  withRetention,
-  withSaving,
-  workspaceRetentionDays,
-} from '../../lib/ai-profiles/workspace-history'
 import { chatHistoryRetentionChoices } from '../../lib/chat/chat-history-settings'
 import { historyRetentionOptions } from '../../lib/history/history-retention'
+import {
+  type KeptHistoryConfig,
+  applyHistoryKeeping,
+  historyKeepingChoice,
+  historyKeepingOptions,
+} from '../../lib/history/history-settings-model'
 import { toHtmlLang } from '../../lib/locale/language'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
-import { useDesktopStore } from '../../stores/desktop'
-import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import SettingsHistoryClear from './SettingsHistoryClear.vue'
 import SettingsSection from './SettingsSection.vue'
 import type { VaultChatHistory, VaultInfo } from '@tyco/shared'
 
-/** How the chats of the profiles of one workspace are kept */
+/**
+ * How the chats of the profiles of one workspace are kept. The workspace
+ * decides alone; a missing value saves the chats forever
+ */
 const props = defineProps<{ vault: VaultInfo }>()
 
 const { t } = useI18n()
 const { toastError } = useToast()
 const { effectiveAppLanguage } = useSettingsContext()
-const desktopStore = useDesktopStore()
 const store = useAiProfilesStore()
 
-// the settings of a workspace apply at once, so they follow the saved chat
-// settings, not an unsaved draft of them
-const defaults = computed(() => desktopStore.userConfig.chat.history)
-const isSaving = computed(() =>
-  isWorkspaceSaving(props.vault.chatHistory, defaults.value)
-)
+const kept = computed<KeptHistoryConfig>(() => ({
+  storage: props.vault.chatHistory.storage ?? 'disk',
+  retentionDays: props.vault.chatHistory.retentionDays || undefined,
+}))
 
 const periodName = (days: number) =>
   historyRetentionOptions(
     [days],
     toHtmlLang(effectiveAppLanguage.value),
-    t('settings.chatHistoryRetentionNever')
+    t('settings.editorHistoryRetentionForever')
   )[0]!.name
 
-const savingOptions = computed(() => [
-  {
-    id: WORKSPACE_DEFAULT,
-    name: t('settings.workspaceHistory.byDefault', {
-      value: isDefaultSaving(defaults.value)
-        ? t('settings.workspaceHistory.saved')
-        : t('settings.workspaceHistory.notSaved'),
-    }),
-  },
-  { id: 'disk', name: t('settings.workspaceHistory.saved') },
-  { id: 'off', name: t('settings.workspaceHistory.notSaved') },
-])
-
-const retentionOptions = computed(() => [
-  {
-    id: WORKSPACE_DEFAULT,
-    name: t('settings.workspaceHistory.byDefault', {
-      value: periodName(defaults.value.retentionDays ?? 0),
-    }),
-  },
-  ...chatHistoryRetentionChoices(props.vault.chatHistory.retentionDays).map(
-    (days) => ({ id: String(days), name: periodName(days) })
-  ),
-])
+const keepingOptions = computed(() =>
+  historyKeepingOptions(
+    chatHistoryRetentionChoices(props.vault.chatHistory.retentionDays),
+    {
+      off: t('settings.workspaceHistory.notSaved'),
+      forever: t('settings.editorHistoryRetentionForever'),
+      period: periodName,
+    }
+  )
+)
 
 async function save(history: VaultChatHistory) {
   try {
@@ -139,53 +112,25 @@ async function save(history: VaultChatHistory) {
   }
 }
 
-const SAVING_CHOICES: readonly WorkspaceSavingChoice[] = [
-  WORKSPACE_DEFAULT,
-  'disk',
-  'off',
-]
-
-function setSaving(value: string | number | undefined) {
-  const choice = SAVING_CHOICES.find((item) => item === value)
-  if (choice) void save(withSaving(props.vault.chatHistory, choice))
+function setKeeping(value: string | number | undefined) {
+  const next = { ...kept.value }
+  if (!applyHistoryKeeping(next, value) || next.storage === 'session') return
+  const { retentionDays: _days, ...rest } = props.vault.chatHistory
+  void save({
+    ...rest,
+    storage: next.storage,
+    ...(next.retentionDays ? { retentionDays: next.retentionDays } : {}),
+  })
 }
 
-/** A retention change that removes chats, waiting for confirmation */
-const pendingHistory = ref<VaultChatHistory | null>(null)
-const pendingMessage = computed(() =>
-  pendingHistory.value
-    ? t('settings.chatHistoryRetentionConfirm', {
-        period: periodName(
-          workspaceRetentionDays(pendingHistory.value, defaults.value)
-        ),
-      })
-    : ''
-)
-
-function setRetention(value: string | number | undefined) {
-  if (value === undefined) return
-  const change = withRetention(
-    props.vault.chatHistory,
-    defaults.value,
-    String(value)
-  )
-  if (!change) return
-  if (change.isStricter) pendingHistory.value = change.history
-  else void save(change.history)
-}
-
-function confirmPending() {
-  const history = pendingHistory.value
-  pendingHistory.value = null
-  if (history) void save(history)
+function setQuickRequestSaving(isEnabled: boolean) {
+  const { isQuickRequestSavingEnabled: _saving, ...rest } =
+    props.vault.chatHistory
+  void save(isEnabled ? rest : { ...rest, isQuickRequestSavingEnabled: false })
 }
 
 const chatCount = ref(0)
 
-const sectionTitle = computed(
-  () =>
-    `${t('settings.workspaceHistory.title')} (${t('settings.chatCount', { count: chatCount.value })})`
-)
 let countRequest = 0
 async function refreshCount() {
   const request = ++countRequest

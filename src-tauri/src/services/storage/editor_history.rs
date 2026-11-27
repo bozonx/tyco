@@ -161,7 +161,15 @@ enum EditorHistoryTarget<'a> {
         location: HistoryLocation,
         own: PathBuf,
     },
-    Memory(&'a mut Vec<EditorHistoryItem>),
+    /// New entries live in `memory`; the entries the journals already hold
+    /// stay there and are shown along with them, so that keeping the history
+    /// in memory hides or deletes nothing. A change to a stored entry is a
+    /// record of the own journal that carries no text: a removal, or a result.
+    /// An entry rewritten in memory hides its stored copy until the app quits.
+    Memory {
+        memory: &'a mut Vec<EditorHistoryItem>,
+        journals: Option<(HistoryLocation, PathBuf)>,
+    },
 }
 
 impl EditorHistoryTarget<'_> {
@@ -171,7 +179,20 @@ impl EditorHistoryTarget<'_> {
                 let paths = location.journal_paths(own);
                 Ok(merge_journals(&read_journals(&paths, own)?))
             }
-            Self::Memory(items) => Ok(items.to_vec()),
+            Self::Memory { memory, journals } => {
+                let mut items = memory.to_vec();
+                if let Some((location, own)) = journals {
+                    let paths = location.journal_paths(own);
+                    let stored = merge_journals(&read_journals(&paths, own)?);
+                    items.extend(
+                        stored
+                            .into_iter()
+                            .filter(|item| !memory.iter().any(|kept| kept.id == item.id)),
+                    );
+                    items.sort_by_key(|item| std::cmp::Reverse(item.created_at_ms));
+                }
+                Ok(items)
+            }
         }
     }
 
@@ -201,15 +222,72 @@ impl EditorHistoryTarget<'_> {
                 }
                 append_records(own, records)
             }
-            Self::Memory(memory) => {
-                **memory = after;
+            Self::Memory {
+                memory,
+                journals: stored_journals,
+            } => {
+                let is_stored = |id: &str| {
+                    before.iter().any(|item| item.id == id)
+                        && !memory.iter().any(|item| item.id == id)
+                };
+                let stored_before: Vec<_> = before
+                    .iter()
+                    .filter(|item| is_stored(&item.id))
+                    .cloned()
+                    .collect();
+                let after_ids: Vec<String> = after.iter().map(|item| item.id.clone()).collect();
+                let mut records = Vec::new();
+                let mut kept = Vec::new();
+                for item in after {
+                    if !is_stored(&item.id) {
+                        kept.push(item);
+                        continue;
+                    }
+                    let known = stored_before.iter().find(|known| known.id == item.id);
+                    let mut with_result = known.cloned();
+                    if let Some(with_result) = &mut with_result {
+                        with_result.result = item.result.clone();
+                    }
+                    if known == Some(&item) {
+                        // unchanged, stays in the journal
+                    } else if with_result.as_ref() == Some(&item) {
+                        records.push(HistoryRecord::Event(journals::HistoryEvent::Result {
+                            id: item.id.clone(),
+                            result: item.result.clone(),
+                            at: now_ms().max(item.created_at_ms),
+                        }));
+                    } else {
+                        // rewritten: the new text stays in memory and hides
+                        // the stored copy, which the journal keeps
+                        kept.push(item);
+                    }
+                }
+                for item in &stored_before {
+                    if !after_ids.contains(&item.id) {
+                        records.push(HistoryRecord::Event(journals::HistoryEvent::Delete {
+                            id: item.id.clone(),
+                        }));
+                    }
+                }
+                if let (Some((_, own)), false) = (stored_journals, records.is_empty()) {
+                    append_records(own, records)?;
+                }
+                **memory = kept;
                 Ok(())
             }
         }
     }
 
     fn is_memory(&self) -> bool {
-        matches!(self, Self::Memory(_))
+        matches!(self, Self::Memory { .. })
+    }
+
+    /// Entries live in journals, which keep a removed id removed for good.
+    fn has_journals(&self) -> bool {
+        match self {
+            Self::Journals { .. } => true,
+            Self::Memory { journals, .. } => journals.is_some(),
+        }
     }
 }
 
@@ -236,7 +314,8 @@ impl<'a> EditorHistorySession<'a> {
     ) -> Result<Self, AppError> {
         let policy = EditorHistoryPolicy::from_config(user_config);
         let store = if is_in_memory(&policy, memory) {
-            EditorHistoryTarget::Memory(memory)
+            let journals = location.own_path().ok().map(|own| (location, own));
+            EditorHistoryTarget::Memory { memory, journals }
         } else {
             let own = location.own_path()?;
             EditorHistoryTarget::Journals { location, own }
@@ -264,7 +343,7 @@ impl<'a> EditorHistorySession<'a> {
     /// limit applies when they are read, so that a change never deletes an
     /// entry of another device for being over it.
     fn limit(&self) -> usize {
-        if self.store.is_memory() {
+        if self.store.is_memory() && !self.store.has_journals() {
             self.policy.max_entries
         } else {
             usize::MAX
@@ -446,7 +525,7 @@ fn restore_item(
     policy.redact_item(&mut item);
     // a journal keeps the removal of the old id for good: the entry comes
     // back under a new one
-    if !history.store.is_memory() {
+    if history.store.has_journals() {
         item.id = new_history_id(now_ms());
     }
 

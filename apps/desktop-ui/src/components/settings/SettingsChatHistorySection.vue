@@ -1,8 +1,17 @@
 <template>
-  <SettingsSection :title="sectionTitle" :info="t('settings.chatHistoryHint')">
+  <SettingsSection
+    :title="t('settings.sectionChatHistory')"
+    :info="t('settings.chatHistoryHint')"
+  >
     <template #actions>
       <SettingsHistoryClear
-        :is-empty="chatCount === 0"
+        :count="chatCount"
+        :label-keys="{
+          one: 'settings.deleteAllChats.one',
+          few: 'settings.deleteAllChats.few',
+          many: 'settings.deleteAllChats.many',
+          other: 'settings.deleteAllChats.other',
+        }"
         :confirm-title="t('history.clearConfirmTitle')"
         :confirm-message="t('settings.clearChatsConfirmDialog')"
         :clear="chats.clear"
@@ -33,16 +42,6 @@
         @update:model-value="setQuickRequestSaving"
       />
     </FieldRow>
-
-    <ConfirmModal
-      :open="pendingChange !== null"
-      :title="t('settings.historyDeleteConfirmTitle')"
-      :message="pendingChange?.message ?? ''"
-      :confirm-text="t('common.delete')"
-      danger
-      @confirm="confirmChange"
-      @cancel="cancelChange"
-    />
   </SettingsSection>
 </template>
 
@@ -55,12 +54,11 @@ import { useSettingsHistoryChats } from '../../composables/use-settings-history-
 import { chatHistoryRetentionChoices } from '../../lib/chat/chat-history-settings'
 import { historyRetentionOptions } from '../../lib/history/history-retention'
 import {
-  createHistoryKeepingModel,
+  applyHistoryKeeping,
   historyKeepingChoice,
   historyKeepingOptions,
 } from '../../lib/history/history-settings-model'
 import { toHtmlLang } from '../../lib/locale/language'
-import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
@@ -80,11 +78,6 @@ onMounted(() => {
 })
 const chatCount = computed(() => chats.count.value)
 
-const sectionTitle = computed(
-  () =>
-    `${t('settings.sectionChatHistory')} (${t('settings.chatCount', { count: chatCount.value })})`
-)
-
 function setQuickRequestSaving(isEnabled: boolean) {
   if (isEnabled) delete history.value.isQuickRequestSavingEnabled
   else history.value.isQuickRequestSavingEnabled = false
@@ -97,12 +90,9 @@ const periodName = (days: number) =>
     t('settings.editorHistoryRetentionForever')
   )[0]!.name
 
-const { pendingChange, confirmChange, cancelChange, setKeeping } =
-  createHistoryKeepingModel({
-    getHistory: () => history.value,
-    retentionMessage: (days) =>
-      t('settings.chatHistoryRetentionConfirm', { period: periodName(days) }),
-  })
+function setKeeping(value: string | number | undefined) {
+  applyHistoryKeeping(history.value, value)
+}
 
 const keepingOptions = computed(() =>
   historyKeepingOptions(

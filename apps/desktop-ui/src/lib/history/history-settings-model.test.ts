@@ -2,18 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import {
   type KeptHistoryConfig,
-  createHistoryKeepingModel,
+  applyHistoryKeeping,
   historyKeepingChoice,
   historyKeepingOptions,
 } from './history-settings-model'
-
-function setup(history: KeptHistoryConfig) {
-  const model = createHistoryKeepingModel({
-    getHistory: () => history,
-    retentionMessage: (days) => `Delete older than ${days}`,
-  })
-  return { history, model }
-}
 
 describe('history keeping', () => {
   it('reads one choice from the storage and the retention', () => {
@@ -42,44 +34,24 @@ describe('history keeping', () => {
     ).toEqual(['off', 7, 0])
   })
 
-  it('turns the history off or keeps it in memory without asking', () => {
-    const { history, model } = setup({ storage: 'disk', retentionDays: 30 })
-    model.setKeeping('off')
-    expect(model.pendingChange.value).toBeNull()
+  it('applies every choice at once and keeps forever as no field', () => {
+    const history: KeptHistoryConfig = { storage: 'disk', retentionDays: 30 }
+    expect(applyHistoryKeeping(history, 'off')).toBe(true)
     expect(history).toEqual({ storage: 'off', retentionDays: 30 })
-    model.setKeeping('session')
-    expect(model.pendingChange.value).toBeNull()
+    applyHistoryKeeping(history, 'session')
     expect(history.storage).toBe('session')
-  })
-
-  it('waits for confirmation before shortening the retention', () => {
-    const { history, model } = setup({ storage: 'disk', retentionDays: 30 })
-    model.setKeeping(7)
-    expect(history.retentionDays).toBe(30)
-    expect(model.pendingChange.value?.message).toBe('Delete older than 7')
-    model.cancelChange()
-    model.confirmChange()
-    expect(history.retentionDays).toBe(30)
-    model.setKeeping(7)
-    model.confirmChange()
+    applyHistoryKeeping(history, 7)
     expect(history).toEqual({ storage: 'disk', retentionDays: 7 })
-  })
-
-  it('extends the retention at once and keeps forever as no field', () => {
-    const { history, model } = setup({ storage: 'off', retentionDays: 7 })
-    model.setKeeping(90)
-    expect(history).toEqual({ storage: 'disk', retentionDays: 90 })
-    model.setKeeping(0)
+    applyHistoryKeeping(history, 0)
     expect(history).toEqual({ storage: 'disk' })
   })
 
   it.each([undefined, '', 'wrong', -1, 0.5, Infinity])(
     'ignores the invalid choice %s',
     (value) => {
-      const { history, model } = setup({ storage: 'disk', retentionDays: 30 })
-      model.setKeeping(value as string)
+      const history: KeptHistoryConfig = { storage: 'disk', retentionDays: 30 }
+      expect(applyHistoryKeeping(history, value as string)).toBe(false)
       expect(history).toEqual({ storage: 'disk', retentionDays: 30 })
-      expect(model.pendingChange.value).toBeNull()
     }
   )
 })

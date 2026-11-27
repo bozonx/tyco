@@ -205,7 +205,10 @@ fn the_memory_store_never_touches_the_disk() {
     let dir = TestDir::new("memory-store");
     let mut memory = Vec::new();
     let mut history = EditorHistorySession {
-        store: EditorHistoryTarget::Memory(&mut memory),
+        store: EditorHistoryTarget::Memory {
+            memory: &mut memory,
+            journals: None,
+        },
         policy: memory_only(),
     };
 
@@ -492,7 +495,10 @@ fn read_only_history_remains_readable_and_cannot_be_changed() {
 fn input_checkpoints_replace_one_record_and_promote_it_without_a_duplicate() {
     let mut memory = Vec::new();
     let mut history = EditorHistorySession {
-        store: EditorHistoryTarget::Memory(&mut memory),
+        store: EditorHistoryTarget::Memory {
+            memory: &mut memory,
+            journals: None,
+        },
         policy: memory_only(),
     };
     let id = save_editor_history_entry(&mut history, entry("first words"))
@@ -530,7 +536,10 @@ fn input_checkpoints_replace_one_record_and_promote_it_without_a_duplicate() {
 fn checkpoint_updates_do_not_resurrect_deleted_records() {
     let mut memory = Vec::new();
     let mut history = EditorHistorySession {
-        store: EditorHistoryTarget::Memory(&mut memory),
+        store: EditorHistoryTarget::Memory {
+            memory: &mut memory,
+            journals: None,
+        },
         policy: memory_only(),
     };
     let checkpoint =
@@ -567,7 +576,10 @@ fn disk_checkpoints_keep_only_the_latest_text_in_the_own_journal() {
 fn a_finished_transcript_replaces_its_draft_and_becomes_the_output_once_sent() {
     let mut memory = Vec::new();
     let mut history = EditorHistorySession {
-        store: EditorHistoryTarget::Memory(&mut memory),
+        store: EditorHistoryTarget::Memory {
+            memory: &mut memory,
+            journals: None,
+        },
         policy: memory_only(),
     };
     let id = save_editor_history_entry(&mut history, entry("heard so far"))
@@ -598,4 +610,47 @@ fn a_finished_transcript_replaces_its_draft_and_becomes_the_output_once_sent() {
         items[0].origin,
         Some(crate::models::EditorHistoryOrigin::Listen)
     );
+}
+
+#[test]
+fn the_memory_only_history_shows_the_stored_entries_and_hides_none() {
+    let dir = TestDir::new("memory-over-journal");
+    let location = HistoryLocation::at(&dir, LAPTOP);
+    let mut stored = recent("a", "stored");
+    stored.created_at_ms -= 1000;
+    let mut gone = recent("b", "gone");
+    gone.created_at_ms -= 2000;
+    write_items(&own(&location), &[stored, gone]);
+    let mut memory = Vec::new();
+    // switched back and forth: nothing is lost
+    for (before, after) in [
+        (policy(), memory_only()),
+        (memory_only(), policy()),
+        (policy(), memory_only()),
+    ] {
+        commit_history_transition(&location, &before, &after, &mut memory, || Ok(())).unwrap();
+    }
+    let mut history = EditorHistorySession {
+        store: EditorHistoryTarget::Memory {
+            memory: &mut memory,
+            journals: Some((location.clone(), own(&location))),
+        },
+        policy: memory_only(),
+    };
+    save_editor_history_entry(&mut history, entry("new")).unwrap();
+    let before = history.load().unwrap();
+    assert_eq!(history_texts(&before), ["new", "stored", "gone"]);
+    let mut after = before.clone();
+    after.retain(|item| item.id != "b");
+    history.save(&before, after).unwrap();
+
+    // the journal takes the removal, never the new text
+    let raw = fs::read_to_string(own(&location)).unwrap();
+    assert!(!raw.contains("\"new\""));
+    assert_eq!(texts(&location), ["stored"]);
+    assert_eq!(history_texts(&memory), ["new"]);
+
+    commit_history_transition(&location, &memory_only(), &policy(), &mut memory, || Ok(()))
+        .unwrap();
+    assert_eq!(texts(&location), ["new", "stored"]);
 }

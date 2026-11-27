@@ -771,13 +771,7 @@
     "browseFolder": "Wybierz folder",
     "browseWorkingDir": "Wybierz katalog roboczy…",
     "chat": "Zapytaj AI",
-    "chatCount": "czatów: {count}",
-    "chatHistoryEnabled": "Zapisuj czaty",
     "chatHistoryHint": "Czaty „Zapytaj AI” i profili AI, łącznie z szybkimi zapytaniami. Przestrzeń robocza może przechowywać swoje czaty po swojemu na karcie Profile AI.",
-    "chatHistoryRetentionConfirm": "Czaty bez nowych wiadomości dłużej niż {period} zostaną od razu usunięte. Tego nie można cofnąć.",
-    "chatHistoryRetentionDays": "Usuwaj stare czaty",
-    "chatHistoryRetentionDaysHint": "Czat jest usuwany, gdy przez tyle czasu nie miał nowych wiadomości. Starsze czaty są usuwane od razu.",
-    "chatHistoryRetentionNever": "Nigdy",
     "chatImageQuality": "Jakość obrazów",
     "chatImageQualityHint": "Dotyczy wszystkich nowych załączników we wszystkich czatach. Z obrazów usuwane są metadane EXIF i są one konwertowane do formatu WebP (limity do 24 MP i 5 MB po kompresji). Zrównoważona (2048 px) zachowuje zrzuty ekranu Full HD 1:1, Oszczędna (1024 px) oszczędza tokeny, a Maksymalna (do 8000 px) zachowuje oryginalną rozdzielczość.",
     "chatInfo": "Szybki czat z AI do codziennych zadań. W przeciwieństwie do profili AI z odrębnymi rolami i narzędziami jest to uniwersalna konwersacja niepowiązana z konkretnym profilem. Możesz zadawać pytania, przekazywać zaznaczony tekst jako kontekst, dołączać obrazy, ustawiać ogólny prompt systemowy i zarządzać lokalną historią czatów. Do tej funkcji najlepiej używać szybkich modeli: sprawdzają się przy szybkich odpowiedziach i weryfikacji faktów.",
@@ -840,8 +834,6 @@
     "dragToReorder": "Przeciągnij, aby zmienić kolejność",
     "duplicateProfile": "Duplikuj",
     "duplicateProfileConfirm": "Utworzyć kopię profilu „{name}”?",
-    "editorHistoryCount": "wpisów: {count}",
-    "editorHistoryRetentionConfirm": "Wpisy historii starsze niż {period} zostaną usunięte. Tego nie można cofnąć.",
     "editorHistoryRetentionForever": "Zawsze",
     "editorHistoryStorage": "Przechowuj historię",
     "editorHistoryStorageHint": "Na dysku — historia przetrwa ponowne uruchomienia w niezaszyfrowanym pliku; wpisy starsze niż wybrany okres są usuwane. Dopóki Tyco działa — nowe wpisy są tylko w pamięci i znikają po zamknięciu. Nie zapisuj — nowe teksty nie są zapisywane. Zmiana tego ustawienia nigdy nie usuwa zapisanych wpisów: zostają, dopóki ich nie wyczyścisz.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "Skróty globalne",
     "grantProfileAccess": "Daj dostęp profilowi",
     "hideAdvanced": "Ukryj ustawienia zaawansowane",
-    "historyDeleteConfirmTitle": "Usunąć zapisaną historię?",
     "historyTab": "Historia",
     "hotkey": "Skrót",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "Ta przestrzeń robocza nie jest podłączona na tym urządzeniu. Wybierz jej folder lub usuń ją z listy.",
     "workspaceHistory": {
       "title": "Historia czatów przestrzeni roboczej",
-      "hint": "Jak przechowywane są czaty profili tej przestrzeni roboczej, łącznie z szybkimi zapytaniami. Domyślnie obowiązują ustawienia czatów z karty Historia.",
+      "hint": "Jak przechowywane są czaty profili tej przestrzeni roboczej, łącznie z szybkimi zapytaniami. Decyduje o tym tylko sama przestrzeń.",
       "syncedHint": "Zapisane w folderze przestrzeni roboczej i stosowane na każdym komputerze, który ją synchronizuje.",
-      "byDefault": "Domyślnie ({value})",
-      "saved": "Zapisuj",
       "notSaved": "Nie zapisuj",
       "clearConfirm": "Usunąć zapisane czaty wszystkich profili tej przestrzeni roboczej? Tej operacji nie można cofnąć."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "Zapisane transkrypcje rozmów i ich nagrania audio.",
     "dialogHistoryRetentionDays": "Przechowuj dialogi",
     "dialogHistoryRetentionDaysHint": "Dialogi i ich nagrania starsze niż wybrany okres są usuwane automatycznie. Nie zapisuj — nowe dialogi nie są zapisywane; zapisane zostają, dopóki ich nie wyczyścisz.",
-    "dialogHistoryRetentionConfirm": "Dialogi starsze niż {period} oraz ich nagrania zostaną usunięte.",
-    "dialogCount": "dialogów: {count}",
     "clearDialogsConfirmDialog": "Wszystkie zapisane dialogi i ich nagrania audio zostaną trwale usunięte.",
     "dialogHistoryLink": "Ustawienia historii i przechowywania dialogów znajdują się w",
     "chatHistoryKeeping": "Przechowuj czaty",
-    "chatHistoryKeepingHint": "Czaty są przechowywane lokalnie bez szyfrowania; hasła i klucze w nich nie są ukrywane. Czat jest usuwany, gdy nie było w nim nowych wiadomości dłużej niż wybrany okres. Nie zapisuj — nowe czaty nie są zapisywane; zapisane zostają, dopóki ich nie wyczyścisz."
+    "chatHistoryKeepingHint": "Czaty są przechowywane lokalnie bez szyfrowania; hasła i klucze w nich nie są ukrywane. Czat jest usuwany, gdy nie było w nim nowych wiadomości dłużej niż wybrany okres. Nie zapisuj — nowe czaty nie są zapisywane; zapisane zostają, dopóki ich nie wyczyścisz.",
+    "deleteAllEntries": {
+      "one": "Usuń {count} wpis",
+      "few": "Usuń wszystkie {count} wpisy",
+      "many": "Usuń wszystkie {count} wpisów",
+      "other": "Usuń wszystkie {count} wpisu"
+    },
+    "deleteAllDialogs": {
+      "one": "Usuń {count} dialog",
+      "few": "Usuń wszystkie {count} dialogi",
+      "many": "Usuń wszystkie {count} dialogów",
+      "other": "Usuń wszystkie {count} dialogu"
+    },
+    "deleteAllChats": {
+      "one": "Usuń {count} czat",
+      "few": "Usuń wszystkie {count} czaty",
+      "many": "Usuń wszystkie {count} czatów",
+      "other": "Usuń wszystkie {count} czatu"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

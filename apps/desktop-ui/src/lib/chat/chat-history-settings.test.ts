@@ -18,10 +18,10 @@ describe('isChatHistoryEnabled', () => {
     expect(isChatHistoryEnabled(withHistory({ storage: 'off' }))).toBe(false)
   })
 
-  it('lets the workspace of a profile chat decide over the chat settings', () => {
+  it('lets the workspace of a profile chat decide alone', () => {
     const off = withHistory({ storage: 'off' })
-    expect(isChatHistoryEnabled(off, 'writer')).toBe(false)
-    expect(isChatHistoryEnabled(off, 'writer', { storage: 'disk' })).toBe(true)
+    expect(isChatHistoryEnabled(off, 'writer')).toBe(true)
+    expect(isChatHistoryEnabled(off, 'writer', {})).toBe(true)
     expect(
       isChatHistoryEnabled(withHistory({ storage: 'disk' }), 'writer', {
         storage: 'off',
@@ -50,8 +50,13 @@ describe('isQuickRequestSavingEnabled', () => {
       storage: 'disk',
       isQuickRequestSavingEnabled: false,
     })
-    expect(isQuickRequestSavingEnabled(config, 'writer')).toBe(false)
     expect(isQuickRequestSavingEnabled(config, null)).toBe(false)
+    expect(isQuickRequestSavingEnabled(config, 'writer', {})).toBe(true)
+    expect(
+      isQuickRequestSavingEnabled(DEFAULT_USER_CONFIG, 'writer', {
+        isQuickRequestSavingEnabled: false,
+      })
+    ).toBe(false)
     expect(
       isQuickRequestSavingEnabled(
         withHistory({ storage: 'off', isQuickRequestSavingEnabled: true })

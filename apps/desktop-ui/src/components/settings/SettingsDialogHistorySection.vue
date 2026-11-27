@@ -1,11 +1,17 @@
 <template>
   <SettingsSection
-    :title="sectionTitle"
+    :title="t('settings.sectionDialogHistory')"
     :info="t('settings.dialogHistoryHint')"
   >
     <template #actions>
       <SettingsHistoryClear
-        :is-empty="dialogCount === 0"
+        :count="dialogCount"
+        :label-keys="{
+          one: 'settings.deleteAllDialogs.one',
+          few: 'settings.deleteAllDialogs.few',
+          many: 'settings.deleteAllDialogs.many',
+          other: 'settings.deleteAllDialogs.other',
+        }"
         :confirm-title="t('dialog.clearHistoryConfirmTitle')"
         :confirm-message="t('settings.clearDialogsConfirmDialog')"
         :clear="clearAllDialogs"
@@ -24,16 +30,6 @@
         @update:model-value="setKeeping"
       />
     </FieldRow>
-
-    <ConfirmModal
-      :open="pendingChange !== null"
-      :title="t('settings.historyDeleteConfirmTitle')"
-      :message="pendingChange?.message ?? ''"
-      :confirm-text="t('common.delete')"
-      danger
-      @confirm="confirmChange"
-      @cancel="cancelChange"
-    />
   </SettingsSection>
 </template>
 
@@ -48,13 +44,12 @@ import {
 } from '../../lib/dialog/dialog-history-storage'
 import { historyRetentionOptions } from '../../lib/history/history-retention'
 import {
-  createHistoryKeepingModel,
+  applyHistoryKeeping,
   historyKeepingChoice,
   historyKeepingOptions,
 } from '../../lib/history/history-settings-model'
 import { toHtmlLang } from '../../lib/locale/language'
 import { useDialogHistoryStore } from '../../stores/dialog-history'
-import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import SettingsHistoryClear from './SettingsHistoryClear.vue'
@@ -81,11 +76,6 @@ onMounted(() => {
 
 const dialogCount = computed(() => dialogHistoryStore.dialogs.length)
 
-const sectionTitle = computed(
-  () =>
-    `${t('settings.sectionDialogHistory')} (${t('settings.dialogCount', { count: dialogCount.value })})`
-)
-
 async function clearAllDialogs() {
   await dialogHistoryStore.clearDialogs()
 }
@@ -97,13 +87,9 @@ const periodName = (days: number) =>
     t('settings.editorHistoryRetentionForever')
   )[0]!.name
 
-const { pendingChange, confirmChange, cancelChange, setKeeping } =
-  createHistoryKeepingModel({
-    getHistory: () => history.value,
-    editHistory: ensureHistory,
-    retentionMessage: (days) =>
-      t('settings.dialogHistoryRetentionConfirm', { period: periodName(days) }),
-  })
+function setKeeping(value: string | number | undefined) {
+  applyHistoryKeeping(ensureHistory(), value)
+}
 
 const keepingOptions = computed(() =>
   historyKeepingOptions(

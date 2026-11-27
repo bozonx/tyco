@@ -352,29 +352,6 @@ fn chat_history_policy_reads_the_settings() {
 }
 
 #[test]
-fn profile_chats_follow_the_chat_settings() {
-    let config = json!({"chat": {"history": {"storage": "disk", "retentionDays": 7}}});
-    assert_eq!(
-        ChatHistoryPolicy::for_vault(&config, &Default::default()),
-        ChatHistoryPolicy {
-            is_enabled: true,
-            retention_days: 7,
-            saves_quick_requests: true,
-            saves_chats: true,
-        }
-    );
-    assert_eq!(
-        ChatHistoryPolicy::from_config(&json!({})),
-        ChatHistoryPolicy {
-            is_enabled: true,
-            retention_days: 0,
-            saves_quick_requests: true,
-            saves_chats: true,
-        }
-    );
-}
-
-#[test]
 fn chat_history_policy_drops_the_chats_past_the_retention_period() {
     let now = 1_791_504_000_000;
     let mut history = vec![
@@ -1077,38 +1054,28 @@ fn the_list_carries_no_recent_prompts_while_the_index_keeps_them() {
 }
 
 #[test]
-fn a_vault_overrides_the_chat_policy() {
+fn a_vault_alone_decides_how_its_chats_are_kept() {
     use crate::services::ai_vault::{VaultChatHistory, VaultHistoryStorage};
-    let config = json!({"chat": {"history": {"storage": "disk", "retentionDays": 7}}});
     assert_eq!(
-        ChatHistoryPolicy::for_vault(&config, &VaultChatHistory::default()),
-        ChatHistoryPolicy::from_config(&config)
+        ChatHistoryPolicy::for_vault(&VaultChatHistory::default()),
+        ChatHistoryPolicy {
+            is_enabled: true,
+            retention_days: 0,
+            saves_quick_requests: true,
+            saves_chats: true,
+        }
     );
-    let kept = ChatHistoryPolicy::for_vault(
-        &config,
-        &VaultChatHistory {
-            storage: None,
-            retention_days: Some(0),
-        },
-    );
-    assert!(kept.is_enabled);
-    assert_eq!(kept.retention_days, 0);
-    let off = ChatHistoryPolicy::for_vault(
-        &config,
-        &VaultChatHistory {
-            storage: Some(VaultHistoryStorage::Off),
-            retention_days: None,
-        },
-    );
+    let kept = ChatHistoryPolicy::for_vault(&VaultChatHistory {
+        storage: Some(VaultHistoryStorage::Disk),
+        retention_days: Some(7),
+        is_quick_request_saving_enabled: Some(false),
+    });
+    assert!(kept.saves_chats && !kept.saves_quick_requests);
+    assert_eq!(kept.retention_days, 7);
+    let off = ChatHistoryPolicy::for_vault(&VaultChatHistory {
+        storage: Some(VaultHistoryStorage::Off),
+        retention_days: None,
+        is_quick_request_saving_enabled: None,
+    });
     assert!(!off.is_enabled && !off.saves_chats);
-    assert_eq!(off.retention_days, 7);
-    let default_off = json!({"chat": {"history": {"storage": "off"}}});
-    let on = ChatHistoryPolicy::for_vault(
-        &default_off,
-        &VaultChatHistory {
-            storage: Some(VaultHistoryStorage::Disk),
-            retention_days: None,
-        },
-    );
-    assert!(on.is_enabled && on.saves_chats);
 }

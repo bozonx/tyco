@@ -138,19 +138,14 @@ describe('SettingsChatHistorySection.vue', () => {
     expect(config.chat.history).toEqual({ storage: 'off', retentionDays: 30 })
   })
 
-  it('asks before a shorter retention period removes older chats', async () => {
+  it('applies a shorter retention period at once, without asking', async () => {
     const config = createConfig()
     const wrapper = mountTab(config)
 
     keepingSelect(wrapper).vm.$emit('update:modelValue', 7)
     await flushPromises()
-    expect(config.chat.history.retentionDays).toBeUndefined()
-    await wrapper.find('.cancel-btn').trigger('click')
-    expect(config.chat.history.retentionDays).toBeUndefined()
 
-    keepingSelect(wrapper).vm.$emit('update:modelValue', 7)
-    await flushPromises()
-    await wrapper.find('.confirm-btn').trigger('click')
+    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
     expect(config.chat.history).toEqual({ storage: 'disk', retentionDays: 7 })
   })
 
@@ -166,18 +161,23 @@ describe('SettingsChatHistorySection.vue', () => {
     )
   })
 
-  it('counts the chats of "Ask AI" and of the profiles in the title', async () => {
-    mockChatHistory.value = [{ id: 'a', title: 'A' }]
-    mockCountAllProfileChats.mockResolvedValue(2)
+  it('names how many chats of "Ask AI" the delete button deletes', async () => {
+    mockChatHistory.value = [
+      { id: 'a', title: 'A' },
+      { id: 'b', title: 'B' },
+    ]
     const wrapper = mountTab()
     await flushPromises()
 
     expect(wrapper.get('.section-stub').attributes('data-title')).toBe(
-      'settings.sectionChatHistory (settings.chatCount:{"count":3})'
+      'settings.sectionChatHistory'
+    )
+    expect(wrapper.get('.actions-stub .btn-stub').text()).toBe(
+      'settings.deleteAllChats.other:{"count":2}'
     )
   })
 
-  it('clears every chat from the header only after confirmation', async () => {
+  it('deletes the chats from the header only after confirmation', async () => {
     mockChatHistory.value = [{ id: 'a', title: 'A' }]
     const wrapper = mountTab()
     await flushPromises()
@@ -191,7 +191,7 @@ describe('SettingsChatHistorySection.vue', () => {
     await flushPromises()
 
     expect(mockClearChatHistory).toHaveBeenCalledOnce()
-    expect(mockClearAllProfileChats).toHaveBeenCalledOnce()
+    expect(mockClearAllProfileChats).not.toHaveBeenCalled()
     expect(mockToast).toHaveBeenCalledWith('history.cleared', 'info')
   })
 })

@@ -65,10 +65,10 @@ Run the desktop app with `pnpm tauri:dev`, not `pnpm tauri dev`.
   applicable error/conflict recovery banner).
 - **Turning a history off never deletes it.** Configuring a history (on, off,
   where it is kept) and clearing it are separate actions: a settings change
-  must not delete stored history or ask whether to delete it. Clearing is the
-  clear button in the header of the history section, with its own
-  confirmation. Only a shorter retention period may remove entries, after a
-  confirmation (`lib/history/history-settings-model.ts`).
+  must not delete stored history or ask whether to delete it. Deleting is the
+  delete button in the header of the history section, with its own
+  confirmation (`lib/history/history-settings-model.ts`). The memory-only
+  editor history shows the stored entries and leaves them on disk.
 - **No red delete or clear buttons.** Delete, remove, and clear buttons and
   menu items ("Delete", "Remove", "Clear") must be ordinary controls (`neutral`
   or `ghost`, or `primary` in confirmation dialogs) — never style them red

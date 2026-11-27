@@ -121,8 +121,7 @@ impl HistoryStorageCoordinator {
         }
         let chat_settings_changed = before.chat != after.chat;
         if chat_settings_changed || self.chat_cleanup_pending.load(Ordering::SeqCst) {
-            let config = app.state::<AppState>().user_config();
-            let chat_cleanup = enforce_chat_history_policies(app, &after, &config);
+            let chat_cleanup = enforce_chat_history_policies(app, &after);
             self.chat_cleanup_pending
                 .store(chat_cleanup.is_err(), Ordering::SeqCst);
             if let Err(error) = chat_cleanup {
@@ -200,7 +199,7 @@ impl HistoryStorageCoordinator {
             }
         }
         if self.chat_cleanup_pending.load(Ordering::SeqCst) {
-            match enforce_chat_history_policies(app, &policy, &config) {
+            match enforce_chat_history_policies(app, &policy) {
                 Ok(()) => self.chat_cleanup_pending.store(false, Ordering::SeqCst),
                 Err(error) => {
                     log::warn!("Chat history cleanup failed; it will be retried: {error}");
@@ -277,7 +276,6 @@ pub fn apply_editor_history_settings_on_startup(
 fn enforce_chat_history_policies(
     app: &AppHandle,
     settings: &HistorySettings,
-    config: &serde_json::Value,
 ) -> Result<(), AppError> {
     super::user_data::user_dir(app)?;
     let ask_ai = chats::app_chat_dirs(app)
@@ -288,7 +286,6 @@ fn enforce_chat_history_policies(
     let mut profiles = Ok(());
     for (vault_ref, vault) in crate::services::ai_vault::connected_vaults(app) {
         let policy = chats::ChatHistoryPolicy::for_vault(
-            config,
             &crate::services::ai_vault::settings::read_chat_history(&vault.root),
         );
         profiles = profiles.and(enforce_profile_chat_history_policy(
@@ -473,7 +470,6 @@ fn scope_policy(
             let (vault_ref, _) = crate::services::ai_vault::split_ref(key);
             let vault = crate::services::ai_vault::resolve_vault(app, vault_ref)?;
             Ok(chats::ChatHistoryPolicy::for_vault(
-                config,
                 &crate::services::ai_vault::settings::read_chat_history(&vault.root),
             ))
         }

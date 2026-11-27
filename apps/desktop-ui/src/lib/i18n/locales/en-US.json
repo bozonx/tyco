@@ -771,13 +771,7 @@
     "browseFolder": "Choose folder",
     "browseWorkingDir": "Select working directory…",
     "chat": "Ask AI",
-    "chatCount": "chats: {count}",
-    "chatHistoryEnabled": "Save chats",
     "chatHistoryHint": "Chats of “Ask AI” and of AI profiles, including quick requests. A workspace can keep its chats in its own way on the AI Profiles tab.",
-    "chatHistoryRetentionConfirm": "Chats with no new messages for longer than {period} will be deleted right away. This cannot be undone.",
-    "chatHistoryRetentionDays": "Delete old chats",
-    "chatHistoryRetentionDaysHint": "A chat is deleted when it has had no new messages for this long. Older chats are deleted right away.",
-    "chatHistoryRetentionNever": "Never",
     "chatImageQuality": "Image quality",
     "chatImageQualityHint": "Applies to all new attachments in all chats. Images are stripped of EXIF metadata and converted to WebP (limits are up to 24 MP and 5 MB after compression). Balanced (2048 px) preserves Full HD screenshots 1:1, Economy (1024 px) saves tokens, and Maximum (up to 8000 px) preserves original resolution.",
     "chatInfo": "A quick AI chat for everyday tasks. Unlike AI profiles with isolated roles and tools, this is a universal conversation not tied to a specific profile. You can ask questions, use selected text as context, attach images, set a general system prompt, and manage local chat history. It is best to use fast models for this feature: they are suited for quick answers and fact checking.",
@@ -840,8 +834,6 @@
     "dragToReorder": "Drag to reorder",
     "duplicateProfile": "Duplicate",
     "duplicateProfileConfirm": "Create a copy of profile “{name}”?",
-    "editorHistoryCount": "entries: {count}",
-    "editorHistoryRetentionConfirm": "History entries older than {period} will be deleted. This cannot be undone.",
     "editorHistoryRetentionForever": "Forever",
     "editorHistoryStorage": "Keep the history",
     "editorHistoryStorageHint": "On disk — the history survives restarts in an unencrypted file; entries older than the chosen period are deleted. While Tyco is running — new entries live in memory only and are gone when the app quits. Don't record — new texts are not saved. Changing this never deletes saved entries: they stay until you clear them.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "Global hotkeys",
     "grantProfileAccess": "Give a profile access",
     "hideAdvanced": "Hide advanced settings",
-    "historyDeleteConfirmTitle": "Delete stored history?",
     "historyTab": "History",
     "hotkey": "Hotkey",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "This workspace is not connected on this device. Choose its folder or remove it from the list.",
     "workspaceHistory": {
       "title": "Chat history of the workspace",
-      "hint": "How the chats of the profiles of this workspace are kept, including quick requests to them. By default they follow the chat settings on the History tab.",
+      "hint": "How the chats of the profiles of this workspace are kept, including quick requests to them. The workspace decides this alone.",
       "syncedHint": "Kept in the workspace folder and applied on every computer that syncs it.",
-      "byDefault": "Default ({value})",
-      "saved": "Save",
       "notSaved": "Do not save",
       "clearConfirm": "Delete the saved chats of all profiles of this workspace? This cannot be undone."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "Saved call transcripts and their audio recordings.",
     "dialogHistoryRetentionDays": "Keep dialogs",
     "dialogHistoryRetentionDaysHint": "Dialogs and their recordings older than the chosen period are deleted automatically. Don't save — new dialogs are not saved; saved ones stay until you clear them.",
-    "dialogHistoryRetentionConfirm": "Dialogs older than {period} and their recordings will be deleted.",
-    "dialogCount": "dialogs: {count}",
     "clearDialogsConfirmDialog": "All saved dialogs and their audio recordings will be permanently deleted.",
     "dialogHistoryLink": "Dialog history and retention settings are in",
     "chatHistoryKeeping": "Keep chats",
-    "chatHistoryKeepingHint": "Chats are stored locally without encryption; passwords and keys in them are not hidden. A chat is deleted when it has had no new messages for longer than the chosen period. Don't save — new chats are not saved; saved chats stay until you clear them."
+    "chatHistoryKeepingHint": "Chats are stored locally without encryption; passwords and keys in them are not hidden. A chat is deleted when it has had no new messages for longer than the chosen period. Don't save — new chats are not saved; saved chats stay until you clear them.",
+    "deleteAllEntries": {
+      "one": "Delete {count} entry",
+      "few": "Delete all {count} entries",
+      "many": "Delete all {count} entries",
+      "other": "Delete all {count} entries"
+    },
+    "deleteAllDialogs": {
+      "one": "Delete {count} dialog",
+      "few": "Delete all {count} dialogs",
+      "many": "Delete all {count} dialogs",
+      "other": "Delete all {count} dialogs"
+    },
+    "deleteAllChats": {
+      "one": "Delete {count} chat",
+      "few": "Delete all {count} chats",
+      "many": "Delete all {count} chats",
+      "other": "Delete all {count} chats"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

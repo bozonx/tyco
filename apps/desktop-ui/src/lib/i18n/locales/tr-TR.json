@@ -771,13 +771,7 @@
     "browseFolder": "Klasör seç",
     "browseWorkingDir": "Çalışma klasörü seç…",
     "chat": "Yapay Zekâya Sor",
-    "chatCount": "{count} sohbet",
-    "chatHistoryEnabled": "Sohbetleri kaydet",
     "chatHistoryHint": "“Yapay zekâya sor” ve yapay zekâ profillerinin sohbetleri, hızlı istekler dahil. Bir çalışma alanı sohbetlerini Yapay Zekâ Profilleri sekmesinde kendi yöntemiyle saklayabilir.",
-    "chatHistoryRetentionConfirm": "{period} süreden uzun süredir yeni mesaj almayan sohbetler hemen silinecek. Bu işlem geri alınamaz.",
-    "chatHistoryRetentionDays": "Eski sohbetleri sil",
-    "chatHistoryRetentionDaysHint": "Bu süre boyunca yeni mesaj gelmeyen sohbet silinir. Daha eski sohbetler hemen silinir.",
-    "chatHistoryRetentionNever": "Asla",
     "chatImageQuality": "Görsel kalitesi",
     "chatImageQualityHint": "Tüm sohbetlerdeki tüm yeni eklere uygulanır. Görsellerden EXIF meta verileri temizlenir ve WebP biçimine dönüştürülür (sıkıştırma sonrası en fazla 24 MP ve 5 MB sınırları). Dengeli (2048 px) Full HD ekran görüntülerini 1:1 korur, Ekonomik (1024 px) belirteç tasarrufu sağlar ve En yüksek (8000 px'e kadar) orijinal çözünürlüğü korur.",
     "chatInfo": "Günlük görevler için hızlı bir yapay zeka sohbeti. İzole rollere ve araçlara sahip yapay zeka profillerinin aksine bu, belirli bir profile bağlı olmayan evrensel bir sohbettir. Soru sorabilir, seçili metni bağlam olarak kullanabilir, görsel ekleyebilir, genel bir sistem istemi ayarlayabilir ve yerel sohbet geçmişini yönetebilirsiniz. Bu işlev için hızlı modelleri kullanmak en iyisidir: hızlı yanıtlar ve olgu denetimi için uygundurlar.",
@@ -840,8 +834,6 @@
     "dragToReorder": "Sıralamak için sürükleyin",
     "duplicateProfile": "Çoğalt",
     "duplicateProfileConfirm": "“{name}” profilinin bir kopyası oluşturulsun mu?",
-    "editorHistoryCount": "{count} öge",
-    "editorHistoryRetentionConfirm": "{period} süresinden eski geçmiş kayıtları silinecek. Bu işlem geri alınamaz.",
     "editorHistoryRetentionForever": "Süresiz",
     "editorHistoryStorage": "Geçmişi sakla",
     "editorHistoryStorageHint": "Diskte — geçmiş yeniden başlatmalar arasında şifrelenmemiş bir dosyada kalır; seçilen süreden eski kayıtlar silinir. Tyco çalışırken — yeni kayıtlar yalnızca bellekte tutulur ve çıkışta kaybolur. Kaydetme — yeni metinler kaydedilmez. Bu ayarı değiştirmek kayıtlı girdileri asla silmez: siz temizleyene kadar kalırlar.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "Genel kısayollar",
     "grantProfileAccess": "Bir profile erişim ver",
     "hideAdvanced": "Gelişmiş ayarları gizle",
-    "historyDeleteConfirmTitle": "Kaydedilmiş geçmiş silinsin mi?",
     "historyTab": "Geçmiş",
     "hotkey": "Kısayol tuşu",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "Bu çalışma alanı bu cihazda bağlı değil. Klasörünü seçin veya listeden kaldırın.",
     "workspaceHistory": {
       "title": "Çalışma alanının sohbet geçmişi",
-      "hint": "Bu çalışma alanındaki profillerin sohbetlerinin, hızlı istekler dahil, nasıl saklandığı. Varsayılan olarak Geçmiş sekmesindeki sohbet ayarlarını izler.",
+      "hint": "Bu çalışma alanındaki profillerin sohbetlerinin, hızlı istekler dahil, nasıl saklandığı. Buna yalnızca çalışma alanı karar verir.",
       "syncedHint": "Çalışma alanı klasöründe saklanır ve onu eşitleyen her bilgisayarda geçerlidir.",
-      "byDefault": "Varsayılan ({value})",
-      "saved": "Kaydet",
       "notSaved": "Kaydetme",
       "clearConfirm": "Bu çalışma alanındaki tüm profillerin kayıtlı sohbetleri silinsin mi? Bu işlem geri alınamaz."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "Kaydedilen görüşme dökümleri ve ses kayıtları.",
     "dialogHistoryRetentionDays": "Diyalogları sakla",
     "dialogHistoryRetentionDaysHint": "Seçilen süreden eski diyaloglar ve kayıtları otomatik olarak silinir. Kaydetme — yeni diyaloglar kaydedilmez; kaydedilenler siz temizleyene kadar kalır.",
-    "dialogHistoryRetentionConfirm": "{period} süresinden eski diyaloglar ve kayıtları silinecek.",
-    "dialogCount": "{count} diyalog",
     "clearDialogsConfirmDialog": "Kaydedilen tüm diyaloglar ve ses kayıtları kalıcı olarak silinecek.",
     "dialogHistoryLink": "Diyalog geçmişi ve saklama ayarları şurada bulunur:",
     "chatHistoryKeeping": "Sohbetleri sakla",
-    "chatHistoryKeepingHint": "Sohbetler yerel olarak şifrelenmeden saklanır; içlerindeki parolalar ve anahtarlar gizlenmez. Seçilen süreden uzun süre yeni mesaj almayan sohbet silinir. Kaydetme — yeni sohbetler kaydedilmez; kaydedilenler siz temizleyene kadar kalır."
+    "chatHistoryKeepingHint": "Sohbetler yerel olarak şifrelenmeden saklanır; içlerindeki parolalar ve anahtarlar gizlenmez. Seçilen süreden uzun süre yeni mesaj almayan sohbet silinir. Kaydetme — yeni sohbetler kaydedilmez; kaydedilenler siz temizleyene kadar kalır.",
+    "deleteAllEntries": {
+      "one": "{count} kaydı sil",
+      "few": "{count} kaydın tümünü sil",
+      "many": "{count} kaydın tümünü sil",
+      "other": "{count} kaydın tümünü sil"
+    },
+    "deleteAllDialogs": {
+      "one": "{count} diyaloğu sil",
+      "few": "{count} diyaloğun tümünü sil",
+      "many": "{count} diyaloğun tümünü sil",
+      "other": "{count} diyaloğun tümünü sil"
+    },
+    "deleteAllChats": {
+      "one": "{count} sohbeti sil",
+      "few": "{count} sohbetin tümünü sil",
+      "many": "{count} sohbetin tümünü sil",
+      "other": "{count} sohbetin tümünü sil"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

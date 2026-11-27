@@ -1,7 +1,3 @@
-import { shallowRef } from 'vue'
-
-import { isStricterRetention } from './history-retention'
-
 /**
  * How long a history is kept, as one choice of the settings: not at all, while
  * the app runs (the editor history only) or on the disk for a number of days, 0
@@ -51,54 +47,27 @@ export function historyKeepingOptions(
   ]
 }
 
-interface PendingHistoryChange {
-  message: string
-  apply: () => void
-}
-
 /**
- * Edits how long a history is kept.
+ * Applies a choice to `history`; returns false for a value that is no choice.
  *
- * Do not ask to delete, or delete, the history when it is turned off or kept in
- * another way: turning it off only stops recording, and what is stored stays
- * until the user clears it with the clear button of the section, a separate
- * action with its own confirmation. The only change that waits for confirmation
- * is a shorter retention period, which removes what is older at once.
+ * Never delete the history, or ask whether to delete it, when it is turned off
+ * or kept in another way: a setting only says what is recorded and for how
+ * long. What is stored stays until the user clears it with the delete button of
+ * the section, a separate action with its own confirmation.
  */
-export function createHistoryKeepingModel(deps: {
-  getHistory: () => KeptHistoryConfig
-  /** The config section to change, created when the config lacks it */
-  editHistory?: () => KeptHistoryConfig
-  retentionMessage: (days: number) => string
-}) {
-  const edit = deps.editHistory ?? deps.getHistory
-  const pendingChange = shallowRef<PendingHistoryChange | null>(null)
-  const cancelChange = () => {
-    pendingChange.value = null
+export function applyHistoryKeeping(
+  history: KeptHistoryConfig,
+  value: string | number | undefined
+): boolean {
+  if (value === 'off' || value === 'session') {
+    history.storage = value
+    return true
   }
-  const confirmChange = () => {
-    const change = pendingChange.value
-    pendingChange.value = null
-    change?.apply()
-  }
-  const setKeeping = (value: string | number | undefined) => {
-    pendingChange.value = null
-    if (value === 'off' || value === 'session') {
-      edit().storage = value
-      return
-    }
-    const days = Number(value)
-    if (value === undefined || value === '') return
-    if (!Number.isSafeInteger(days) || days < 0) return
-    const apply = () => {
-      const history = edit()
-      history.storage = 'disk'
-      if (days) history.retentionDays = days
-      else delete history.retentionDays
-    }
-    if (isStricterRetention(deps.getHistory().retentionDays, days)) {
-      pendingChange.value = { message: deps.retentionMessage(days), apply }
-    } else apply()
-  }
-  return { pendingChange, confirmChange, cancelChange, setKeeping }
+  if (value === undefined || value === '') return false
+  const days = Number(value)
+  if (!Number.isSafeInteger(days) || days < 0) return false
+  history.storage = 'disk'
+  if (days) history.retentionDays = days
+  else delete history.retentionDays
+  return true
 }

@@ -771,13 +771,7 @@
     "browseFolder": "Alege dosarul",
     "browseWorkingDir": "Selectați directorul de lucru…",
     "chat": "Întreabă AI",
-    "chatCount": "chaturi: {count}",
-    "chatHistoryEnabled": "Salvează chaturile",
     "chatHistoryHint": "Chaturile „Întreabă AI” și ale profilurilor AI, inclusiv cererile rapide. Un spațiu de lucru își poate păstra chaturile în felul său în fila Profiluri AI.",
-    "chatHistoryRetentionConfirm": "Conversațiile fără mesaje noi de mai mult de {period} vor fi șterse imediat. Acțiunea nu poate fi anulată.",
-    "chatHistoryRetentionDays": "Șterge chaturile vechi",
-    "chatHistoryRetentionDaysHint": "Un chat este șters când nu a avut mesaje noi atât timp. Chaturile mai vechi sunt șterse imediat.",
-    "chatHistoryRetentionNever": "Niciodată",
     "chatImageQuality": "Calitatea imaginilor",
     "chatImageQualityHint": "Se aplică tuturor atașamentelor noi din toate chaturile. Imaginile sunt curățate de metadatele EXIF și convertite în WebP (limite de până la 24 MP și 5 MB după comprimare). Echilibrată (2048 px) păstrează capturile de ecran Full HD 1:1, Economică (1024 px) economisește tokenuri, iar Maximă (până la 8000 px) păstrează rezoluția originală.",
     "chatInfo": "Un chat rapid cu IA pentru sarcini zilnice. Spre deosebire de profilurile IA cu roluri și instrumente izolate, aceasta este o conversație universală nelegată de un profil anume. Puteți pune întrebări, utiliza textul selectat drept context, atașa imagini, configura un prompt general de sistem și gestiona istoricul local de conversații. Pentru această funcție este recomandat să folosiți modele rapide: sunt ideale pentru răspunsuri rapide și verificarea faptelor.",
@@ -840,8 +834,6 @@
     "dragToReorder": "Trageți pentru a reordona",
     "duplicateProfile": "Duplică",
     "duplicateProfileConfirm": "Creați o copie a profilului „{name}”?",
-    "editorHistoryCount": "intrări: {count}",
-    "editorHistoryRetentionConfirm": "Intrările din istoric mai vechi de {period} vor fi șterse. Acțiunea nu poate fi anulată.",
     "editorHistoryRetentionForever": "Pentru totdeauna",
     "editorHistoryStorage": "Păstrează istoricul",
     "editorHistoryStorageHint": "Pe disc — istoricul rămâne între reporniri într-un fișier necriptat; intrările mai vechi decât perioada aleasă sunt șterse. Cât timp rulează Tyco — intrările noi sunt doar în memorie și dispar la ieșire. Nu înregistra — textele noi nu sunt salvate. Schimbarea acestei setări nu șterge niciodată intrările salvate: rămân până le ștergeți.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "Comenzi rapide globale",
     "grantProfileAccess": "Dă acces unui profil",
     "hideAdvanced": "Ascunde setările avansate",
-    "historyDeleteConfirmTitle": "Ștergeți istoricul salvat?",
     "historyTab": "Istoric",
     "hotkey": "Comandă rapidă",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "Acest spațiu de lucru nu este conectat pe acest dispozitiv. Alegeți dosarul lui sau eliminați-l din listă.",
     "workspaceHistory": {
       "title": "Istoricul conversațiilor spațiului de lucru",
-      "hint": "Cum sunt păstrate chaturile profilurilor acestui spațiu de lucru, inclusiv cererile rapide. Implicit urmează setările chaturilor din fila Istoric.",
+      "hint": "Cum sunt păstrate chaturile profilurilor acestui spațiu de lucru, inclusiv cererile rapide. Decide doar spațiul de lucru.",
       "syncedHint": "Salvat în dosarul spațiului de lucru și aplicat pe fiecare computer care îl sincronizează.",
-      "byDefault": "Implicit ({value})",
-      "saved": "Salvează",
       "notSaved": "Nu salva",
       "clearConfirm": "Ștergeți conversațiile salvate ale tuturor profilurilor din acest spațiu de lucru? Acțiunea nu poate fi anulată."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "Transcrierile salvate ale apelurilor și înregistrările audio.",
     "dialogHistoryRetentionDays": "Păstrează dialogurile",
     "dialogHistoryRetentionDaysHint": "Dialogurile și înregistrările lor mai vechi decât perioada aleasă sunt șterse automat. Nu salva — dialogurile noi nu sunt salvate; cele salvate rămân până le ștergeți.",
-    "dialogHistoryRetentionConfirm": "Dialogurile mai vechi de {period} și înregistrările lor vor fi șterse.",
-    "dialogCount": "dialoguri: {count}",
     "clearDialogsConfirmDialog": "Toate dialogurile salvate și înregistrările lor audio vor fi șterse definitiv.",
     "dialogHistoryLink": "Setările de istoric și păstrare a dialogurilor se află în",
     "chatHistoryKeeping": "Păstrează chaturile",
-    "chatHistoryKeepingHint": "Chaturile sunt stocate local fără criptare; parolele și cheile din ele nu sunt ascunse. Un chat este șters dacă nu a avut mesaje noi mai mult decât perioada aleasă. Nu salva — chaturile noi nu sunt salvate; cele salvate rămân până le ștergeți."
+    "chatHistoryKeepingHint": "Chaturile sunt stocate local fără criptare; parolele și cheile din ele nu sunt ascunse. Un chat este șters dacă nu a avut mesaje noi mai mult decât perioada aleasă. Nu salva — chaturile noi nu sunt salvate; cele salvate rămân până le ștergeți.",
+    "deleteAllEntries": {
+      "one": "Șterge {count} intrare",
+      "few": "Șterge toate cele {count} intrări",
+      "many": "Șterge toate cele {count} de intrări",
+      "other": "Șterge toate cele {count} de intrări"
+    },
+    "deleteAllDialogs": {
+      "one": "Șterge {count} dialog",
+      "few": "Șterge toate cele {count} dialoguri",
+      "many": "Șterge toate cele {count} de dialoguri",
+      "other": "Șterge toate cele {count} de dialoguri"
+    },
+    "deleteAllChats": {
+      "one": "Șterge {count} chat",
+      "few": "Șterge toate cele {count} chaturi",
+      "many": "Șterge toate cele {count} de chaturi",
+      "other": "Șterge toate cele {count} de chaturi"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

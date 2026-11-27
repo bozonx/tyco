@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 1e837079c224e5b51cbec5578f99cb9b81075827b95359e5fa9c495f2ba0ea90
+// Source hash: c6b6e8e4e46bee213fa0b2b9c30883f65e0c8e4f6d9162fa094837417d15debf
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -1225,13 +1225,15 @@ export type VaultChange = {
 }
 
 /**
- * The chat history of a vault's profiles; a missing field follows the app-wide
- * default.
+ * The chat history of a vault's profiles, kept by the vault alone: a missing
+ * field takes its default, saving chats forever with their quick requests.
  */
 export type VaultChatHistory = {
   storage?: VaultHistoryStorage
   /** 0 keeps the chats forever. */
   retentionDays?: number
+  /** Quick requests to the profiles are saved with the chats. */
+  isQuickRequestSavingEnabled?: boolean
 }
 
 export type VaultFolder = { path: string; kind: VaultFolderKind }

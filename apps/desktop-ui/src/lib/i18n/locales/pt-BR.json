@@ -771,13 +771,7 @@
     "browseFolder": "Escolher pasta",
     "browseWorkingDir": "Selecionar o diretório de trabalho…",
     "chat": "Perguntar à IA",
-    "chatCount": "chats: {count}",
-    "chatHistoryEnabled": "Salvar chats",
     "chatHistoryHint": "Chats de “Perguntar à IA” e dos perfis de IA, incluindo solicitações rápidas. Um espaço de trabalho pode guardar seus chats do próprio jeito na aba Perfis de IA.",
-    "chatHistoryRetentionConfirm": "Conversas sem novas mensagens há mais de {period} serão excluídas imediatamente. Isso não pode ser desfeito.",
-    "chatHistoryRetentionDays": "Excluir chats antigos",
-    "chatHistoryRetentionDaysHint": "Um chat é excluído quando fica sem novas mensagens por esse tempo. Chats mais antigos são excluídos imediatamente.",
-    "chatHistoryRetentionNever": "Nunca",
     "chatImageQuality": "Qualidade da imagem",
     "chatImageQualityHint": "Aplica-se a todos os novos anexos em todos os chats. As imagens têm os metadados EXIF removidos e são convertidas para WebP (limites de até 24 MP e 5 MB após a compressão). Equilibrada (2048 px) preserva capturas de tela Full HD 1:1, Econômica (1024 px) economiza tokens e Máxima (até 8000 px) preserva a resolução original.",
     "chatInfo": "Um chat rápido com IA para tarefas do dia a dia. Ao contrário dos perfis de IA com papéis e ferramentas isolados, esta é uma conversa universal não vinculada a um perfil específico. Você pode fazer perguntas, usar texto selecionado como contexto, anexar imagens, configurar um prompt de sistema geral e gerenciar o histórico local de conversas. Para este recurso, é melhor usar modelos rápidos: eles são adequados para respostas rápidas e checagem de fatos.",
@@ -840,8 +834,6 @@
     "dragToReorder": "Arraste para reordenar",
     "duplicateProfile": "Duplicar",
     "duplicateProfileConfirm": "Criar uma cópia do perfil “{name}”?",
-    "editorHistoryCount": "entradas: {count}",
-    "editorHistoryRetentionConfirm": "As entradas do histórico com mais de {period} serão excluídas. Isso não pode ser desfeito.",
     "editorHistoryRetentionForever": "Para sempre",
     "editorHistoryStorage": "Manter o histórico",
     "editorHistoryStorageHint": "No disco — o histórico persiste entre reinicializações em um arquivo não criptografado; entradas mais antigas que o período escolhido são excluídas. Enquanto o Tyco estiver aberto — novas entradas ficam só na memória e somem ao sair. Não registrar — novos textos não são salvos. Mudar esta configuração nunca exclui entradas salvas: elas permanecem até você limpá-las.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "Atalhos globais",
     "grantProfileAccess": "Dar acesso a um perfil",
     "hideAdvanced": "Ocultar configurações avançadas",
-    "historyDeleteConfirmTitle": "Excluir o histórico salvo?",
     "historyTab": "Histórico",
     "hotkey": "Atalho",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "Este espaço de trabalho não está conectado neste dispositivo. Escolha a pasta dele ou remova-o da lista.",
     "workspaceHistory": {
       "title": "Histórico de chats do espaço de trabalho",
-      "hint": "Como os chats dos perfis deste espaço de trabalho são mantidos, incluindo solicitações rápidas a eles. Por padrão seguem as configurações de chats da aba Histórico.",
+      "hint": "Como os chats dos perfis deste espaço de trabalho são mantidos, incluindo solicitações rápidas. Só o espaço de trabalho decide.",
       "syncedHint": "Guardado na pasta do espaço de trabalho e aplicado em todo computador que o sincroniza.",
-      "byDefault": "Padrão ({value})",
-      "saved": "Salvar",
       "notSaved": "Não salvar",
       "clearConfirm": "Excluir os chats salvos de todos os perfis deste espaço de trabalho? Isso não pode ser desfeito."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "Transcrições de chamadas salvas e suas gravações de áudio.",
     "dialogHistoryRetentionDays": "Manter diálogos",
     "dialogHistoryRetentionDaysHint": "Diálogos e suas gravações mais antigos que o período escolhido são excluídos automaticamente. Não salvar — novos diálogos não são salvos; os salvos permanecem até você limpá-los.",
-    "dialogHistoryRetentionConfirm": "Diálogos com mais de {period} e suas gravações serão excluídos.",
-    "dialogCount": "diálogos: {count}",
     "clearDialogsConfirmDialog": "Todos os diálogos salvos e suas gravações de áudio serão excluídos permanentemente.",
     "dialogHistoryLink": "As configurações de histórico e retenção de diálogos estão em",
     "chatHistoryKeeping": "Manter chats",
-    "chatHistoryKeepingHint": "Os chats ficam armazenados localmente sem criptografia; senhas e chaves neles não são ocultadas. Um chat é excluído quando fica sem mensagens novas por mais tempo que o período escolhido. Não salvar — novos chats não são salvos; os salvos permanecem até você limpá-los."
+    "chatHistoryKeepingHint": "Os chats ficam armazenados localmente sem criptografia; senhas e chaves neles não são ocultadas. Um chat é excluído quando fica sem mensagens novas por mais tempo que o período escolhido. Não salvar — novos chats não são salvos; os salvos permanecem até você limpá-los.",
+    "deleteAllEntries": {
+      "one": "Excluir {count} entrada",
+      "few": "Excluir todas as {count} entradas",
+      "many": "Excluir todas as {count} entradas",
+      "other": "Excluir todas as {count} entradas"
+    },
+    "deleteAllDialogs": {
+      "one": "Excluir {count} diálogo",
+      "few": "Excluir todos os {count} diálogos",
+      "many": "Excluir todos os {count} diálogos",
+      "other": "Excluir todos os {count} diálogos"
+    },
+    "deleteAllChats": {
+      "one": "Excluir {count} chat",
+      "few": "Excluir todos os {count} chats",
+      "many": "Excluir todos os {count} chats",
+      "other": "Excluir todos os {count} chats"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {

@@ -771,13 +771,7 @@
     "browseFolder": "Scegli cartella",
     "browseWorkingDir": "Seleziona la cartella di lavoro…",
     "chat": "Chiedi all’IA",
-    "chatCount": "chat: {count}",
-    "chatHistoryEnabled": "Salva le chat",
     "chatHistoryHint": "Chat di «Chiedi all’IA» e dei profili IA, incluse le richieste rapide. Uno spazio di lavoro può conservare le sue chat a modo suo nella scheda Profili IA.",
-    "chatHistoryRetentionConfirm": "Le chat senza nuovi messaggi da più di {period} verranno eliminate subito. L'operazione non può essere annullata.",
-    "chatHistoryRetentionDays": "Elimina le chat vecchie",
-    "chatHistoryRetentionDaysHint": "Una chat viene eliminata quando non riceve nuovi messaggi per questo periodo. Le chat più vecchie vengono eliminate subito.",
-    "chatHistoryRetentionNever": "Mai",
     "chatImageQuality": "Qualità delle immagini",
     "chatImageQualityHint": "Si applica a tutti i nuovi allegati in tutte le chat. Le immagini vengono ripulite dai metadati EXIF e convertite in WebP (limiti fino a 24 MP e 5 MB dopo la compressione). Bilanciata (2048 px) preserva gli screenshot Full HD 1:1, Economica (1024 px) risparmia token e Massima (fino a 8000 px) mantiene la risoluzione originale.",
     "chatInfo": "Una chat rapida con l'IA per le attività quotidiane. A differenza dei profili IA con ruoli e strumenti isolati, questa è una conversazione universale non legata a un profilo specifico. Puoi fare domande, usare il testo selezionato come contesto, allegare immagini, impostare un prompt di sistema generale e gestire la cronologia locale delle chat. Per questa funzionalità è preferibile utilizzare modelli veloci: sono ideali per risposte rapide e verifica dei fatti.",
@@ -840,8 +834,6 @@
     "dragToReorder": "Trascina per riordinare",
     "duplicateProfile": "Duplica",
     "duplicateProfileConfirm": "Creare una copia del profilo «{name}»?",
-    "editorHistoryCount": "voci: {count}",
-    "editorHistoryRetentionConfirm": "Le voci della cronologia più vecchie di {period} verranno eliminate. L’operazione non può essere annullata.",
     "editorHistoryRetentionForever": "Per sempre",
     "editorHistoryStorage": "Conserva la cronologia",
     "editorHistoryStorageHint": "Su disco — la cronologia resta tra un avvio e l’altro in un file non cifrato; le voci più vecchie del periodo scelto vengono eliminate. Finché Tyco è in esecuzione — le nuove voci restano solo in memoria e spariscono alla chiusura. Non registrare — i nuovi testi non vengono salvati. Cambiare questa impostazione non elimina mai le voci salvate: restano finché non le cancelli.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "Scorciatoie globali",
     "grantProfileAccess": "Dai accesso a un profilo",
     "hideAdvanced": "Nascondi le impostazioni avanzate",
-    "historyDeleteConfirmTitle": "Eliminare la cronologia salvata?",
     "historyTab": "Cronologia",
     "hotkey": "Scorciatoia",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "Questa area di lavoro non è collegata su questo dispositivo. Scegli la sua cartella o rimuovila dall’elenco.",
     "workspaceHistory": {
       "title": "Cronologia chat dell’area di lavoro",
-      "hint": "Come vengono conservate le chat dei profili di questo spazio di lavoro, incluse le richieste rapide. Per impostazione predefinita seguono le impostazioni delle chat nella scheda Cronologia.",
+      "hint": "Come vengono conservate le chat dei profili di questo spazio di lavoro, incluse le richieste rapide. Lo decide solo lo spazio di lavoro.",
       "syncedHint": "Salvato nella cartella dell’area di lavoro e applicato su ogni computer che la sincronizza.",
-      "byDefault": "Predefinito ({value})",
-      "saved": "Salva",
       "notSaved": "Non salvare",
       "clearConfirm": "Eliminare le chat salvate di tutti i profili di questa area di lavoro? L’operazione non può essere annullata."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "Trascrizioni delle chiamate salvate e relative registrazioni audio.",
     "dialogHistoryRetentionDays": "Conserva i dialoghi",
     "dialogHistoryRetentionDaysHint": "I dialoghi e le loro registrazioni più vecchi del periodo scelto vengono eliminati automaticamente. Non salvare — i nuovi dialoghi non vengono salvati; quelli salvati restano finché non li cancelli.",
-    "dialogHistoryRetentionConfirm": "I dialoghi più vecchi di {period} e le relative registrazioni verranno eliminati.",
-    "dialogCount": "dialoghi: {count}",
     "clearDialogsConfirmDialog": "Tutti i dialoghi salvati e le relative registrazioni audio verranno eliminati definitivamente.",
     "dialogHistoryLink": "Le impostazioni di cronologia e conservazione dei dialoghi sono in",
     "chatHistoryKeeping": "Conserva le chat",
-    "chatHistoryKeepingHint": "Le chat sono salvate in locale senza cifratura; password e chiavi al loro interno non vengono nascoste. Una chat viene eliminata se non riceve nuovi messaggi per più del periodo scelto. Non salvare — le nuove chat non vengono salvate; quelle salvate restano finché non le cancelli."
+    "chatHistoryKeepingHint": "Le chat sono salvate in locale senza cifratura; password e chiavi al loro interno non vengono nascoste. Una chat viene eliminata se non riceve nuovi messaggi per più del periodo scelto. Non salvare — le nuove chat non vengono salvate; quelle salvate restano finché non le cancelli.",
+    "deleteAllEntries": {
+      "one": "Elimina {count} voce",
+      "few": "Elimina tutte le {count} voci",
+      "many": "Elimina tutte le {count} voci",
+      "other": "Elimina tutte le {count} voci"
+    },
+    "deleteAllDialogs": {
+      "one": "Elimina {count} dialogo",
+      "few": "Elimina tutti i {count} dialoghi",
+      "many": "Elimina tutti i {count} dialoghi",
+      "other": "Elimina tutti i {count} dialoghi"
+    },
+    "deleteAllChats": {
+      "one": "Elimina {count} chat",
+      "few": "Elimina tutte le {count} chat",
+      "many": "Elimina tutte le {count} chat",
+      "other": "Elimina tutte le {count} chat"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {

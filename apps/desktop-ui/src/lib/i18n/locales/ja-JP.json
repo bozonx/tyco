@@ -771,13 +771,7 @@
     "browseFolder": "フォルダーを選択",
     "browseWorkingDir": "作業ディレクトリを選択…",
     "chat": "AIに質問",
-    "chatCount": "{count} 件",
-    "chatHistoryEnabled": "チャットを保存",
     "chatHistoryHint": "「AI に質問」と AI プロファイルのチャット（クイックリクエストを含む）。ワークスペースは「AI プロファイル」タブで独自の保存方法を設定できます。",
-    "chatHistoryRetentionConfirm": "{period}より長く新しいメッセージがないチャットはすぐに削除されます。この操作は元に戻せません。",
-    "chatHistoryRetentionDays": "古いチャットを削除",
-    "chatHistoryRetentionDaysHint": "指定した日数以上新しいメッセージがないチャットは削除されます。",
-    "chatHistoryRetentionNever": "削除しない",
     "chatImageQuality": "画質",
     "chatImageQualityHint": "すべてのチャットの新しい添付ファイルに適用されます。画像はEXIFメタデータが削除され、WebPに変換されます（圧縮後の上限は24 MPおよび5 MB）。「バランス」（2048 px）はFull HDスクリーンショットを1:1で維持し、「エコノミー」（1024 px）はトークンを節約し、「最大」（最大8000 px）は元の解像度を保持します。",
     "chatInfo": "日常のタスクに使える素早いAIチャットです。独立した役割やツールを持つAIプロファイルとは異なり、特定のプロファイルに紐付かない汎用的な会話です。質問の入力、選択テキストのコンテキスト利用、画像の添付、共通システムプロンプトの設定、ローカル履歴の管理が可能です。 この機能には高速モデルの使用をおすすめします。素早い回答や事実確認に適しています。",
@@ -840,8 +834,6 @@
     "dragToReorder": "ドラッグして並べ替え",
     "duplicateProfile": "プロファイルを複製",
     "duplicateProfileConfirm": "プロファイル「{name}」のコピーを作成しますか？",
-    "editorHistoryCount": "{count} 件",
-    "editorHistoryRetentionConfirm": "{period}より古い履歴は削除されます。元に戻せません。",
     "editorHistoryRetentionForever": "無制限",
     "editorHistoryStorage": "履歴を保存",
     "editorHistoryStorageHint": "ディスク — 履歴は暗号化されていないファイルに保存され、再起動後も残ります。選択した期間より古い項目は削除されます。Tyco の実行中のみ — 新しい項目はメモリにのみ保持され、終了すると消えます。記録しない — 新しいテキストは保存されません。この設定を変更しても保存済みの項目は削除されず、消去するまで残ります。",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "グローバルショートカット",
     "grantProfileAccess": "プロファイルにアクセスを付与",
     "hideAdvanced": "高度な設定を非表示",
-    "historyDeleteConfirmTitle": "保存された履歴を削除しますか?",
     "historyTab": "履歴",
     "hotkey": "ショートカット",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "このワークスペースはこのデバイスに接続されていません。フォルダーを選ぶか、一覧から外してください。",
     "workspaceHistory": {
       "title": "ワークスペースのチャット履歴",
-      "hint": "このワークスペースのプロファイルのチャット（クイックリクエストを含む）の保存方法。既定では「履歴」タブのチャット設定に従います。",
+      "hint": "このワークスペースのプロファイルのチャット（クイックリクエストを含む）の保存方法。ワークスペースだけが決めます。",
       "syncedHint": "ワークスペースのフォルダーに保存され、同期するすべてのコンピューターで適用されます。",
-      "byDefault": "既定（{value}）",
-      "saved": "保存する",
       "notSaved": "保存しない",
       "clearConfirm": "このワークスペースの全プロファイルの保存済みチャットを削除しますか？この操作は元に戻せません。"
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "保存された通話の文字起こしと音声録音です。",
     "dialogHistoryRetentionDays": "ダイアログを保存",
     "dialogHistoryRetentionDaysHint": "選択した期間より古いダイアログとその録音は自動的に削除されます。保存しない — 新しいダイアログは保存されず、保存済みのものは消去するまで残ります。",
-    "dialogHistoryRetentionConfirm": "{period}より前のダイアログと録音が削除されます。",
-    "dialogCount": "{count} 件",
     "clearDialogsConfirmDialog": "保存されているすべてのダイアログと音声録音が完全に削除されます。",
     "dialogHistoryLink": "ダイアログの履歴と保存期間の設定は次にあります:",
     "chatHistoryKeeping": "チャットを保存",
-    "chatHistoryKeepingHint": "チャットは暗号化されずにローカルに保存され、含まれるパスワードやキーは隠されません。選択した期間より長く新しいメッセージがないチャットは削除されます。保存しない — 新しいチャットは保存されず、保存済みのものは消去するまで残ります。"
+    "chatHistoryKeepingHint": "チャットは暗号化されずにローカルに保存され、含まれるパスワードやキーは隠されません。選択した期間より長く新しいメッセージがないチャットは削除されます。保存しない — 新しいチャットは保存されず、保存済みのものは消去するまで残ります。",
+    "deleteAllEntries": {
+      "one": "{count} 件の項目を削除",
+      "few": "{count} 件の項目をすべて削除",
+      "many": "{count} 件の項目をすべて削除",
+      "other": "{count} 件の項目をすべて削除"
+    },
+    "deleteAllDialogs": {
+      "one": "{count} 件のダイアログを削除",
+      "few": "{count} 件のダイアログをすべて削除",
+      "many": "{count} 件のダイアログをすべて削除",
+      "other": "{count} 件のダイアログをすべて削除"
+    },
+    "deleteAllChats": {
+      "one": "{count} 件のチャットを削除",
+      "few": "{count} 件のチャットをすべて削除",
+      "many": "{count} 件のチャットをすべて削除",
+      "other": "{count} 件のチャットをすべて削除"
+    }
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

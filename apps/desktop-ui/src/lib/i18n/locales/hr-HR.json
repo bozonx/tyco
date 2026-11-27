@@ -771,13 +771,7 @@
     "browseFolder": "Odaberi mapu",
     "browseWorkingDir": "Odaberi radni direktorij…",
     "chat": "Pitaj AI",
-    "chatCount": "chatova: {count}",
-    "chatHistoryEnabled": "Spremaj chatove",
     "chatHistoryHint": "Chatovi „Pitaj AI” i AI profila, uključujući brze upite. Radni prostor može svoje chatove čuvati na svoj način na kartici AI profili.",
-    "chatHistoryRetentionConfirm": "Razgovori bez novih poruka dulje od {period} odmah će se izbrisati. Ovo se ne može poništiti.",
-    "chatHistoryRetentionDays": "Briši stare chatove",
-    "chatHistoryRetentionDaysHint": "Chat se briše kad toliko dugo nema novih poruka. Stariji chatovi brišu se odmah.",
-    "chatHistoryRetentionNever": "Nikad",
     "chatImageQuality": "Kvaliteta slike",
     "chatImageQualityHint": "Vrijedi za sve nove privitke u svim chatovima. Slikama se uklanjaju EXIF metapodaci i pretvaraju se u WebP (ograničenja do 24 MP i 5 MB nakon sažimanja). Uravnotežena (2048 px) čuva Full HD snimke zaslona 1:1, Štedljiva (1024 px) štedi tokene, a Najviša (do 8000 px) zadržava izvornu razlučivost.",
     "chatInfo": "Brzi AI chat za svakodnevne zadatke. Za razliku od AI profila s izoliranim ulogama i alatima, ovo je univerzalni razgovor bez vezivanja uz određeni profil. Možete postavljati pitanja, koristiti označeni tekst kao kontekst, priložiti slike, postaviti opći sistemski prompt i upravljati lokalnom poviješću razgovora. Za ovu je značajku najbolje koristiti brze modele: prikladni su za brze odgovore i provjeru činjenica.",
@@ -840,8 +834,6 @@
     "dragToReorder": "Povucite za promjenu redoslijeda",
     "duplicateProfile": "Dupliciraj",
     "duplicateProfileConfirm": "Stvoriti kopiju profila „{name}”?",
-    "editorHistoryCount": "unosa: {count}",
-    "editorHistoryRetentionConfirm": "Zapisi povijesti stariji od {period} bit će izbrisani. Ovo se ne može poništiti.",
     "editorHistoryRetentionForever": "Zauvijek",
     "editorHistoryStorage": "Čuvaj povijest",
     "editorHistoryStorageHint": "Na disku — povijest ostaje između pokretanja u nešifriranoj datoteci; zapisi stariji od odabranog razdoblja brišu se. Dok Tyco radi — novi zapisi su samo u memoriji i nestaju pri izlasku. Ne bilježi — novi tekstovi se ne spremaju. Promjena ove postavke nikad ne briše spremljene zapise: ostaju dok ih ne očistite.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "Globalni prečaci",
     "grantProfileAccess": "Daj pristup profilu",
     "hideAdvanced": "Sakrij napredne postavke",
-    "historyDeleteConfirmTitle": "Izbrisati spremljenu povijest?",
     "historyTab": "Povijest",
     "hotkey": "Prečac",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "Ovaj radni prostor nije priključen na ovom uređaju. Odaberite njegovu mapu ili ga uklonite s popisa.",
     "workspaceHistory": {
       "title": "Povijest razgovora radnog prostora",
-      "hint": "Kako se čuvaju chatovi profila ovog radnog prostora, uključujući brze upite. Prema zadanim postavkama slijede postavke chatova na kartici Povijest.",
+      "hint": "Kako se čuvaju chatovi profila ovog radnog prostora, uključujući brze upite. O tome odlučuje samo radni prostor.",
       "syncedHint": "Sprema se u mapu radnog prostora i vrijedi na svakom računalu koje ga sinkronizira.",
-      "byDefault": "Zadano ({value})",
-      "saved": "Spremaj",
       "notSaved": "Ne spremaj",
       "clearConfirm": "Izbrisati spremljene razgovore svih profila ovog radnog prostora? Ovo se ne može poništiti."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "Spremljeni transkripti poziva i njihove audio snimke.",
     "dialogHistoryRetentionDays": "Čuvaj dijaloge",
     "dialogHistoryRetentionDaysHint": "Dijalozi i njihove snimke stariji od odabranog razdoblja brišu se automatski. Ne spremaj — novi dijalozi se ne spremaju; spremljeni ostaju dok ih ne očistite.",
-    "dialogHistoryRetentionConfirm": "Dijalozi stariji od {period} i njihove snimke bit će izbrisani.",
-    "dialogCount": "dijaloga: {count}",
     "clearDialogsConfirmDialog": "Svi spremljeni dijalozi i njihove audio snimke bit će trajno izbrisani.",
     "dialogHistoryLink": "Postavke povijesti i čuvanja dijaloga nalaze se u",
     "chatHistoryKeeping": "Čuvaj chatove",
-    "chatHistoryKeepingHint": "Chatovi se spremaju lokalno bez šifriranja; lozinke i ključevi u njima nisu skriveni. Chat se briše kad u njemu dulje od odabranog razdoblja nije bilo novih poruka. Ne spremaj — novi chatovi se ne spremaju; spremljeni ostaju dok ih ne očistite."
+    "chatHistoryKeepingHint": "Chatovi se spremaju lokalno bez šifriranja; lozinke i ključevi u njima nisu skriveni. Chat se briše kad u njemu dulje od odabranog razdoblja nije bilo novih poruka. Ne spremaj — novi chatovi se ne spremaju; spremljeni ostaju dok ih ne očistite.",
+    "deleteAllEntries": {
+      "one": "Izbriši {count} zapis",
+      "few": "Izbriši sva {count} zapisa",
+      "many": "Izbriši svih {count} zapisa",
+      "other": "Izbriši svih {count} zapisa"
+    },
+    "deleteAllDialogs": {
+      "one": "Izbriši {count} dijalog",
+      "few": "Izbriši sva {count} dijaloga",
+      "many": "Izbriši svih {count} dijaloga",
+      "other": "Izbriši svih {count} dijaloga"
+    },
+    "deleteAllChats": {
+      "one": "Izbriši {count} chat",
+      "few": "Izbriši sva {count} chata",
+      "many": "Izbriši svih {count} chatova",
+      "other": "Izbriši svih {count} chatova"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

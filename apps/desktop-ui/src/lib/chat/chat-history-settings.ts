@@ -11,15 +11,14 @@ type ChatHistorySettingsSource = Pick<UserConfig, 'chat'>
 
 /**
  * Chats are saved unless the settings turn it off. A profile chat follows the
- * settings of its workspace, `vaultHistory`, over the chat settings, which "Ask
- * AI" follows too
+ * settings of its workspace, `vaultHistory`, alone; "Ask AI" the chat settings
  */
 export function isChatHistoryEnabled(
   config: ChatHistorySettingsSource,
   profileId?: string | null,
   vaultHistory?: VaultChatHistory
 ): boolean {
-  if (profileId && vaultHistory?.storage) return vaultHistory.storage !== 'off'
+  if (profileId) return vaultHistory?.storage !== 'off'
   return config.chat.history.storage !== 'off'
 }
 
@@ -30,8 +29,8 @@ export function chatHistoryRetentionChoices(saved: unknown): number[] {
 
 /**
  * Quick requests are stored with the chats when chat saving is enabled and the
- * settings do not turn quick requests off; saving is the default, kept as no
- * field
+ * settings of the chat, or of the workspace of a profile, do not turn quick
+ * requests off; saving is the default, kept as no field
  */
 export function isQuickRequestSavingEnabled(
   config: ChatHistorySettingsSource,
@@ -41,5 +40,6 @@ export function isQuickRequestSavingEnabled(
   if (!isChatHistoryEnabled(config, profileId, vaultHistory)) {
     return false
   }
-  return config.chat.history.isQuickRequestSavingEnabled !== false
+  const history = profileId ? vaultHistory : config.chat.history
+  return history?.isQuickRequestSavingEnabled !== false
 }

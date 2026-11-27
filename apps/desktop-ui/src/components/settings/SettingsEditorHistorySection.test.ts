@@ -161,16 +161,18 @@ describe('SettingsEditorHistorySection.vue', () => {
     expect(mockToast).not.toHaveBeenCalledWith('history.cleared', 'info')
   })
 
-  it('shows how many entries are stored in the title, also while the history is off', async () => {
+  it('names how many entries the delete button deletes, also while the history is off', async () => {
     mockHistory.editorHistory = [{ id: 'a' }, { id: 'b' }]
     const wrapper = mountTab(createConfig({ storage: 'off' }))
     await flushPromises()
 
     expect(mockHistory.loadEditorHistory).toHaveBeenCalled()
     expect(wrapper.get('.section-stub').attributes('data-title')).toBe(
-      'settings.sectionEditorHistory (settings.editorHistoryCount)'
+      'settings.sectionEditorHistory'
     )
-    expect(wrapper.find('.actions-stub .btn-stub').exists()).toBe(true)
+    expect(wrapper.get('.actions-stub .btn-stub').text()).toBe(
+      'settings.deleteAllEntries.other'
+    )
   })
 
   it.each(['off', 'session'] as const)(
@@ -191,15 +193,14 @@ describe('SettingsEditorHistorySection.vue', () => {
     }
   )
 
-  it('asks before a shorter retention period removes older entries', async () => {
+  it('applies a shorter retention period at once, without asking', async () => {
     const config = createConfig({ storage: 'disk' })
     const wrapper = mountTab(config)
 
     keepingSelect(wrapper).vm.$emit('update:modelValue', 7)
     await flushPromises()
 
-    expect(config.editor.history.retentionDays).toBe(30)
-    await wrapper.find('.confirm-btn').trigger('click')
+    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
     expect(config.editor.history.retentionDays).toBe(7)
   })
 })

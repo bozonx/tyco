@@ -771,13 +771,7 @@
     "browseFolder": "Ordner wählen",
     "browseWorkingDir": "Arbeitsverzeichnis auswählen…",
     "chat": "KI fragen",
-    "chatCount": "Chats: {count}",
-    "chatHistoryEnabled": "Chats speichern",
     "chatHistoryHint": "Chats von „KI fragen“ und der KI-Profile, einschließlich Schnellanfragen. Ein Arbeitsbereich kann seine Chats auf dem Tab „KI-Profile“ eigens aufbewahren.",
-    "chatHistoryRetentionConfirm": "Chats ohne neue Nachrichten seit mehr als {period} werden sofort gelöscht. Dies kann nicht rückgängig gemacht werden.",
-    "chatHistoryRetentionDays": "Alte Chats löschen",
-    "chatHistoryRetentionDaysHint": "Ein Chat wird gelöscht, wenn er so lange keine neuen Nachrichten hatte. Ältere Chats werden sofort gelöscht.",
-    "chatHistoryRetentionNever": "Nie",
     "chatImageQuality": "Bildqualität",
     "chatImageQualityHint": "Gilt für alle neuen Anhänge in allen Chats. Bilder werden von EXIF-Metadaten bereinigt und in WebP konvertiert (Grenzen: bis zu 24 MP und 5 MB nach Komprimierung). Ausgewogen (2048 px) erhält Full-HD-Screenshots 1:1, Sparsam (1024 px) spart Tokens und Maximal (bis 8000 px) behält die Originalauflösung bei.",
     "chatInfo": "Ein schneller KI-Chat für alltägliche Aufgaben. Im Gegensatz zu KI-Profilen mit isolierten Rollen und Werkzeugen ist dies ein universeller Chat ohne Bindung an ein Profil. Sie können Fragen stellen, markierten Text als Kontext nutzen, Bilder anhängen, einen allgemeinen Systemprompt festlegen und den lokalen Chatverlauf verwalten. Für diese Funktion werden schnelle Modelle empfohlen: Sie eignen sich für zügige Antworten und Faktenchecks.",
@@ -840,8 +834,6 @@
     "dragToReorder": "Zum Umsortieren ziehen",
     "duplicateProfile": "Duplizieren",
     "duplicateProfileConfirm": "Eine Kopie des Profils „{name}“ erstellen?",
-    "editorHistoryCount": "Einträge: {count}",
-    "editorHistoryRetentionConfirm": "Verlaufseinträge, die älter als {period} sind, werden gelöscht. Das kann nicht rückgängig gemacht werden.",
     "editorHistoryRetentionForever": "Unbegrenzt",
     "editorHistoryStorage": "Verlauf behalten",
     "editorHistoryStorageHint": "Auf dem Datenträger — der Verlauf bleibt über Neustarts in einer unverschlüsselten Datei erhalten; Einträge, die älter als der gewählte Zeitraum sind, werden gelöscht. Solange Tyco läuft — neue Einträge liegen nur im Speicher und verschwinden beim Beenden. Nicht aufzeichnen — neue Texte werden nicht gespeichert. Eine Änderung dieser Einstellung löscht nie gespeicherte Einträge: Sie bleiben, bis Sie sie löschen.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "Globale Tastenkürzel",
     "grantProfileAccess": "Einem Profil Zugriff geben",
     "hideAdvanced": "Erweiterte Einstellungen ausblenden",
-    "historyDeleteConfirmTitle": "Gespeicherten Verlauf löschen?",
     "historyTab": "Verlauf",
     "hotkey": "Tastenkürzel",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "Dieser Arbeitsbereich ist auf diesem Gerät nicht verbunden. Wähle seinen Ordner oder entferne ihn aus der Liste.",
     "workspaceHistory": {
       "title": "Chatverlauf des Arbeitsbereichs",
-      "hint": "Wie die Chats der Profile dieses Arbeitsbereichs aufbewahrt werden, einschließlich Schnellanfragen an sie. Standardmäßig gelten die Chat-Einstellungen auf dem Tab „Verlauf“.",
+      "hint": "Wie die Chats der Profile dieses Arbeitsbereichs aufbewahrt werden, einschließlich Schnellanfragen an sie. Das entscheidet allein der Arbeitsbereich.",
       "syncedHint": "Im Ordner des Arbeitsbereichs gespeichert und auf jedem Computer angewendet, der ihn synchronisiert.",
-      "byDefault": "Standard ({value})",
-      "saved": "Speichern",
       "notSaved": "Nicht speichern",
       "clearConfirm": "Die gespeicherten Chats aller Profile dieses Arbeitsbereichs löschen? Das kann nicht rückgängig gemacht werden."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "Gespeicherte Gesprächstranskripte und ihre Audioaufnahmen.",
     "dialogHistoryRetentionDays": "Dialoge aufbewahren",
     "dialogHistoryRetentionDaysHint": "Dialoge und ihre Aufnahmen, die älter als der gewählte Zeitraum sind, werden automatisch gelöscht. Nicht speichern — neue Dialoge werden nicht gespeichert; gespeicherte bleiben, bis Sie sie löschen.",
-    "dialogHistoryRetentionConfirm": "Dialoge älter als {period} und ihre Aufnahmen werden gelöscht.",
-    "dialogCount": "Dialoge: {count}",
     "clearDialogsConfirmDialog": "Alle gespeicherten Dialoge und ihre Audioaufnahmen werden dauerhaft gelöscht.",
     "dialogHistoryLink": "Einstellungen zu Dialogverlauf und Aufbewahrung finden Sie unter",
     "chatHistoryKeeping": "Chats aufbewahren",
-    "chatHistoryKeepingHint": "Chats werden lokal ohne Verschlüsselung gespeichert; Passwörter und Schlüssel darin werden nicht verborgen. Ein Chat wird gelöscht, wenn er länger als der gewählte Zeitraum keine neuen Nachrichten hatte. Nicht speichern — neue Chats werden nicht gespeichert; gespeicherte bleiben, bis Sie sie löschen."
+    "chatHistoryKeepingHint": "Chats werden lokal ohne Verschlüsselung gespeichert; Passwörter und Schlüssel darin werden nicht verborgen. Ein Chat wird gelöscht, wenn er länger als der gewählte Zeitraum keine neuen Nachrichten hatte. Nicht speichern — neue Chats werden nicht gespeichert; gespeicherte bleiben, bis Sie sie löschen.",
+    "deleteAllEntries": {
+      "one": "{count} Eintrag löschen",
+      "few": "Alle {count} Einträge löschen",
+      "many": "Alle {count} Einträge löschen",
+      "other": "Alle {count} Einträge löschen"
+    },
+    "deleteAllDialogs": {
+      "one": "{count} Dialog löschen",
+      "few": "Alle {count} Dialoge löschen",
+      "many": "Alle {count} Dialoge löschen",
+      "other": "Alle {count} Dialoge löschen"
+    },
+    "deleteAllChats": {
+      "one": "{count} Chat löschen",
+      "few": "Alle {count} Chats löschen",
+      "many": "Alle {count} Chats löschen",
+      "other": "Alle {count} Chats löschen"
+    }
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

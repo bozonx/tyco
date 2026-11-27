@@ -771,13 +771,7 @@
     "browseFolder": "Choisir un dossier",
     "browseWorkingDir": "Choisir le répertoire de travail…",
     "chat": "Demander à l’IA",
-    "chatCount": "chats : {count}",
-    "chatHistoryEnabled": "Enregistrer les chats",
     "chatHistoryHint": "Chats de « Demander à l’IA » et des profils IA, requêtes rapides comprises. Un espace de travail peut conserver ses chats à sa façon dans l’onglet Profils IA.",
-    "chatHistoryRetentionConfirm": "Les discussions sans nouveau message depuis plus de {period} seront supprimées immédiatement. Cette action est irréversible.",
-    "chatHistoryRetentionDays": "Supprimer les anciens chats",
-    "chatHistoryRetentionDaysHint": "Un chat est supprimé lorsqu’il n’a reçu aucun nouveau message pendant cette durée. Les chats plus anciens sont supprimés immédiatement.",
-    "chatHistoryRetentionNever": "Jamais",
     "chatImageQuality": "Qualité des images",
     "chatImageQualityHint": "S’applique à toutes les nouvelles pièces jointes dans tous les chats. Les métadonnées EXIF sont supprimées et les images sont converties en WebP (limites jusqu’à 24 Mpx et 5 Mo après compression). Équilibrée (2048 px) préserve les captures Full HD 1:1, Économique (1024 px) économise les jetons et Maximale (jusqu’à 8000 px) conserve la résolution d’origine.",
     "chatInfo": "Un chat IA rapide pour les tâches quotidiennes. Contrairement aux profils IA avec des rôles et outils isolés, il s'agit d'une conversation universelle sans profil spécifique. Vous pouvez poser des questions, utiliser le texte sélectionné comme contexte, joindre des images, configurer une instruction système générale et gérer l'historique local des discussions. Il est préférable d'utiliser des modèles rapides pour cette fonction : ils conviennent aux réponses rapides et à la vérification des faits.",
@@ -840,8 +834,6 @@
     "dragToReorder": "Faites glisser pour réordonner",
     "duplicateProfile": "Dupliquer",
     "duplicateProfileConfirm": "Créer une copie du profil « {name} » ?",
-    "editorHistoryCount": "entrées : {count}",
-    "editorHistoryRetentionConfirm": "Les entrées de l’historique antérieures à {period} seront supprimées. Cette action est irréversible.",
     "editorHistoryRetentionForever": "Pour toujours",
     "editorHistoryStorage": "Conserver l’historique",
     "editorHistoryStorageHint": "Sur le disque — l’historique survit aux redémarrages dans un fichier non chiffré ; les entrées plus anciennes que la durée choisie sont supprimées. Tant que Tyco est lancé — les nouvelles entrées restent en mémoire uniquement et disparaissent à la fermeture. Ne pas enregistrer — les nouveaux textes ne sont pas enregistrés. Modifier ce réglage ne supprime jamais les entrées enregistrées : elles restent jusqu’à ce que vous les effaciez.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "Raccourcis globaux",
     "grantProfileAccess": "Donner accès à un profil",
     "hideAdvanced": "Masquer les paramètres avancés",
-    "historyDeleteConfirmTitle": "Supprimer l'historique enregistré ?",
     "historyTab": "Historique",
     "hotkey": "Raccourci",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "Cet espace de travail n’est pas connecté sur cet appareil. Choisissez son dossier ou retirez-le de la liste.",
     "workspaceHistory": {
       "title": "Historique des discussions de l’espace de travail",
-      "hint": "Comment les chats des profils de cet espace de travail sont conservés, requêtes rapides comprises. Par défaut, ils suivent les réglages des chats de l’onglet Historique.",
+      "hint": "Comment les chats des profils de cet espace de travail sont conservés, requêtes rapides comprises. Seul l’espace de travail en décide.",
       "syncedHint": "Enregistré dans le dossier de l’espace de travail et appliqué sur chaque ordinateur qui le synchronise.",
-      "byDefault": "Par défaut ({value})",
-      "saved": "Enregistrer",
       "notSaved": "Ne pas enregistrer",
       "clearConfirm": "Supprimer les discussions enregistrées de tous les profils de cet espace de travail ? Cette action est irréversible."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "Transcriptions d’appels enregistrées et leurs fichiers audio.",
     "dialogHistoryRetentionDays": "Conserver les dialogues",
     "dialogHistoryRetentionDaysHint": "Les dialogues et leurs enregistrements plus anciens que la durée choisie sont supprimés automatiquement. Ne pas enregistrer — les nouveaux dialogues ne sont pas enregistrés ; ceux déjà enregistrés restent jusqu’à ce que vous les effaciez.",
-    "dialogHistoryRetentionConfirm": "Les dialogues de plus de {period} et leurs enregistrements seront supprimés.",
-    "dialogCount": "dialogues : {count}",
     "clearDialogsConfirmDialog": "Tous les dialogues enregistrés et leurs enregistrements audio seront définitivement supprimés.",
     "dialogHistoryLink": "Les paramètres d’historique et de conservation des dialogues se trouvent dans",
     "chatHistoryKeeping": "Conserver les chats",
-    "chatHistoryKeepingHint": "Les chats sont stockés localement sans chiffrement ; les mots de passe et les clés qu’ils contiennent ne sont pas masqués. Un chat est supprimé s’il n’a reçu aucun nouveau message pendant plus longtemps que la durée choisie. Ne pas enregistrer — les nouveaux chats ne sont pas enregistrés ; ceux déjà enregistrés restent jusqu’à ce que vous les effaciez."
+    "chatHistoryKeepingHint": "Les chats sont stockés localement sans chiffrement ; les mots de passe et les clés qu’ils contiennent ne sont pas masqués. Un chat est supprimé s’il n’a reçu aucun nouveau message pendant plus longtemps que la durée choisie. Ne pas enregistrer — les nouveaux chats ne sont pas enregistrés ; ceux déjà enregistrés restent jusqu’à ce que vous les effaciez.",
+    "deleteAllEntries": {
+      "one": "Supprimer {count} entrée",
+      "few": "Supprimer les {count} entrées",
+      "many": "Supprimer les {count} entrées",
+      "other": "Supprimer les {count} entrées"
+    },
+    "deleteAllDialogs": {
+      "one": "Supprimer {count} dialogue",
+      "few": "Supprimer les {count} dialogues",
+      "many": "Supprimer les {count} dialogues",
+      "other": "Supprimer les {count} dialogues"
+    },
+    "deleteAllChats": {
+      "one": "Supprimer {count} chat",
+      "few": "Supprimer les {count} chats",
+      "many": "Supprimer les {count} chats",
+      "other": "Supprimer les {count} chats"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

@@ -733,26 +733,23 @@ pub struct ChatHistoryPolicy {
 }
 
 impl ChatHistoryPolicy {
-    /// The policy of the chats of "Ask AI", and of the profile chats of a
-    /// vault that sets nothing of its own.
+    /// The policy of the chats of "Ask AI".
     pub fn from_config(user_config: &Value) -> Self {
         user_config::chat_history(user_config).into()
     }
 
-    /// The policy of the profile chats of a vault: its own settings over the
-    /// chat settings of the app.
-    pub fn for_vault(user_config: &Value, vault: &VaultChatHistory) -> Self {
-        let mut config = user_config::chat_history(user_config);
-        if let Some(storage) = vault.storage {
-            config.storage = match storage {
-                VaultHistoryStorage::Off => HistoryStorage::Off,
-                VaultHistoryStorage::Disk => HistoryStorage::Disk,
-            };
+    /// The policy of the profile chats of a vault, which its own settings
+    /// alone decide: the chat settings of the app govern "Ask AI" only.
+    pub fn for_vault(vault: &VaultChatHistory) -> Self {
+        ChatHistoryConfig {
+            storage: match vault.storage {
+                Some(VaultHistoryStorage::Off) => HistoryStorage::Off,
+                Some(VaultHistoryStorage::Disk) | None => HistoryStorage::Disk,
+            },
+            retention_days: vault.retention_days.unwrap_or(0),
+            is_quick_request_saving_enabled: vault.is_quick_request_saving_enabled,
         }
-        if let Some(days) = vault.retention_days {
-            config.retention_days = days;
-        }
-        config.into()
+        .into()
     }
 
     /// The chat is to be stored: regular chats follow `saves_chats`, and

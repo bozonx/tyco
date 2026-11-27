@@ -771,13 +771,7 @@
     "browseFolder": "選取資料夾",
     "browseWorkingDir": "選取工作目錄…",
     "chat": "詢問 AI",
-    "chatCount": "{count} 個",
-    "chatHistoryEnabled": "儲存聊天記錄",
     "chatHistoryHint": "「詢問 AI」與 AI 設定檔的聊天，包括快速請求。工作區可以在「AI 設定檔」分頁中以自己的方式保存聊天。",
-    "chatHistoryRetentionConfirm": "超過 {period} 沒有新訊息的聊天將立即刪除。此動作無法復原。",
-    "chatHistoryRetentionDays": "刪除舊聊天記錄",
-    "chatHistoryRetentionDaysHint": "若聊天記錄在此時間內未有新訊息，將予以刪除。更早的聊天記錄會立即刪除。",
-    "chatHistoryRetentionNever": "永不",
     "chatImageQuality": "圖片品質",
     "chatImageQualityHint": "套用至所有聊天中的所有新附件。圖片將清除 EXIF 中繼資料並轉換為 WebP（壓縮後限制最高 24 MP 與 5 MB）。「均衡」（2048 像素）以 1:1 保留 Full HD 螢幕截圖，「省流」（1024 像素）節省權杖，「最高」（最高 8000 像素）保留原始解析度。",
     "chatInfo": "用於日常任務的快速 AI 對話。與擁有獨立角色和工具的 AI 設定檔不同，這是未綁定任何特定設定檔的通用對話。您可以發問、將選取的文字作為上下文、附加圖片、設定通用系統提示詞並管理本機對話歷程記錄。 此功能建議使用快速模型：適合快速回答與事實查證。",
@@ -840,8 +834,6 @@
     "dragToReorder": "拖曳以重新排序",
     "duplicateProfile": "製作複本",
     "duplicateProfileConfirm": "建立設定檔「{name}」的副本？",
-    "editorHistoryCount": "{count} 筆",
-    "editorHistoryRetentionConfirm": "早於 {period} 的歷史紀錄將被刪除。此動作無法復原。",
     "editorHistoryRetentionForever": "永久",
     "editorHistoryStorage": "保留歷史",
     "editorHistoryStorageHint": "磁碟 — 歷史紀錄儲存在未加密的檔案中，重新啟動後仍保留；早於所選期限的紀錄會被刪除。Tyco 執行期間 — 新紀錄只保存在記憶體中，結束後消失。不記錄 — 新文字不會儲存。變更此設定絕不會刪除已儲存的紀錄：它們會保留，直到你清除。",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "全域快捷鍵",
     "grantProfileAccess": "授予設定檔存取",
     "hideAdvanced": "隱藏進階設定",
-    "historyDeleteConfirmTitle": "刪除已儲存的歷史記錄？",
     "historyTab": "歷史",
     "hotkey": "快捷鍵",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "此工作區未在此裝置上連接。請選擇它的資料夾，或將其從清單中移除。",
     "workspaceHistory": {
       "title": "工作區的聊天歷史",
-      "hint": "此工作區設定檔的聊天（包括快速請求）的保存方式。預設遵循「歷史」分頁中的聊天設定。",
+      "hint": "此工作區設定檔的聊天（包括快速請求）的保存方式。僅由工作區自行決定。",
       "syncedHint": "保存在工作區資料夾中，並在同步它的每台電腦上生效。",
-      "byDefault": "預設（{value}）",
-      "saved": "儲存",
       "notSaved": "不儲存",
       "clearConfirm": "要刪除此工作區中所有設定檔的已儲存聊天嗎？此操作無法復原。"
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "已儲存的通話逐字稿及其音訊錄音。",
     "dialogHistoryRetentionDays": "保存對話",
     "dialogHistoryRetentionDaysHint": "早於所選期限的對話及其錄音會自動刪除。不儲存 — 新對話不會儲存，已儲存的對話會保留，直到你清除。",
-    "dialogHistoryRetentionConfirm": "超過 {period} 的對話及其錄音將會被刪除。",
-    "dialogCount": "{count} 個",
     "clearDialogsConfirmDialog": "所有已儲存的對話及其音訊錄音將被永久刪除。",
     "dialogHistoryLink": "對話歷史紀錄與保留期間設定位於",
     "chatHistoryKeeping": "保存聊天",
-    "chatHistoryKeepingHint": "聊天以未加密方式儲存在本機，其中的密碼與金鑰不會被隱藏。超過所選期限沒有新訊息的聊天會被刪除。不儲存 — 新聊天不會儲存，已儲存的聊天會保留，直到你清除。"
+    "chatHistoryKeepingHint": "聊天以未加密方式儲存在本機，其中的密碼與金鑰不會被隱藏。超過所選期限沒有新訊息的聊天會被刪除。不儲存 — 新聊天不會儲存，已儲存的聊天會保留，直到你清除。",
+    "deleteAllEntries": {
+      "one": "刪除 {count} 筆紀錄",
+      "few": "刪除全部 {count} 筆紀錄",
+      "many": "刪除全部 {count} 筆紀錄",
+      "other": "刪除全部 {count} 筆紀錄"
+    },
+    "deleteAllDialogs": {
+      "one": "刪除 {count} 個對話",
+      "few": "刪除全部 {count} 個對話",
+      "many": "刪除全部 {count} 個對話",
+      "other": "刪除全部 {count} 個對話"
+    },
+    "deleteAllChats": {
+      "one": "刪除 {count} 個聊天",
+      "few": "刪除全部 {count} 個聊天",
+      "many": "刪除全部 {count} 個聊天",
+      "other": "刪除全部 {count} 個聊天"
+    }
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

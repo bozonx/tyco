@@ -771,13 +771,7 @@
     "browseFolder": "Vybrat složku",
     "browseWorkingDir": "Vybrat pracovní adresář…",
     "chat": "Zeptat se AI",
-    "chatCount": "chatů: {count}",
-    "chatHistoryEnabled": "Ukládat chaty",
     "chatHistoryHint": "Chaty „Zeptat se AI“ a profilů AI včetně rychlých dotazů. Pracovní prostor může své chaty uchovávat po svém na kartě Profily AI.",
-    "chatHistoryRetentionConfirm": "Chaty bez nových zpráv déle než {period} budou ihned smazány. Tuto akci nelze vrátit.",
-    "chatHistoryRetentionDays": "Mazat staré chaty",
-    "chatHistoryRetentionDaysHint": "Chat se smaže, když v něm takto dlouho nepřibyla nová zpráva. Starší chaty se smažou ihned.",
-    "chatHistoryRetentionNever": "Nikdy",
     "chatImageQuality": "Kvalita obrázků",
     "chatImageQualityHint": "Platí pro všechny nové přílohy ve všech chatech. Z obrázků se odstraní metadata EXIF a převedou se do WebP (limity jsou do 24 MP a 5 MB po kompresi). Vyvážená (2048 px) zachová snímky obrazovky Full HD 1:1, Úsporná (1024 px) šetří tokeny a Maximální (do 8000 px) zachová původní rozlišení.",
     "chatInfo": "Rychlý chat s umělou inteligencí pro každodenní úkoly. Na rozdíl od profilů AI s oddělenými rolemi a nástroji jde o univerzální konverzaci bez vazby na konkrétní profil. Můžete pokládat dotazy, použít vybraný text jako kontext, přikládat obrázky, nastavit obecný systémový prompt a spravovat lokální historii chatu. Pro tuto funkci je nejlepší používat rychlé modely: hodí se pro rychlé odpovědi a ověřování faktů.",
@@ -840,8 +834,6 @@
     "dragToReorder": "Přetažením změníte pořadí",
     "duplicateProfile": "Duplikovat",
     "duplicateProfileConfirm": "Vytvořit kopii profilu „{name}“?",
-    "editorHistoryCount": "záznamů: {count}",
-    "editorHistoryRetentionConfirm": "Záznamy historie starší než {period} budou smazány. Nelze vrátit.",
     "editorHistoryRetentionForever": "Navždy",
     "editorHistoryStorage": "Uchovávat historii",
     "editorHistoryStorageHint": "Na disku — historie přetrvá restarty v nešifrovaném souboru; záznamy starší než zvolené období se mažou. Dokud běží Tyco — nové záznamy jsou jen v paměti a po ukončení zmizí. Nezaznamenávat — nové texty se neukládají. Změna tohoto nastavení nikdy nemaže uložené záznamy: zůstanou, dokud je nevymažete.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "Globální klávesové zkratky",
     "grantProfileAccess": "Dát profilu přístup",
     "hideAdvanced": "Skrýt pokročilá nastavení",
-    "historyDeleteConfirmTitle": "Smazat uloženou historii?",
     "historyTab": "Historie",
     "hotkey": "Klávesová zkratka",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "Tento prostor není na tomto zařízení připojen. Vyberte jeho složku nebo jej odeberte ze seznamu.",
     "workspaceHistory": {
       "title": "Historie chatů prostoru",
-      "hint": "Jak se uchovávají chaty profilů tohoto pracovního prostoru včetně rychlých dotazů na ně. Ve výchozím stavu podle nastavení chatů na kartě Historie.",
+      "hint": "Jak se uchovávají chaty profilů tohoto pracovního prostoru včetně rychlých dotazů na ně. Rozhoduje o tom jen samotný prostor.",
       "syncedHint": "Uloženo ve složce prostoru a platí na všech počítačích, kde se synchronizuje.",
-      "byDefault": "Výchozí ({value})",
-      "saved": "Ukládat",
       "notSaved": "Neukládat",
       "clearConfirm": "Smazat uložené chaty všech profilů tohoto prostoru? Tuto akci nelze vrátit."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "Uložené přepisy hovorů a jejich zvukové nahrávky.",
     "dialogHistoryRetentionDays": "Uchovávat dialogy",
     "dialogHistoryRetentionDaysHint": "Dialogy a jejich nahrávky starší než zvolené období se mažou automaticky. Neukládat — nové dialogy se neukládají; uložené zůstanou, dokud je nevymažete.",
-    "dialogHistoryRetentionConfirm": "Dialogy starší než {period} a jejich nahrávky budou smazány.",
-    "dialogCount": "dialogů: {count}",
     "clearDialogsConfirmDialog": "Všechny uložené dialogy a jejich zvukové nahrávky budou trvale smazány.",
     "dialogHistoryLink": "Nastavení historie a uchovávání dialogů najdete v",
     "chatHistoryKeeping": "Uchovávat chaty",
-    "chatHistoryKeepingHint": "Chaty se ukládají místně bez šifrování; hesla a klíče v nich se neskrývají. Chat se smaže, když v něm déle než zvolené období nebyla nová zpráva. Neukládat — nové chaty se neukládají; uložené zůstanou, dokud je nevymažete."
+    "chatHistoryKeepingHint": "Chaty se ukládají místně bez šifrování; hesla a klíče v nich se neskrývají. Chat se smaže, když v něm déle než zvolené období nebyla nová zpráva. Neukládat — nové chaty se neukládají; uložené zůstanou, dokud je nevymažete.",
+    "deleteAllEntries": {
+      "one": "Smazat {count} záznam",
+      "few": "Smazat všechny {count} záznamy",
+      "many": "Smazat všech {count} záznamu",
+      "other": "Smazat všech {count} záznamů"
+    },
+    "deleteAllDialogs": {
+      "one": "Smazat {count} dialog",
+      "few": "Smazat všechny {count} dialogy",
+      "many": "Smazat všech {count} dialogu",
+      "other": "Smazat všech {count} dialogů"
+    },
+    "deleteAllChats": {
+      "one": "Smazat {count} chat",
+      "few": "Smazat všechny {count} chaty",
+      "many": "Smazat všech {count} chatu",
+      "other": "Smazat všech {count} chatů"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

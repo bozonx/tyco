@@ -771,13 +771,7 @@
     "browseFolder": "Mappa kiválasztása",
     "browseWorkingDir": "Munkakönyvtár kiválasztása…",
     "chat": "Kérdezze az MI-t",
-    "chatCount": "csevegés: {count}",
-    "chatHistoryEnabled": "Csevegések mentése",
     "chatHistoryHint": "Az „AI kérdezése” és az AI-profilok csevegései, a gyorskérésekkel együtt. Egy munkaterület az AI-profilok lapon a saját módján is tárolhatja a csevegéseit.",
-    "chatHistoryRetentionConfirm": "A {period} óta új üzenet nélküli csevegések azonnal törlődnek. Ez nem vonható vissza.",
-    "chatHistoryRetentionDays": "Régi csevegések törlése",
-    "chatHistoryRetentionDaysHint": "Egy csevegés akkor törlődik, ha ennyi ideig nem érkezett bele új üzenet. A régebbi csevegések azonnal törlődnek.",
-    "chatHistoryRetentionNever": "Soha",
     "chatImageQuality": "Képminőség",
     "chatImageQualityHint": "Minden csevegés összes új mellékletére érvényes. A képekről törlődnek az EXIF metaadatok, és WebP formátumba konvertálódnak (korlát: legfeljebb 24 MP és tömörítés után 5 MB). A Kiegyensúlyozott (2048 px) 1:1 arányban megőrzi a Full HD képernyőképeket, a Takarékos (1024 px) tokeneket spórol, a Maximális (legfeljebb 8000 px) pedig megtartja az eredeti felbontást.",
     "chatInfo": "Gyors AI-csevegés a mindennapi feladatokhoz. Az izolált szerepkörökkel és eszközökkel rendelkező AI-profilokkal ellentétben ez egy univerzális beszélgetés, amely nem kötődik konkrét profilhoz. Feltehet kérdéseket, használhatja a kijelölt szöveget kontextusként, csatolhat képeket, beállíthat általános rendszerpromptot és kezelheti a helyi csevegési előzményeket. Ehhez a funkcióhoz érdemes gyors modelleket használni: kiválóan alkalmasak gyors válaszokra és tényellenőrzésre.",
@@ -840,8 +834,6 @@
     "dragToReorder": "Húzza az átrendezéshez",
     "duplicateProfile": "Duplikálás",
     "duplicateProfileConfirm": "Létrehozza a(z) „{name}” profil másolatát?",
-    "editorHistoryCount": "bejegyzés: {count}",
-    "editorHistoryRetentionConfirm": "A(z) {period} időtartamnál régebbi előzménybejegyzések törlődnek. Ez nem vonható vissza.",
     "editorHistoryRetentionForever": "Örökre",
     "editorHistoryStorage": "Előzmények megőrzése",
     "editorHistoryStorageHint": "Lemezen — az előzmények titkosítatlan fájlban megmaradnak az újraindítások között; a választott időszaknál régebbi bejegyzések törlődnek. Amíg a Tyco fut — az új bejegyzések csak a memóriában vannak, és kilépéskor elvesznek. Nincs rögzítés — az új szövegek nem mentődnek. A beállítás módosítása soha nem törli a mentett bejegyzéseket: megmaradnak, amíg nem törli őket.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "Globális billentyűparancsok",
     "grantProfileAccess": "Hozzáférés adása egy profilnak",
     "hideAdvanced": "Speciális beállítások elrejtése",
-    "historyDeleteConfirmTitle": "Törli a mentett előzményeket?",
     "historyTab": "Előzmények",
     "hotkey": "Billentyűparancs",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "Ez a munkaterület nincs csatlakoztatva ezen az eszközön. Válassza ki a mappáját, vagy vegye le a listáról.",
     "workspaceHistory": {
       "title": "A munkaterület csevegési előzményei",
-      "hint": "Hogyan tárolódnak a munkaterület profiljainak csevegései, a hozzájuk intézett gyorskérésekkel együtt. Alapértelmezés szerint az Előzmények lap csevegésbeállításai érvényesek.",
+      "hint": "Hogyan tárolódnak a munkaterület profiljainak csevegései, a gyorskérésekkel együtt. Erről csak a munkaterület dönt.",
       "syncedHint": "A munkaterület mappájában tárolódik, és minden olyan számítógépen érvényes, amely szinkronizálja.",
-      "byDefault": "Alapértelmezett ({value})",
-      "saved": "Mentés",
       "notSaved": "Nincs mentés",
       "clearConfirm": "Törli e munkaterület összes profiljának mentett csevegéseit? Ez nem vonható vissza."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "Mentett hívásleiratok és hangfelvételeik.",
     "dialogHistoryRetentionDays": "Párbeszédek megőrzése",
     "dialogHistoryRetentionDaysHint": "A választott időszaknál régebbi párbeszédek és felvételeik automatikusan törlődnek. Ne mentse — az új párbeszédek nem mentődnek; a mentettek megmaradnak, amíg nem törli őket.",
-    "dialogHistoryRetentionConfirm": "A(z) {period} időszaknál régebbi párbeszédek és felvételeik törlődnek.",
-    "dialogCount": "párbeszéd: {count}",
     "clearDialogsConfirmDialog": "Minden mentett párbeszéd és hangfelvétel véglegesen törlődik.",
     "dialogHistoryLink": "A párbeszédek előzményeinek és megőrzésének beállításai itt találhatók:",
     "chatHistoryKeeping": "Csevegések megőrzése",
-    "chatHistoryKeepingHint": "A csevegések helyben, titkosítás nélkül tárolódnak; a bennük lévő jelszavak és kulcsok nincsenek elrejtve. Egy csevegés törlődik, ha a választott időszaknál tovább nem érkezett bele új üzenet. Ne mentse — az új csevegések nem mentődnek; a mentettek megmaradnak, amíg nem törli őket."
+    "chatHistoryKeepingHint": "A csevegések helyben, titkosítás nélkül tárolódnak; a bennük lévő jelszavak és kulcsok nincsenek elrejtve. Egy csevegés törlődik, ha a választott időszaknál tovább nem érkezett bele új üzenet. Ne mentse — az új csevegések nem mentődnek; a mentettek megmaradnak, amíg nem törli őket.",
+    "deleteAllEntries": {
+      "one": "{count} bejegyzés törlése",
+      "few": "Mind a(z) {count} bejegyzés törlése",
+      "many": "Mind a(z) {count} bejegyzés törlése",
+      "other": "Mind a(z) {count} bejegyzés törlése"
+    },
+    "deleteAllDialogs": {
+      "one": "{count} párbeszéd törlése",
+      "few": "Mind a(z) {count} párbeszéd törlése",
+      "many": "Mind a(z) {count} párbeszéd törlése",
+      "other": "Mind a(z) {count} párbeszéd törlése"
+    },
+    "deleteAllChats": {
+      "one": "{count} csevegés törlése",
+      "few": "Mind a(z) {count} csevegés törlése",
+      "many": "Mind a(z) {count} csevegés törlése",
+      "other": "Mind a(z) {count} csevegés törlése"
+    }
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

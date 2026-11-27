@@ -84,7 +84,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `aiVaults`          | `attached`: `[{ path, vaultId }]`, the vaults this device attached                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `markdown`          | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `plugins`           | per plugin id: `isEnabled` and the plugin-owned `settings`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `chat`              | `history` (`storage`: `off` or `disk`, `retentionDays`, `isQuickRequestSavingEnabled`): "Ask AI" and every profile whose vault sets nothing                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `chat`              | `history` (`storage`: `off` or `disk`, `retentionDays`, `isQuickRequestSavingEnabled`): "Ask AI"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `stt`               | `provider`, `correctionMode`, `isVoiceInputHoldEnabled`, `isVoiceCommandsHoldEnabled`, `microphoneId` (device), `listenAppId` (device), `listenAppLabel` (device), `listenLanguage` (the computer sound; set in the listening window only), `isStylingBarEnabled`, `isStylingBarDirectInsertEnabled`, `providers.deepgram`, `providers.sherpaOnnx`, `providers.geminiLive`                                                                                                                                                                                                                            |
 | `dialog`            | `isEnabled` (the Dialog tab and view; off: hidden, a running dialog stops and is saved), `source` (`microphoneAndSystem`, `system`), `translationTargetLanguage` (empty: no translation), `remoteLanguage` (Deepgram only; `auto`: detected), `ownLanguage` (empty: the primary spoken language), `isTranslationOnly` (a translated turn without its original; no effect without a translation), `isHistoryOpen` (history drawer state in dialog view), `compactGeometry` (device), `isRecordingNoticeAcknowledged` (no setting of its own), `isHeadphonesNoticeAcknowledged` (no setting of its own) |
 
@@ -432,12 +432,15 @@ compacts its own journal, keeping the records that still name an entry and its
 latest `clear`. Times are the clocks of the devices: a clock that is off moves
 entries in the order, nothing more.
 
-Changing a history setting never deletes the history; only clearing it does,
-and only a shorter retention period removes entries by itself (the settings
-ask first). Turning a history off stops recording and keeps what is stored.
-The memory-only editor history (`session`) neither reads nor writes the
-journal and leaves it as it is, also at startup; switching back to the disk
-adds what the memory holds to the journal.
+Changing a history setting never deletes the history and never asks to:
+deleting is a separate action of the settings. Turning a history off stops
+recording and keeps what is stored; entries expire only by the retention
+period chosen. The memory-only editor history (`session`) shows the entries
+of the journals along with the new ones it keeps in memory. A change to a
+stored entry goes to the own journal as a record without text (`delete`,
+`result`); a stored entry rewritten in memory is hidden by the memory copy.
+The journal is left as it is, also at startup, and switching back to the
+disk adds what the memory holds to it.
 
 A `transcript` is input finished without leaving the app: a listening that
 was stopped, a dictation without an AI pass. It takes the place of its
@@ -613,19 +616,17 @@ it: its files are not moved.
 The settings of a vault live in `tyco-vault-settings.json` next to its marker
 (`ai_vault::settings`), synced with it and kept apart from the marker so that
 editing them never conflicts with it. Today it holds `chatHistory`
-(`storage`: `off` or `disk`, `retentionDays`); each field is optional and a
-missing one follows `chat.history`, the chat settings of the app
-(`ChatHistoryPolicy::for_vault`; a vault's `storage` alone decides whether its
-chats are saved). Unknown fields are kept on write; a newer `formatVersion` or
+(`storage`: `off` or `disk`, `retentionDays`, `isQuickRequestSavingEnabled`); each field is optional and a
+missing one takes its default: chats saved forever with their quick requests
+(`ChatHistoryPolicy::for_vault`; the chat settings of the app govern "Ask AI"
+only). Unknown fields are kept on write; a newer `formatVersion` or
 an unreadable file is refused on write and read as no settings, so a broken
 file never stops the chats. `set_ai_vault_chat_history` writes it and marks the
 chat cleanup pending; `list_ai_vaults` returns it as `chatHistory`. The watcher
 follows the file too: a change a sync brings refreshes the settings and marks
-the cleanup pending as well. The settings page applies these values at once,
-so its "by default" choice shows the saved default, not an unsaved draft.
-Whether quick requests are saved stays an app-wide choice
-(`chat.history.isQuickRequestSavingEnabled`), applied within the
-vault's own saving choice.
+the cleanup pending as well. The settings page applies these values at once.
+Whether quick requests to its profiles are saved is the vault's
+`isQuickRequestSavingEnabled`, applied within its own saving choice.
 
 `move_ai_profile` and `move_ai_project` (`ai_vault::transfer`) move an entity
 to another connected vault, locking both vaults in the order of their roots.

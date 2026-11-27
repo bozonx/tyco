@@ -4,7 +4,7 @@
 //! the settings never conflicts with it in a sync.
 //!
 //! Each setting is optional: a missing one follows the app-wide default
-//! (`chat.history` for the chat history). Fields this build does not
+//! (the chat history keeps chats forever). Fields this build does not
 //! know are kept when the file is written.
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -26,8 +26,9 @@ pub enum VaultHistoryStorage {
     Disk,
 }
 
-/// The chat history of a vault's profiles; a missing field follows the
-/// app-wide default.
+/// The chat history of a vault's profiles, kept by the vault alone: a
+/// missing field takes its default, saving chats forever with their quick
+/// requests.
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct VaultChatHistory {
@@ -38,6 +39,10 @@ pub struct VaultChatHistory {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub retention_days: Option<u64>,
+    /// Quick requests to the profiles are saved with the chats.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub is_quick_request_saving_enabled: Option<bool>,
 }
 
 impl VaultChatHistory {
@@ -51,6 +56,9 @@ impl VaultChatHistory {
                 .get("storage")
                 .and_then(|value| serde_json::from_value(value.clone()).ok()),
             retention_days: object.get("retentionDays").and_then(Value::as_u64),
+            is_quick_request_saving_enabled: object
+                .get("isQuickRequestSavingEnabled")
+                .and_then(Value::as_bool),
         }
     }
 }
@@ -108,6 +116,13 @@ pub fn write_chat_history(root: &Path, chat_history: VaultChatHistory) -> Result
         Some(storage) => history.insert("storage".into(), serde_json::to_value(storage)?),
         None => history.remove("storage"),
     };
+    match chat_history.is_quick_request_saving_enabled {
+        Some(is_enabled) => history.insert(
+            "isQuickRequestSavingEnabled".into(),
+            Value::from(is_enabled),
+        ),
+        None => history.remove("isQuickRequestSavingEnabled"),
+    };
     match chat_history.retention_days {
         Some(days) => history.insert("retentionDays".into(), Value::from(days)),
         None => history.remove("retentionDays"),
@@ -143,6 +158,7 @@ mod tests {
         let history = VaultChatHistory {
             storage: Some(VaultHistoryStorage::Off),
             retention_days: Some(30),
+            is_quick_request_saving_enabled: Some(false),
         };
         write_chat_history(&dir, history).unwrap();
         assert_eq!(read_chat_history(&dir), history);
@@ -161,6 +177,7 @@ mod tests {
             VaultChatHistory {
                 storage: None,
                 retention_days: Some(7),
+                is_quick_request_saving_enabled: None,
             },
         )
         .unwrap();

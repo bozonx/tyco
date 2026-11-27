@@ -771,13 +771,7 @@
     "browseFolder": "폴더 선택",
     "browseWorkingDir": "작업 디렉터리 선택…",
     "chat": "AI에게 질문",
-    "chatCount": "{count}개",
-    "chatHistoryEnabled": "채팅 저장",
     "chatHistoryHint": "“AI에게 묻기”와 AI 프로필의 채팅(빠른 요청 포함). 작업 공간은 AI 프로필 탭에서 채팅을 자체 방식으로 보관할 수 있습니다.",
-    "chatHistoryRetentionConfirm": "{period} 넘게 새 메시지가 없는 채팅은 바로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
-    "chatHistoryRetentionDays": "오래된 채팅 삭제",
-    "chatHistoryRetentionDaysHint": "이 기간 동안 새 메시지가 없는 채팅은 삭제됩니다. 더 오래된 채팅은 즉시 삭제됩니다.",
-    "chatHistoryRetentionNever": "삭제 안 함",
     "chatImageQuality": "이미지 품질",
     "chatImageQualityHint": "모든 채팅의 모든 새 첨부 파일에 적용됩니다. 이미지는 EXIF 메타데이터가 제거되고 WebP로 변환됩니다(압축 후 제한: 최대 24 MP 및 5 MB). 균형(2048 px)은 Full HD 스크린샷을 1:1로 유지하고, 절약(1024 px)은 토큰을 절약하며, 최대(최대 8000 px)는 원래 해상도를 보존합니다.",
     "chatInfo": "일상적인 작업을 위한 빠른 AI 채팅입니다. 분리된 역할과 도구를 갖춘 AI 프로필과 달리 특정 프로필에 종속되지 않는 범용 대화입니다. 질문하기, 선택한 텍스트를 컨텍스트로 전달하기, 이미지 첨부, 일반 시스템 프롬프트 설정 및 로컬 대화 기록 관리가 가능합니다. 이 기능에는 빠른 모델을 사용하는 것이 좋습니다. 빠른 답변과 팩트 체크에 적합합니다.",
@@ -840,8 +834,6 @@
     "dragToReorder": "드래그하여 순서 변경",
     "duplicateProfile": "복제",
     "duplicateProfileConfirm": "“{name}” 프로필의 사본을 만드시겠습니까?",
-    "editorHistoryCount": "{count}개",
-    "editorHistoryRetentionConfirm": "{period}보다 오래된 기록은 삭제됩니다. 되돌릴 수 없습니다.",
     "editorHistoryRetentionForever": "영구 보관",
     "editorHistoryStorage": "기록 보관",
     "editorHistoryStorageHint": "디스크 — 기록이 암호화되지 않은 파일에 저장되어 재시작 후에도 유지되며, 선택한 기간보다 오래된 항목은 삭제됩니다. Tyco 실행 중에만 — 새 항목은 메모리에만 있고 종료하면 사라집니다. 기록 안 함 — 새 텍스트는 저장되지 않습니다. 이 설정을 바꿔도 저장된 항목은 삭제되지 않으며 지울 때까지 남습니다.",
@@ -869,7 +861,6 @@
     "globalHotkeysTitle": "전역 단축키",
     "grantProfileAccess": "프로필에 접근 권한 부여",
     "hideAdvanced": "고급 설정 숨기기",
-    "historyDeleteConfirmTitle": "저장된 기록을 삭제할까요?",
     "historyTab": "기록",
     "hotkey": "단축키",
     "hotkeyActions": {
@@ -1335,10 +1326,8 @@
     "workspaceNotConnected": "이 작업 공간은 이 기기에 연결되어 있지 않습니다. 폴더를 선택하거나 목록에서 제거하세요.",
     "workspaceHistory": {
       "title": "작업 공간의 채팅 기록",
-      "hint": "이 작업 공간 프로필의 채팅(빠른 요청 포함)을 보관하는 방식입니다. 기본값은 기록 탭의 채팅 설정을 따릅니다.",
+      "hint": "이 작업 공간 프로필의 채팅(빠른 요청 포함)을 보관하는 방식입니다. 작업 공간만 정합니다.",
       "syncedHint": "작업 공간 폴더에 저장되며 이를 동기화하는 모든 컴퓨터에 적용됩니다.",
-      "byDefault": "기본값({value})",
-      "saved": "저장",
       "notSaved": "저장 안 함",
       "clearConfirm": "이 작업 공간에 있는 모든 프로필의 저장된 채팅을 삭제할까요? 이 작업은 되돌릴 수 없습니다."
     },
@@ -1372,12 +1361,28 @@
     "dialogHistoryHint": "저장된 통화 전사와 오디오 녹음 파일입니다.",
     "dialogHistoryRetentionDays": "대화 보관",
     "dialogHistoryRetentionDaysHint": "선택한 기간보다 오래된 대화와 녹음은 자동으로 삭제됩니다. 저장 안 함 — 새 대화는 저장되지 않으며, 저장된 대화는 지울 때까지 남습니다.",
-    "dialogHistoryRetentionConfirm": "{period}보다 오래된 대화와 녹음이 삭제됩니다.",
-    "dialogCount": "{count}개",
     "clearDialogsConfirmDialog": "저장된 모든 대화와 오디오 녹음이 영구적으로 삭제됩니다.",
     "dialogHistoryLink": "대화 기록 및 보관 설정은 다음 위치에 있습니다:",
     "chatHistoryKeeping": "채팅 보관",
-    "chatHistoryKeepingHint": "채팅은 암호화 없이 로컬에 저장되며, 그 안의 비밀번호와 키는 숨겨지지 않습니다. 선택한 기간보다 오래 새 메시지가 없는 채팅은 삭제됩니다. 저장 안 함 — 새 채팅은 저장되지 않으며, 저장된 채팅은 지울 때까지 남습니다."
+    "chatHistoryKeepingHint": "채팅은 암호화 없이 로컬에 저장되며, 그 안의 비밀번호와 키는 숨겨지지 않습니다. 선택한 기간보다 오래 새 메시지가 없는 채팅은 삭제됩니다. 저장 안 함 — 새 채팅은 저장되지 않으며, 저장된 채팅은 지울 때까지 남습니다.",
+    "deleteAllEntries": {
+      "one": "항목 {count}개 삭제",
+      "few": "항목 {count}개 모두 삭제",
+      "many": "항목 {count}개 모두 삭제",
+      "other": "항목 {count}개 모두 삭제"
+    },
+    "deleteAllDialogs": {
+      "one": "대화 {count}개 삭제",
+      "few": "대화 {count}개 모두 삭제",
+      "many": "대화 {count}개 모두 삭제",
+      "other": "대화 {count}개 모두 삭제"
+    },
+    "deleteAllChats": {
+      "one": "채팅 {count}개 삭제",
+      "few": "채팅 {count}개 모두 삭제",
+      "many": "채팅 {count}개 모두 삭제",
+      "other": "채팅 {count}개 모두 삭제"
+    }
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
