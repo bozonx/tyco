@@ -362,6 +362,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     clearVaultChats: (vaultId: string) =>
       profileChats.clearAll(profileIdsOf(vaultId)),
     setProjectAccess: profilesModel.setProjectAccess,
+    setProjectDeleteAllowed: profilesModel.setProjectDeleteAllowed,
     readSoul: profilesModel.readSoul,
     readSoulWithRevision,
     writeSoul,

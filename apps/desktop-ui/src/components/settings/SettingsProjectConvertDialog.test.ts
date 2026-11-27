@@ -46,18 +46,13 @@ const openDialog = async (wrapper: ReturnType<typeof mountDialog>) => {
   await flushPromises()
 }
 
-const checkbox = (wrapper: ReturnType<typeof mountDialog>, label: string) =>
-  wrapper
-    .findAllComponents({ name: 'FieldCheckbox' })
-    .find((item) => item.props('label') === label)!
-
 describe('SettingsProjectConvertDialog.vue', () => {
   it('always moves the files of an internal project to the chosen folder', async () => {
     const inspect = vi.fn(async () => preview())
     const wrapper = mountDialog({ toExternal: true, inspect })
     await openDialog(wrapper)
     expect(inspect).toHaveBeenCalledWith(undefined)
-    expect(wrapper.findComponent({ name: 'FieldCheckbox' }).exists()).toBe(
+    expect(wrapper.findComponent({ name: 'SegmentedControl' }).exists()).toBe(
       false
     )
     expect(wrapper.get('[data-testid="convert-summary"]').text()).toBe(
@@ -93,26 +88,28 @@ describe('SettingsProjectConvertDialog.vue', () => {
     ).toBeDefined()
   })
 
-  it('copies the files of an external project and may trash its folder', async () => {
+  it('copies the files of an external project, or moves its folder to the trash', async () => {
     const wrapper = mountDialog({
       toExternal: false,
       hasSourceFolder: true,
       inspect: vi.fn(async () => preview({}, { hasGit: true })),
     })
     await openDialog(wrapper)
-    expect(wrapper.text()).toContain('settings.projectConvertSourceStays')
+    expect(wrapper.text()).toContain('settings.projectConvertCopyHint')
     expect(wrapper.text()).toContain('settings.projectConvertHasGit')
-    await checkbox(wrapper, 'settings.projectConvertTrashSource').vm.$emit(
-      'update:modelValue',
-      true
-    )
+    await wrapper.get('form').trigger('submit')
+    await wrapper
+      .findComponent({ name: 'SegmentedControl' })
+      .vm.$emit('update:modelValue', 'move')
+    expect(wrapper.text()).toContain('settings.projectConvertMoveHint')
     await wrapper.get('form').trigger('submit')
     expect(wrapper.emitted('confirm')).toEqual([
+      [{ targetPath: undefined, transferFiles: true, trashSource: false }],
       [{ targetPath: undefined, transferFiles: true, trashSource: true }],
     ])
   })
 
-  it('keeps a folder another project uses', async () => {
+  it('only copies from a folder another project uses', async () => {
     const wrapper = mountDialog({
       toExternal: false,
       hasSourceFolder: true,
@@ -120,23 +117,12 @@ describe('SettingsProjectConvertDialog.vue', () => {
     })
     await openDialog(wrapper)
     expect(wrapper.text()).toContain('settings.projectConvertTrashShared')
-    expect(
-      checkbox(wrapper, 'settings.projectConvertTrashSource').props('disabled')
-    ).toBe(true)
-  })
-
-  it('warns that files stay behind when they are not transferred', async () => {
-    const wrapper = mountDialog({ toExternal: false, hasSourceFolder: true })
-    await openDialog(wrapper)
-    expect(wrapper.text()).not.toContain('settings.projectConvertNoTransfer')
-    await checkbox(wrapper, 'settings.projectConvertTransferFiles').vm.$emit(
-      'update:modelValue',
+    expect(wrapper.findComponent({ name: 'SegmentedControl' }).exists()).toBe(
       false
     )
-    expect(wrapper.text()).toContain('settings.projectConvertNoTransfer')
     await wrapper.get('form').trigger('submit')
     expect(wrapper.emitted('confirm')).toEqual([
-      [{ targetPath: undefined, transferFiles: false, trashSource: false }],
+      [{ targetPath: undefined, transferFiles: true, trashSource: false }],
     ])
   })
 

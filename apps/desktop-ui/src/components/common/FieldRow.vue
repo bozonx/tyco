@@ -24,6 +24,7 @@
         <slot name="info" :device-scope-note="deviceScopeNote">
           <InfoTooltip v-if="infoText" :text="infoText" />
         </slot>
+        <slot name="badge" />
         <div v-if="$slots.action" class="field-row-action">
           <slot name="action" />
         </div>

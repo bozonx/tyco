@@ -78,6 +78,7 @@ function createStore() {
     openProjectFolder: vi.fn(async () => {}),
     pickFolder: vi.fn(async (): Promise<string | null> => '/work'),
     setProjectAccess: vi.fn(async () => {}),
+    setProjectDeleteAllowed: vi.fn(async () => {}),
   })
 }
 
@@ -176,9 +177,7 @@ describe('SettingsProjectDetailTab.vue', () => {
   it('shows the type and folder of a project in one field', async () => {
     const internal = mountTab()
     const field = internal.get('[data-testid="project-folder"]')
-    expect(field.get('[data-testid="project-type"]').text()).toBe(
-      'settings.projectBadgeInternal'
-    )
+    expect(field.find('[data-testid="project-type"]').exists()).toBe(false)
     expect(field.text()).toContain('projects/notes')
     expect(field.text()).toContain('settings.projectConvertToExternal')
     expect(field.find('[data-testid="project-folder-pick"]').exists()).toBe(
@@ -283,25 +282,32 @@ describe('SettingsProjectDetailTab.vue', () => {
       { ...profile({}), id: 'reader', name: 'Reader' }
     )
     const wrapper = mountTab()
-    const badges = wrapper.findAllComponents({ name: 'Badge' })
-    expect(badges.map((badge) => badge.text())).toContain(
-      'settings.accessLevelReadWrite'
-    )
-    expect(wrapper.text()).toContain('settings.projectAccessFileToolsOff')
-
-    const menu = wrapper.findComponent({ name: 'DropdownMenu' })
-    const items = menu.props('items') as Array<{ action: () => void }>
-    items[0]!.action()
-
-    const removeBtn = wrapper
-      .findAllComponents({ name: 'IconButton' })
-      .find((b) => b.props('icon') === 'mdi:link-variant-off')!
-    await removeBtn.trigger('click')
+    const list = wrapper.findComponent({ name: 'SettingsAccessList' })
+    expect(list.props('entries')).toEqual([
+      expect.objectContaining({
+        id: 'writer',
+        level: 'readWrite',
+        warning: 'settings.projectAccessFileToolsOff',
+      }),
+    ])
+    expect(list.props('candidates')).toEqual([
+      { id: 'reader', label: 'Reader' },
+    ])
+    await list.vm.$emit('change', 'reader', 'read')
+    await list.vm.$emit('change', 'writer', undefined)
+    await list.vm.$emit('deleteAllowed', 'writer', true)
+    await list.vm.$emit('open', 'writer')
 
     expect(store.setProjectAccess.mock.calls).toEqual([
       ['reader', 'notes', 'read'],
       ['writer', 'notes', undefined],
     ])
+    expect(store.setProjectDeleteAllowed).toHaveBeenCalledWith(
+      'writer',
+      'notes',
+      true
+    )
+    expect(context.navigate).toHaveBeenCalledWith('ai-profile:writer')
   })
 
   it('grants the chosen access when a new project is created', async () => {

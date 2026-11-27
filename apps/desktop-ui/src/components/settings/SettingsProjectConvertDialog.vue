@@ -14,69 +14,78 @@
             : t('settings.projectConvertToInternalTitle')
         }}
       </h3>
-      <p :id="messageId" class="convert-dialog-message">
-        {{
-          toExternal
-            ? t('settings.projectConvertToExternalMessage')
-            : t('settings.projectConvertToInternalMessage')
-        }}
-      </p>
-
-      <SettingsProjectFolderField
-        v-if="toExternal"
-        :path="targetPath"
-        :disabled="isBusy"
-        @pick="pickFolder"
-      />
-
-      <InlineNotice
-        v-if="!toExternal && !hasSourceFolder"
-        :message="t('settings.projectConvertNoSourceFolder')"
-      />
-      <template v-else-if="!toExternal">
-        <FieldCheckbox
-          v-model="transferFiles"
-          :disabled="isBusy"
-          :label="t('settings.projectConvertTransferFiles')"
-          data-testid="convert-transfer"
-        />
-        <template v-if="transferFiles">
-          <p class="convert-dialog-note">
-            {{ t('settings.projectConvertSourceStays') }}
-          </p>
-          <FieldCheckbox
-            v-model="trashSource"
-            :disabled="isBusy || isFolderShared"
-            :label="t('settings.projectConvertTrashSource')"
-            data-testid="convert-trash"
-          />
-          <InlineNotice
-            v-if="isFolderShared"
-            density="compact"
-            :message="t('settings.projectConvertTrashShared')"
-          />
-        </template>
-        <InlineNotice
+      <template v-if="toExternal">
+        <p :id="messageId" class="convert-dialog-message">
+          {{ t('settings.projectConvertToExternalMessage') }}
+        </p>
+        <PathDisplay
+          v-if="targetPath"
+          :path="targetPath"
+          :can-copy="false"
+          data-testid="convert-folder"
+        >
+          <template #actions>
+            <Button
+              size="sm"
+              variant="ghost"
+              icon="mdi:folder-edit-outline"
+              :disabled="isBusy"
+              data-testid="project-folder-pick"
+              @click="pickFolder"
+            >
+              {{ t('settings.projectFolderChange') }}
+            </Button>
+          </template>
+        </PathDisplay>
+        <Button
           v-else
-          kind="warning"
-          :message="t('settings.projectConvertNoTransfer')"
+          size="sm"
+          variant="neutral"
+          icon="mdi:folder-open-outline"
+          class="convert-dialog-pick"
+          :disabled="isBusy"
+          data-testid="project-folder-pick"
+          @click="pickFolder"
+        >
+          {{ t('settings.projectConvertChooseFolder') }}
+        </Button>
+      </template>
+      <p
+        v-else-if="!hasSourceFolder"
+        :id="messageId"
+        class="convert-dialog-message"
+      >
+        {{ t('settings.projectConvertNoSourceFolder') }}
+      </p>
+      <p v-else-if="isFolderShared" :id="messageId" class="convert-dialog-note">
+        {{ t('settings.projectConvertTrashShared') }}
+      </p>
+      <template v-else>
+        <SegmentedControl
+          size="sm"
+          :label="t('settings.projectConvertFilesMode')"
+          :model-value="filesMode"
+          :options="filesModeOptions"
+          data-testid="convert-mode"
+          @update:model-value="filesMode = $event as FilesMode"
         />
+        <p :id="messageId" class="convert-dialog-note">
+          {{
+            filesMode === 'move'
+              ? t('settings.projectConvertMoveHint')
+              : t('settings.projectConvertCopyHint')
+          }}
+        </p>
       </template>
 
       <template v-if="isTransferring">
         <p
           v-if="preview"
-          class="convert-dialog-summary"
+          class="convert-dialog-note"
           data-testid="convert-summary"
         >
           {{ summary }}
         </p>
-        <StateMessage
-          v-else-if="isInspecting"
-          kind="loading"
-          density="compact"
-          :message="t('settings.projectConvertCounting')"
-        />
         <InlineNotice
           v-if="inspectError"
           kind="error"
@@ -91,11 +100,9 @@
         <InlineNotice
           v-for="message in check.notices"
           :key="message.key"
+          density="compact"
           :message="t(message.key, message.params ?? {})"
         />
-        <p class="convert-dialog-note">
-          {{ t('settings.projectConvertSafety') }}
-        </p>
       </template>
 
       <div class="convert-dialog-actions">
@@ -133,11 +140,13 @@ import {
 import { describeError } from '../../lib/errors/describe-error'
 import BaseDialog from '../common/BaseDialog.vue'
 import Button from '../common/Button.vue'
-import FieldCheckbox from '../common/FieldCheckbox.vue'
 import InlineNotice from '../common/InlineNotice.vue'
-import StateMessage from '../common/StateMessage.vue'
-import SettingsProjectFolderField from './SettingsProjectFolderField.vue'
+import PathDisplay from '../common/PathDisplay.vue'
+import SegmentedControl from '../common/SegmentedControl.vue'
 import type { ProjectTransferPreview } from '@tyco/shared'
+
+/** What an external project turned internal does with its folder */
+type FilesMode = 'copy' | 'move'
 
 const props = defineProps<{
   open: boolean
@@ -162,19 +171,21 @@ const titleId = useId()
 const messageId = useId()
 
 const targetPath = ref('')
-const transferFiles = ref(true)
-const trashSource = ref(false)
+const filesMode = ref<FilesMode>('copy')
 const preview = ref<ProjectTransferPreview | null>(null)
 const isInspecting = ref(false)
 const inspectError = ref('')
 
-/** An internal project always moves its files; an external one may not */
-const isTransferring = computed(
-  () => props.toExternal || (props.hasSourceFolder && transferFiles.value)
-)
+/** Files move unless an external project has no folder here */
+const isTransferring = computed(() => props.toExternal || props.hasSourceFolder)
+/** Another project uses the folder: it is never moved to the trash */
 const isFolderShared = computed(
   () => (preview.value?.sharedFolderCount ?? 0) > 0
 )
+const filesModeOptions = computed<{ id: FilesMode; name: string }[]>(() => [
+  { id: 'copy', name: t('settings.projectConvertCopy') },
+  { id: 'move', name: t('settings.projectConvertMove') },
+])
 const check = computed(() =>
   preview.value
     ? checkProjectTransfer(preview.value, {
@@ -203,6 +214,10 @@ const isValid = computed(() => {
   )
 })
 
+watch(isFolderShared, (isShared) => {
+  if (isShared) filesMode.value = 'copy'
+})
+
 let inspectRequest = 0
 async function loadPreview() {
   const request = ++inspectRequest
@@ -226,11 +241,10 @@ watch(
   (open) => {
     if (!open) return
     targetPath.value = ''
-    transferFiles.value = props.hasSourceFolder
-    trashSource.value = false
+    filesMode.value = 'copy'
     preview.value = null
     inspectError.value = ''
-    if (props.toExternal || props.hasSourceFolder) void loadPreview()
+    if (isTransferring.value) void loadPreview()
   }
 )
 
@@ -247,7 +261,8 @@ function submit() {
   emit('confirm', {
     targetPath: props.toExternal ? targetPath.value.trim() : undefined,
     transferFiles: isCopying,
-    trashSource: isCopying && trashSource.value && !isFolderShared.value,
+    trashSource:
+      isCopying && filesMode.value === 'move' && !isFolderShared.value,
   })
 }
 </script>
@@ -270,8 +285,7 @@ function submit() {
   font-weight: 600;
 }
 
-.convert-dialog-message,
-.convert-dialog-summary {
+.convert-dialog-message {
   margin: 0;
   color: var(--color-base-content);
   font-size: var(--text-body);
@@ -283,6 +297,10 @@ function submit() {
   color: var(--app-text-muted);
   font-size: var(--text-caption);
   line-height: 1.5;
+}
+
+.convert-dialog-pick {
+  align-self: flex-start;
 }
 
 .convert-dialog-actions {

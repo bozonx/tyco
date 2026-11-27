@@ -21,7 +21,6 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { projectIcon } from '../../lib/ai-profiles/profile-icons'
 import {
   type ProjectAccessLevel,
   isDeleteAllowed,
@@ -51,7 +50,6 @@ const entries = computed<AccessListEntry[]>(() =>
     return [
       {
         id: project.id,
-        icon: projectIcon(project),
         title: project.name,
         description: project.description || undefined,
         level,
@@ -69,10 +67,6 @@ const entries = computed<AccessListEntry[]>(() =>
 const candidates = computed<AccessListCandidate[]>(() =>
   props.projects
     .filter((project) => !projectAccessLevelOf(props.permissions[project.id]))
-    .map((project) => ({
-      id: project.id,
-      icon: projectIcon(project),
-      label: project.name,
-    }))
+    .map((project) => ({ id: project.id, label: project.name }))
 )
 </script>

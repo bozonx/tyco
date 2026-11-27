@@ -365,7 +365,7 @@ describe('SettingsAiProfilesTab.vue', () => {
     const items = projectMenu(wrapper, 'Site')
     expect(items.map((item) => item.label)).toEqual([
       'settings.projectFolderOpen',
-      'common.delete',
+      'settings.disconnectProjectAction',
     ])
     await items[0]!.action()
     expect(store.openProjectFolder).toHaveBeenCalledWith('site')
@@ -389,12 +389,19 @@ describe('SettingsAiProfilesTab.vue', () => {
     store.projects.push({ id: 'proj-1', name: 'Project 1', ...fields })
     const wrapper = mountTab()
     const items = projectMenu(wrapper, 'Project 1')
-    const remove = items.find((item) => item.label === 'common.delete')!
+    const remove = items.at(-1)!
+    expect(remove.label).toBe(
+      fields.isExternal ? 'settings.disconnectProjectAction' : 'common.delete'
+    )
     expect((remove as { danger?: boolean }).danger).toBeFalsy()
 
     await remove.action()
     await flushPromises()
-    const confirm = wrapper.get('[data-title="settings.deleteProject"]')
+    const confirm = wrapper.get(
+      fields.isExternal
+        ? '[data-title="settings.disconnectProject"]'
+        : '[data-title="settings.deleteProject"]'
+    )
     expect(confirm.attributes('data-open')).toBe('true')
     expect(store.deleteProject).not.toHaveBeenCalled()
     await confirm.get('.confirm-yes').trigger('click')

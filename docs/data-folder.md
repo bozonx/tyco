@@ -28,10 +28,12 @@ the general rules in a few common programs.
    change it later, use "Make external…" or "Make internal…" next to the
    project folder in its settings. Making a project external moves its files
    to the folder you choose. Making it internal copies the files of its
-   folder into the workspace; the folder stays where it is, unless you ask to
-   move it to the trash. The dialog shows how many files move, and nothing is
-   deleted before everything is copied. "Change…" only points an external
-   project to another folder on this computer: its files are not moved.
+   folder into the workspace, or moves them and sends the folder to the
+   trash; nothing is deleted before everything is copied. "Change…" only
+   points an external project to another folder on this computer: its files
+   are not moved. **Disconnect** in the menu of an external project removes
+   it from TyCo and leaves its folder untouched; **Delete** an internal
+   project deletes its files with it.
 
 Call recordings of the dialog are kept per dialog in
 `dialogs/recordings/<dialog-id>/` of the data folder (see `docs/dialog.md`).

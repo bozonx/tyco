@@ -2,7 +2,11 @@ import { ref, type Ref } from 'vue'
 import type { AiProfile, ProfileSoul } from '@tyco/shared'
 
 import { isIpcErrorCode } from '../ipc/ipc-model'
-import { type ProjectAccessLevel, withProjectAccess } from './project-access'
+import {
+  type ProjectAccessLevel,
+  withProjectAccess,
+  withProjectDeleteAllowed,
+} from './project-access'
 import { vaultOfRef } from './profile-ref'
 import { createWithFreshId } from './vault-id'
 
@@ -265,6 +269,23 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     }).then(() => {})
   }
 
+  /** Lets the profile delete in the project without asking, or not */
+  const setProjectDeleteAllowed = (
+    profileId: string,
+    projectId: string,
+    isAllowed: boolean
+  ): Promise<void> => {
+    const profile = getProfile(profileId)
+    if (!profile) return Promise.resolve()
+    return updateProfile(profileId, {
+      projectPermissions: withProjectDeleteAllowed(
+        profile.projectPermissions,
+        projectId,
+        isAllowed
+      ),
+    }).then(() => {})
+  }
+
   const forgetConflict = (id: string) => {
     const { [id]: _resolved, ...rest } = conflicts.value
     conflicts.value = rest
@@ -305,6 +326,7 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     duplicateProfile,
     deleteProfile,
     setProjectAccess,
+    setProjectDeleteAllowed,
     readSoul,
     conflicts,
     resolveConflict,

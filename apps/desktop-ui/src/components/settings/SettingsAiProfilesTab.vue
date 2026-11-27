@@ -213,17 +213,25 @@
 
     <ConfirmModal
       :open="showDeleteProjectConfirm"
-      :title="t('settings.deleteProject')"
+      :title="
+        projectToDelete?.isExternal
+          ? t('settings.disconnectProject')
+          : t('settings.deleteProject')
+      "
       :message="
         t(
           projectToDelete?.isExternal
-            ? 'settings.deleteExternalProjectConfirm'
+            ? 'settings.disconnectProjectConfirm'
             : 'settings.deleteInternalProjectConfirm',
           { name: projectToDelete?.name ?? '' }
         )
       "
-      :confirm-text="t('settings.deleteProject')"
-      danger
+      :confirm-text="
+        projectToDelete?.isExternal
+          ? t('settings.disconnectProjectAction')
+          : t('settings.deleteProject')
+      "
+      :danger="!projectToDelete?.isExternal"
       @confirm="handleDeleteProject"
       @cancel="showDeleteProjectConfirm = false"
     />
@@ -470,11 +478,17 @@ function projectMenuItems(project: AiProject): DropdownMenuItem[] {
           action: () => openProjectFolder(project),
         },
     ...moveItem('project', project),
-    {
-      label: t('common.delete'),
-      icon: 'mdi:trash-can-outline',
-      action: () => askDeleteProject(project),
-    },
+    project.isExternal
+      ? {
+          label: t('settings.disconnectProjectAction'),
+          icon: 'mdi:link-variant-off',
+          action: () => askDeleteProject(project),
+        }
+      : {
+          label: t('common.delete'),
+          icon: 'mdi:trash-can-outline',
+          action: () => askDeleteProject(project),
+        },
   ]
 }
 

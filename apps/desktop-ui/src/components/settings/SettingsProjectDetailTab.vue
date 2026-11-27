@@ -102,17 +102,12 @@
                 }}
               </Button>
             </template>
-            <div class="project-folder">
-              <Badge
-                :tone="isExternal ? 'accent' : 'muted'"
-                data-testid="project-type"
-              >
-                {{
-                  isExternal
-                    ? t('settings.projectBadgeExternal')
-                    : t('settings.projectBadgeInternal')
-                }}
+            <template #badge>
+              <Badge v-if="isExternal" tone="accent" data-testid="project-type">
+                {{ t('settings.projectBadgeExternal') }}
               </Badge>
+            </template>
+            <div class="project-folder">
               <PathDisplay
                 :path="isExternal ? targetPath : `projects/${projectId}`"
                 :placeholder="
@@ -167,8 +162,6 @@
               <SettingsEntityItem
                 v-for="p in profiles"
                 :key="p.id"
-                icon="mdi:account-outline"
-                icon-tone="secondary"
                 :title="p.name"
               >
                 <FieldCheckbox
@@ -180,60 +173,20 @@
             </div>
           </div>
           <div v-else class="settings-section-content">
-            <div class="settings-entity-list">
-              <SettingsEntityItem
-                v-for="entry in accessEntries"
-                :key="entry.id"
-                icon="mdi:account-outline"
-                icon-tone="secondary"
-                :title="entry.title"
-                openable
-                @open="navigate(profileTab(entry.id))"
-              >
-                <span
-                  v-if="entry.warning"
-                  class="settings-entity-meta access-warning"
-                  :title="entry.warning"
-                >
-                  <AppIcon
-                    icon="mdi:alert-outline"
-                    size="sm"
-                    aria-hidden="true"
-                  />
-                  {{ entry.warning }}
-                </span>
-                <Badge :tone="accessLevelTone(entry.level)">
-                  {{ t(PROJECT_ACCESS_LABEL_KEYS[entry.level]) }}
-                </Badge>
-                <template #actions>
-                  <IconButton
-                    size="xs"
-                    icon="mdi:link-variant-off"
-                    :label="t('settings.accessRemove')"
-                    :title="t('settings.accessRemove')"
-                    @click="changeAccess(entry.id, undefined)"
-                  />
-                </template>
-              </SettingsEntityItem>
-              <StateMessage
-                v-if="accessEntries.length === 0"
-                density="compact"
-                :message="
-                  profiles.length === 0
-                    ? t('settings.noProfilesYet')
-                    : t('settings.noProfilesWithAccess')
-                "
-              />
-              <div v-if="accessCandidates.length > 0" class="access-add">
-                <DropdownMenu
-                  size="sm"
-                  variant="neutral"
-                  icon="mdi:plus"
-                  :label="t('settings.grantProfileAccess')"
-                  :items="addCandidateItems"
-                />
-              </div>
-            </div>
+            <SettingsAccessList
+              :entries="accessEntries"
+              :candidates="accessCandidates"
+              :add-label="t('settings.grantProfileAccess')"
+              :empty-message="
+                profiles.length === 0
+                  ? t('settings.noProfilesYet')
+                  : t('settings.noProfilesWithAccess')
+              "
+              openable
+              @change="changeAccess"
+              @delete-allowed="changeDeleteAllowed"
+              @open="(profileId) => navigate(profileTab(profileId))"
+            />
           </div>
         </SettingsSection>
       </fieldset>
@@ -278,9 +231,9 @@ import type { ConvertProjectOptions } from '../../lib/ai-profiles/ai-projects-mo
 import { vaultOfRef } from '../../lib/ai-profiles/profile-ref'
 import {
   DEFAULT_PROJECT_ACCESS_LEVEL,
-  PROJECT_ACCESS_LABEL_KEYS,
   type ProjectAccessLevel,
   hasFileToolsOff,
+  isDeleteAllowed,
   projectAccessLevelOf,
 } from '../../lib/ai-profiles/project-access'
 import { createProjectEditor } from '../../lib/ai-profiles/project-editor'
@@ -291,19 +244,20 @@ import {
   projectTab,
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
-import AppIcon from '../common/AppIcon.vue'
 import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
-import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
-import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import PathDisplay from '../common/PathDisplay.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import StateMessage from '../common/StateMessage.vue'
+import SettingsAccessList, {
+  type AccessListCandidate,
+  type AccessListEntry,
+} from './SettingsAccessList.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsProjectConvertDialog from './SettingsProjectConvertDialog.vue'
@@ -412,32 +366,6 @@ function accessLevelOf(profile: {
     : projectAccessLevelOf(profile.projectPermissions[props.projectId])
 }
 
-interface AccessEntry {
-  id: string
-  title: string
-  level: ProjectAccessLevel
-  warning?: string
-}
-
-interface AccessCandidate {
-  id: string
-  label: string
-}
-
-function accessLevelTone(
-  level: ProjectAccessLevel
-): 'neutral' | 'accent' | 'success' {
-  switch (level) {
-    case 'full':
-      return 'success'
-    case 'readWrite':
-      return 'accent'
-    case 'read':
-    default:
-      return 'neutral'
-  }
-}
-
 function togglePendingAccess(profileId: string, enabled: boolean) {
   if (enabled) {
     pendingAccess.value = {
@@ -450,7 +378,7 @@ function togglePendingAccess(profileId: string, enabled: boolean) {
   }
 }
 
-const accessEntries = computed<AccessEntry[]>(() =>
+const accessEntries = computed<AccessListEntry[]>(() =>
   profiles.value.flatMap((profile) => {
     const level = accessLevelOf(profile)
     if (!level) return []
@@ -459,6 +387,9 @@ const accessEntries = computed<AccessEntry[]>(() =>
         id: profile.id,
         title: profile.name,
         level,
+        isDeleteAllowed: isDeleteAllowed(
+          profile.projectPermissions[props.projectId]
+        ),
         warning: hasFileToolsOff(profile)
           ? t('settings.projectAccessFileToolsOff')
           : undefined,
@@ -467,19 +398,17 @@ const accessEntries = computed<AccessEntry[]>(() =>
   })
 )
 
-const accessCandidates = computed<AccessCandidate[]>(() =>
+const accessCandidates = computed<AccessListCandidate[]>(() =>
   profiles.value
     .filter((profile) => !accessLevelOf(profile))
     .map((profile) => ({ id: profile.id, label: profile.name }))
 )
 
-const addCandidateItems = computed<DropdownMenuItem[]>(() =>
-  accessCandidates.value.map((candidate) => ({
-    label: candidate.label,
-    icon: 'mdi:account-outline',
-    action: () => changeAccess(candidate.id, DEFAULT_PROJECT_ACCESS_LEVEL),
-  }))
-)
+function changeDeleteAllowed(profileId: string, isAllowed: boolean) {
+  void aiProfilesStore
+    .setProjectDeleteAllowed(profileId, props.projectId, isAllowed)
+    .catch(toastError)
+}
 
 function changeAccess(
   profileId: string,
@@ -583,16 +512,5 @@ async function handleCreate() {
   align-items: center;
   gap: var(--space-sm);
   min-width: 0;
-}
-
-.access-warning {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2xs);
-  color: var(--color-warning);
-}
-
-.access-add {
-  display: flex;
 }
 </style>
