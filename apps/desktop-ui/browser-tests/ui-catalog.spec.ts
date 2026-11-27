@@ -30,6 +30,29 @@ test('mouse clicks preserve text focus and buttons stay in the Tab order', async
   await expect(primary).toBeFocused()
 })
 
+test('an outside mouse press clears select focus and Escape preserves it', async ({
+  page,
+}) => {
+  const select = page.getByRole('combobox', { name: 'Small select' })
+  const button = page.getByRole('button', { name: 'primary', exact: true })
+  const input = page.getByRole('textbox', { name: 'Small input', exact: true })
+
+  await select.focus()
+  await page.keyboard.press('Space')
+  await page.keyboard.press('Escape')
+  await expect(select).toBeFocused()
+
+  await select.click()
+  await expect(select).toBeFocused()
+  await button.click()
+  await expect(select).not.toBeFocused()
+  await expect(button).not.toBeFocused()
+
+  await select.focus()
+  await input.click()
+  await expect(input).toBeFocused()
+})
+
 test('menus preserve keyboard focus and nested navigation', async ({
   page,
 }) => {

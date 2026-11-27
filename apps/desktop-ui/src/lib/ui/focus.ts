@@ -23,15 +23,19 @@ export function preventMouseFocus(event: PointerEvent): void {
 const BUTTON_SELECTOR =
   'button, input[type="button"], input[type="submit"], input[type="reset"], summary, [role="button"]'
 
-/**
- * Applies mouse focus handling to native and custom buttons, including
- * teleports.
- */
+/** Applies mouse focus handling to buttons and selects, including teleports. */
 export function installButtonMouseFocusPolicy(): void {
   document.addEventListener(
     'mousedown',
     (event) => {
       if (event.button !== 0 || !(event.target instanceof Element)) return
+      const activeElement = document.activeElement
+      if (
+        activeElement instanceof HTMLSelectElement &&
+        !activeElement.contains(event.target)
+      ) {
+        activeElement.blur()
+      }
       const button = event.target.closest(BUTTON_SELECTOR)
       if (button) {
         event.preventDefault()
