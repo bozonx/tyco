@@ -1418,9 +1418,12 @@
     "profileMemoryCompactConfirmTitle": "Compattare la memoria?",
     "profileMemoryCompactConfirm": "Il modello riscrive {file} in forma più breve, togliendo ripetizioni e voci superate. La richiesta consuma token. Vedrai le modifiche prima del salvataggio e potrai rifiutarle.",
     "actionWebhookHeaderReplacePlaceholder": "Salvato. Inserisci un nuovo valore per sostituirlo",
-    "actionWebhookHeadersInfo": "I valori delle intestazioni sono conservati nell’archivio sicuro e inviati solo all’indirizzo del webhook. Per un token aggiungi ad es. Authorization: Bearer …",
+    "actionWebhookHeadersInfo": "Un valore normale resta nelle impostazioni e può contenere variabili. Con il lucchetto il valore è segreto: va nell’archivio sicuro ed è inviato solo all’indirizzo del webhook — usalo per i token, ad es. Authorization: Bearer …",
     "actionWebhookHeaderUnsaved": "Non ancora salvato: premi Salva accanto al valore. Andrà nell’archivio sicuro.",
-    "actionWebhookHeaderNeedsUrl": "Inserisci prima un URL valido: il valore è legato all’indirizzo del webhook."
+    "actionWebhookHeaderNeedsUrl": "Inserisci prima un URL valido: il valore è legato all’indirizzo del webhook.",
+    "actionWebhookHeaderSecretPlaceholder": "Valore segreto",
+    "actionWebhookHeaderMakeSecret": "Rendi segreto il valore",
+    "actionWebhookHeaderMakePlain": "Rendi normale il valore"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {

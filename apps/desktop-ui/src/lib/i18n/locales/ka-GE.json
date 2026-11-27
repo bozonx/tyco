@@ -1418,9 +1418,12 @@
     "profileMemoryCompactConfirmTitle": "შეიკუმშოს მეხსიერება?",
     "profileMemoryCompactConfirm": "მოდელი {file}-ს უფრო მოკლედ გადაწერს: მოაშორებს გამეორებებს და მოძველებულს. მოთხოვნა ხარჯავს ტოკენებს. შენახვამდე ნახავთ ცვლილებებს და შეძლებთ უარის თქმას.",
     "actionWebhookHeaderReplacePlaceholder": "შენახულია. ჩასანაცვლებლად შეიყვანეთ ახალი მნიშვნელობა",
-    "actionWebhookHeadersInfo": "სათაურების მნიშვნელობები ინახება დაცულ საცავში და იგზავნება მხოლოდ webhook-ის მისამართზე. ტოკენისთვის დაამატეთ, მაგ., Authorization: Bearer …",
+    "actionWebhookHeadersInfo": "ჩვეულებრივი მნიშვნელობა ინახება პარამეტრებში და შეიძლება შეიცავდეს ცვლადებს. ბოქლომით მნიშვნელობა საიდუმლოა: ის დაცულ საცავში ინახება და მხოლოდ webhook-ის მისამართზე იგზავნება — გამოიყენეთ ტოკენებისთვის, მაგ., Authorization: Bearer …",
     "actionWebhookHeaderUnsaved": "ჯერ არ არის შენახული: დააჭირეთ „შენახვას“ მნიშვნელობის გვერდით. ის დაცულ საცავში მოხვდება.",
-    "actionWebhookHeaderNeedsUrl": "ჯერ მიუთითეთ სწორი URL: მნიშვნელობა webhook-ის მისამართს უკავშირდება."
+    "actionWebhookHeaderNeedsUrl": "ჯერ მიუთითეთ სწორი URL: მნიშვნელობა webhook-ის მისამართს უკავშირდება.",
+    "actionWebhookHeaderSecretPlaceholder": "საიდუმლო მნიშვნელობა",
+    "actionWebhookHeaderMakeSecret": "მნიშვნელობის საიდუმლოდ ქცევა",
+    "actionWebhookHeaderMakePlain": "მნიშვნელობის ჩვეულებრივად ქცევა"
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {

@@ -1418,9 +1418,12 @@
     "profileMemoryCompactConfirmTitle": "Συμπύκνωση μνήμης;",
     "profileMemoryCompactConfirm": "Το μοντέλο ξαναγράφει το {file} πιο σύντομα, αφαιρώντας επαναλήψεις και ό,τι είναι ξεπερασμένο. Το αίτημα καταναλώνει tokens. Θα δείτε τις αλλαγές πριν την αποθήκευση και μπορείτε να τις απορρίψετε.",
     "actionWebhookHeaderReplacePlaceholder": "Αποθηκεύτηκε. Εισαγάγετε νέα τιμή για αντικατάσταση",
-    "actionWebhookHeadersInfo": "Οι τιμές των κεφαλίδων φυλάσσονται στον ασφαλή χώρο αποθήκευσης και αποστέλλονται μόνο στη διεύθυνση του webhook. Για token προσθέστε π.χ. Authorization: Bearer …",
+    "actionWebhookHeadersInfo": "Μια κανονική τιμή φυλάσσεται στις ρυθμίσεις και μπορεί να περιέχει μεταβλητές. Με την κλειδαριά η τιμή είναι μυστική: πηγαίνει στον ασφαλή χώρο αποθήκευσης και αποστέλλεται μόνο στη διεύθυνση του webhook — χρησιμοποιήστε τη για tokens, π.χ. Authorization: Bearer …",
     "actionWebhookHeaderUnsaved": "Δεν αποθηκεύτηκε ακόμη: πατήστε Αποθήκευση δίπλα στην τιμή. Πηγαίνει στον ασφαλή χώρο αποθήκευσης.",
-    "actionWebhookHeaderNeedsUrl": "Εισαγάγετε πρώτα ένα έγκυρο URL: η τιμή δεσμεύεται στη διεύθυνση του webhook."
+    "actionWebhookHeaderNeedsUrl": "Εισαγάγετε πρώτα ένα έγκυρο URL: η τιμή δεσμεύεται στη διεύθυνση του webhook.",
+    "actionWebhookHeaderSecretPlaceholder": "Μυστική τιμή",
+    "actionWebhookHeaderMakeSecret": "Να γίνει η τιμή μυστική",
+    "actionWebhookHeaderMakePlain": "Να γίνει η τιμή κανονική"
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {

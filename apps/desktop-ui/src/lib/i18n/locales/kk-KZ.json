@@ -1418,9 +1418,12 @@
     "profileMemoryCompactConfirmTitle": "Жадты ықшамдау керек пе?",
     "profileMemoryCompactConfirm": "Модель {file} файлын қысқартып қайта жазады: қайталаулар мен ескіргенін алып тастайды. Сұрау токендерді жұмсайды. Сақтамас бұрын өзгерістерді көріп, бас тарта аласыз.",
     "actionWebhookHeaderReplacePlaceholder": "Сақталды. Ауыстыру үшін жаңа мән енгізіңіз",
-    "actionWebhookHeadersInfo": "Тақырып мәндері қорғалған қоймада сақталады және тек вебхук мекенжайына жіберіледі. Токен үшін, мысалы, Authorization: Bearer … қосыңыз",
+    "actionWebhookHeadersInfo": "Кәдімгі мән баптауларда сақталады және айнымалыларды қамти алады. Құлыппен мән құпия болады: ол қорғалған қоймаға түседі және тек вебхук мекенжайына жіберіледі — оны токендер үшін пайдаланыңыз, мысалы Authorization: Bearer …",
     "actionWebhookHeaderUnsaved": "Әлі сақталмады: мәннің жанындағы «Сақтау» түймесін басыңыз. Ол қорғалған қоймаға түседі.",
-    "actionWebhookHeaderNeedsUrl": "Алдымен дұрыс URL енгізіңіз: мән вебхук мекенжайына байланады."
+    "actionWebhookHeaderNeedsUrl": "Алдымен дұрыс URL енгізіңіз: мән вебхук мекенжайына байланады.",
+    "actionWebhookHeaderSecretPlaceholder": "Құпия мән",
+    "actionWebhookHeaderMakeSecret": "Мәнді құпия ету",
+    "actionWebhookHeaderMakePlain": "Мәнді кәдімгі ету"
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {

@@ -1418,9 +1418,12 @@
     "profileMemoryCompactConfirmTitle": "Tömöríted a memóriát?",
     "profileMemoryCompactConfirm": "A modell rövidebben újraírja a(z) {file} fájlt, eltávolítva az ismétléseket és az elavult elemeket. A kérés tokeneket használ. Mentés előtt látod a változásokat, és elvetheted őket.",
     "actionWebhookHeaderReplacePlaceholder": "Mentve. Adjon meg új értéket a cseréjéhez",
-    "actionWebhookHeadersInfo": "A fejlécek értékei a biztonságos tárolóba kerülnek, és csak a webhook címére lesznek elküldve. Tokenhez adja hozzá pl.: Authorization: Bearer …",
+    "actionWebhookHeadersInfo": "A normál érték a beállításokban marad, és változókat is tartalmazhat. A lakattal az érték titkos: a biztonságos tárolóba kerül, és csak a webhook címére lesz elküldve — tokenekhez használja, pl. Authorization: Bearer …",
     "actionWebhookHeaderUnsaved": "Még nincs mentve: kattintson az érték melletti Mentés gombra. A biztonságos tárolóba kerül.",
-    "actionWebhookHeaderNeedsUrl": "Előbb adjon meg érvényes URL-t: az érték a webhook címéhez kötődik."
+    "actionWebhookHeaderNeedsUrl": "Előbb adjon meg érvényes URL-t: az érték a webhook címéhez kötődik.",
+    "actionWebhookHeaderSecretPlaceholder": "Titkos érték",
+    "actionWebhookHeaderMakeSecret": "Érték titkossá tétele",
+    "actionWebhookHeaderMakePlain": "Érték normálissá tétele"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

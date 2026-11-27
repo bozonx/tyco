@@ -89,3 +89,18 @@ export function removeWebhookHeaderRow(
 ): WebhookHeaderRow[] {
   return rows.filter((_, i) => i !== index)
 }
+
+/**
+ * Whether a header name tells of a credential, e.g. `Authorization`,
+ * `X-API-Key`, `X-Auth-Token`: such a header starts secret
+ */
+export function isSensitiveHeaderName(name: string): boolean {
+  const key = headerKey(name)
+  return (
+    key === 'authorization' ||
+    key === 'proxy-authorization' ||
+    key === 'cookie' ||
+    /(^|[-_])(key|token|secret|password|signature)$/.test(key) ||
+    /(^|[-_])(api[-_]?key|auth)([-_]|$)/.test(key)
+  )
+}

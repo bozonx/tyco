@@ -171,9 +171,10 @@ Conventions:
   boundary.
 - An id is stable and independent of the display name.
 
-Script operations use `workingDirectory` and `isDetached`; webhook
-operations keep every header value, Authorization included, as a secret
-reference; commands use `isLlmArgumentParsingEnabled`. The standard
+Script operations use `workingDirectory` and `isDetached`; a webhook header
+value is either plain text, which may hold variables, or a secret reference
+the webview made when the user saved a value marked secret (Authorization
+included); commands use `isLlmArgumentParsingEnabled`. The standard
 menu actions `transformationMenu`, `stylingMenu` and `translationMenu` open a
 menu to pick from; one transformation, style or language is an item of the
 `transformation`, `styling` or `translation` type.

@@ -1418,9 +1418,12 @@
     "profileMemoryCompactConfirmTitle": "Ущільнити пам’ять?",
     "profileMemoryCompactConfirm": "Модель перепише {file} коротше: прибере повтори й застаріле. Запит витрачає токени. Перед збереженням ви побачите зміни й зможете відмовитися.",
     "actionWebhookHeaderReplacePlaceholder": "Збережено. Введіть нове значення, щоб замінити його",
-    "actionWebhookHeadersInfo": "Значення заголовків зберігаються в захищеному сховищі й надсилаються лише на адресу вебхука. Для токена додайте, наприклад, Authorization: Bearer …",
+    "actionWebhookHeadersInfo": "Звичайне значення зберігається в налаштуваннях і може містити змінні. Із замком значення секретне: воно потрапляє до захищеного сховища й надсилається лише на адресу вебхука — використовуйте його для токенів, наприклад Authorization: Bearer …",
     "actionWebhookHeaderUnsaved": "Ще не збережено: натисніть «Зберегти» поруч зі значенням. Воно потрапить до захищеного сховища.",
-    "actionWebhookHeaderNeedsUrl": "Спершу вкажіть коректний URL: значення прив’язується до адреси вебхука."
+    "actionWebhookHeaderNeedsUrl": "Спершу вкажіть коректний URL: значення прив’язується до адреси вебхука.",
+    "actionWebhookHeaderSecretPlaceholder": "Секретне значення",
+    "actionWebhookHeaderMakeSecret": "Зробити значення секретним",
+    "actionWebhookHeaderMakePlain": "Зробити значення звичайним"
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {

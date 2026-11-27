@@ -1418,9 +1418,12 @@
     "profileMemoryCompactConfirmTitle": "기억을 압축할까요?",
     "profileMemoryCompactConfirm": "모델이 {file}을(를) 반복과 오래된 내용을 빼고 더 짧게 다시 씁니다. 요청에는 토큰이 사용됩니다. 저장하기 전에 변경 사항을 보고 거부할 수 있습니다.",
     "actionWebhookHeaderReplacePlaceholder": "저장됨. 교체할 새 값을 입력하세요",
-    "actionWebhookHeadersInfo": "헤더 값은 보안 저장소에 보관되며 웹훅 주소로만 전송됩니다. 토큰은 예를 들어 Authorization: Bearer … 를 추가하세요",
+    "actionWebhookHeadersInfo": "일반 값은 설정에 저장되며 변수를 포함할 수 있습니다. 자물쇠를 켜면 값이 비밀이 되어 보안 저장소에 저장되고 웹훅 주소로만 전송됩니다. 토큰에 사용하세요(예: Authorization: Bearer …)",
     "actionWebhookHeaderUnsaved": "아직 저장되지 않았습니다. 값 옆의 저장을 누르세요. 보안 저장소에 저장됩니다.",
-    "actionWebhookHeaderNeedsUrl": "먼저 올바른 URL을 입력하세요. 값은 웹훅 주소에 연결됩니다."
+    "actionWebhookHeaderNeedsUrl": "먼저 올바른 URL을 입력하세요. 값은 웹훅 주소에 연결됩니다.",
+    "actionWebhookHeaderSecretPlaceholder": "비밀 값",
+    "actionWebhookHeaderMakeSecret": "값을 비밀로 설정",
+    "actionWebhookHeaderMakePlain": "값을 일반으로 설정"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

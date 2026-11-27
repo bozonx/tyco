@@ -68,28 +68,56 @@
             :placeholder="t('settings.actionWebhookHeaderName')"
             @update:model-value="updateHeader(headerIndex, 0, $event)"
           />
-          <FieldInput
-            class="flex-1"
-            type="password"
-            autocomplete="off"
+          <template v-if="secretRows[headerIndex]">
+            <FieldInput
+              class="flex-1"
+              type="password"
+              autocomplete="off"
+              :aria-label="t('settings.actionWebhookHeaderValue')"
+              :model-value="secretDrafts[headerIndex] ?? ''"
+              :placeholder="
+                secretIdOf(header[1])
+                  ? t('settings.actionWebhookHeaderReplacePlaceholder')
+                  : t('settings.actionWebhookHeaderSecretPlaceholder')
+              "
+              @update:model-value="secretDrafts[headerIndex] = $event"
+              @keydown.enter.prevent="saveHeaderValue(headerIndex)"
+            />
+            <Button
+              variant="primary"
+              size="sm"
+              :disabled="!canSaveHeaderValue(headerIndex)"
+              @click="saveHeaderValue(headerIndex)"
+            >
+              {{ t('common.save') }}
+            </Button>
+          </template>
+          <ActionTemplateField
+            v-else
+            can-use-variables
+            without-text
             :aria-label="t('settings.actionWebhookHeaderValue')"
-            :model-value="secretDrafts[headerIndex] ?? ''"
-            :placeholder="
-              secretIdOf(header[1])
-                ? t('settings.actionWebhookHeaderReplacePlaceholder')
-                : t('settings.actionWebhookHeaderValue')
-            "
-            @update:model-value="secretDrafts[headerIndex] = $event"
-            @keydown.enter.prevent="saveHeaderValue(headerIndex)"
+            :model-value="header[1]"
+            :placeholder="t('settings.actionWebhookHeaderValue')"
+            @update:model-value="updateHeader(headerIndex, 1, $event)"
           />
-          <Button
-            variant="primary"
+          <IconButton
+            variant="ghost"
             size="sm"
-            :disabled="!canSaveHeaderValue(headerIndex)"
-            @click="saveHeaderValue(headerIndex)"
-          >
-            {{ t('common.save') }}
-          </Button>
+            :icon="
+              secretRows[headerIndex]
+                ? 'mdi:lock'
+                : 'mdi:lock-open-variant-outline'
+            "
+            :label="
+              secretRows[headerIndex]
+                ? t('settings.actionWebhookHeaderMakePlain')
+                : t('settings.actionWebhookHeaderMakeSecret')
+            "
+            :aria-pressed="secretRows[headerIndex] ? 'true' : 'false'"
+            data-testid="header-secret-toggle"
+            @click="toggleSecret(headerIndex)"
+          />
           <IconButton
             variant="ghost"
             size="sm"
@@ -147,6 +175,7 @@ import {
   addWebhookHeaderRow,
   duplicateWebhookHeaderRows,
   isSameWebhookHeaders,
+  isSensitiveHeaderName,
   removeWebhookHeaderRow,
   updateWebhookHeaderRow,
   webhookHeaderRows,
@@ -192,35 +221,41 @@ const urlHere = computed(() => {
 const secretsStore = useSecretsStore()
 const { toastKey, toastError, toastText } = useToast()
 // the rows live here, so a row without a name, with a repeated one or
-// without a saved value is kept while it is edited; the config gets only the
-// named headers whose value is in the secret store
+// with a secret value not saved yet is kept while it is edited. The config
+// gets the named headers: a plain value as it is, variables and all, and a
+// secret one as the reference to its value in the secret store
 const headerRows = ref<WebhookHeaderRow[]>([])
-/** What is typed into the value of each row, not saved yet */
+/** Which rows hold a secret value */
+const secretRows = ref<boolean[]>([])
+/** The secret value typed into each row, not saved yet */
 const secretDrafts = ref<string[]>([])
 const configHeaders = computed(() =>
   props.command.operationId === 'webhook' ? webhook.value.headers : {}
 )
 const secretIdOf = (value: string): string | null => secretIdFromRef(value)
-const savedHeaders = (rows: readonly WebhookHeaderRow[]) =>
-  webhookHeadersFromRows(rows.filter(([, value]) => secretIdOf(value)))
+/** A secret row goes to the config only once its value is saved */
+const configHeadersOf = (rows: readonly WebhookHeaderRow[]) =>
+  webhookHeadersFromRows(
+    rows.filter(
+      ([, value], index) => !secretRows.value[index] || secretIdOf(value)
+    )
+  )
 watch(
   [() => props.command.id, configHeaders],
   ([id], [previousId]) => {
     if (
       id === previousId &&
-      isSameWebhookHeaders(savedHeaders(headerRows.value), configHeaders.value)
+      isSameWebhookHeaders(
+        configHeadersOf(headerRows.value),
+        configHeaders.value
+      )
     )
       return
-    // a value in plain text, e.g. written by hand into the file, waits in
-    // its field for the user to save it into the secret store
-    const rows = webhookHeaderRows(configHeaders.value)
-    headerRows.value = rows.map(([name, value]) => [
-      name,
-      secretIdOf(value) ? value : '',
-    ])
-    secretDrafts.value = rows.map(([, value]) =>
-      secretIdOf(value) ? '' : value
+    headerRows.value = webhookHeaderRows(configHeaders.value)
+    secretRows.value = headerRows.value.map(([, value]) =>
+      Boolean(secretIdOf(value))
     )
+    secretDrafts.value = headerRows.value.map(() => '')
   },
   { immediate: true }
 )
@@ -230,7 +265,9 @@ const duplicateHeaders = computed(() =>
 /** The origin a value is bound to: the one of the URL on this device */
 const originHere = computed(() => httpOrigin(urlHere.value))
 const hasUnsavedHeaderValue = computed(() =>
-  secretDrafts.value.some((draft) => draft.trim())
+  secretDrafts.value.some(
+    (draft, index) => secretRows.value[index] && draft.trim()
+  )
 )
 const canSaveHeaderValue = (index: number) =>
   Boolean(
@@ -238,29 +275,58 @@ const canSaveHeaderValue = (index: number) =>
     secretDrafts.value[index]?.trim() &&
     headerRows.value[index]?.[0].trim()
   )
+const withAt = <T,>(items: readonly T[], index: number, item: T) =>
+  items.map((current, i) => (i === index ? item : current))
 
 function setHeaders(rows: WebhookHeaderRow[]) {
   headerRows.value = rows
-  const headers = savedHeaders(rows)
+  const headers = configHeadersOf(rows)
   if (!isSameWebhookHeaders(headers, configHeaders.value))
     update('headers', headers)
 }
 
 function updateHeader(index: number, part: 0 | 1, value: string) {
+  // a name that tells of a key makes a new, empty row secret
+  if (
+    part === 0 &&
+    !secretRows.value[index] &&
+    !headerRows.value[index]?.[1] &&
+    isSensitiveHeaderName(value)
+  )
+    secretRows.value = withAt(secretRows.value, index, true)
   setHeaders(updateWebhookHeaderRow(headerRows.value, index, part, value))
 }
 
 function addHeader() {
   const rows = addWebhookHeaderRow(headerRows.value)
   if (!rows) return
+  secretRows.value = [...secretRows.value, false]
   secretDrafts.value = [...secretDrafts.value, '']
   setHeaders(rows)
 }
 
 function removeHeader(index: number) {
   const id = secretIdOf(headerRows.value[index]?.[1] ?? '')
-  secretDrafts.value = secretDrafts.value.filter((_, i) => i !== index)
+  const without = <T,>(items: readonly T[]) =>
+    items.filter((_, i) => i !== index)
+  secretRows.value = without(secretRows.value)
+  secretDrafts.value = without(secretDrafts.value)
   setHeaders(removeWebhookHeaderRow(headerRows.value, index))
+  if (id) void removeUnusedSecret(id)
+}
+
+/**
+ * Makes a value secret or plain. A plain value waits in the field to be saved
+ * as a secret; a secret one is not shown back, so a plain value starts empty
+ * and the stored one is removed once no config refers to it
+ */
+function toggleSecret(index: number) {
+  const value = headerRows.value[index]?.[1] ?? ''
+  const isSecret = !secretRows.value[index]
+  secretRows.value = withAt(secretRows.value, index, isSecret)
+  secretDrafts.value = withAt(secretDrafts.value, index, isSecret ? value : '')
+  setHeaders(updateWebhookHeaderRow(headerRows.value, index, 1, ''))
+  const id = secretIdOf(value)
   if (id) void removeUnusedSecret(id)
 }
 
@@ -276,9 +342,7 @@ async function saveHeaderValue(index: number) {
     ? (await replaceSecret(id, value)) && id
     : await createSecret(value)
   if (!saved) return
-  secretDrafts.value = secretDrafts.value.map((draft, i) =>
-    i === index ? '' : draft
-  )
+  secretDrafts.value = withAt(secretDrafts.value, index, '')
   if (!id) updateHeader(index, 1, secretRef(saved))
 }
 

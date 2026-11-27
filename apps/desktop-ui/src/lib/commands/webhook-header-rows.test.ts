@@ -4,6 +4,7 @@ import {
   addWebhookHeaderRow,
   duplicateWebhookHeaderRows,
   isSameWebhookHeaders,
+  isSensitiveHeaderName,
   removeWebhookHeaderRow,
   updateWebhookHeaderRow,
   webhookHeaderRows,
@@ -68,5 +69,21 @@ describe('webhook header rows', () => {
     expect(isSameWebhookHeaders({ A: '1', B: '2' }, { B: '2', A: '1' })).toBe(
       false
     )
+  })
+})
+
+describe('isSensitiveHeaderName', () => {
+  it('tells the names of credentials', () => {
+    for (const name of [
+      'Authorization',
+      'x-api-key',
+      'X-Auth-Token',
+      'Cookie',
+      'apikey',
+      'X-Webhook-Secret',
+    ])
+      expect(isSensitiveHeaderName(name), name).toBe(true)
+    for (const name of ['Accept', 'Content-Type', 'X-Device', 'Keyboard'])
+      expect(isSensitiveHeaderName(name), name).toBe(false)
   })
 })

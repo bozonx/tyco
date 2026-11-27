@@ -1418,9 +1418,12 @@
     "profileMemoryCompactConfirmTitle": "Gedächtnis verdichten?",
     "profileMemoryCompactConfirm": "Das Modell schreibt {file} kürzer neu und entfernt Wiederholungen und Veraltetes. Die Anfrage verbraucht Tokens. Vor dem Speichern sehen Sie die Änderungen und können sie verwerfen.",
     "actionWebhookHeaderReplacePlaceholder": "Gespeichert. Geben Sie einen neuen Wert ein, um ihn zu ersetzen",
-    "actionWebhookHeadersInfo": "Header-Werte werden im sicheren Speicher abgelegt und nur an die Adresse des Webhooks gesendet. Für ein Token z. B. Authorization: Bearer … hinzufügen",
+    "actionWebhookHeadersInfo": "Ein normaler Wert steht in den Einstellungen und darf Variablen enthalten. Mit dem Schloss ist ein Wert geheim: Er kommt in den sicheren Speicher und wird nur an die Adresse des Webhooks gesendet — nutze das für Tokens, z. B. Authorization: Bearer …",
     "actionWebhookHeaderUnsaved": "Noch nicht gespeichert: Klicke neben dem Wert auf Speichern. Er kommt in den sicheren Speicher.",
-    "actionWebhookHeaderNeedsUrl": "Gib zuerst eine gültige URL ein: Ein Wert wird an die Adresse des Webhooks gebunden."
+    "actionWebhookHeaderNeedsUrl": "Gib zuerst eine gültige URL ein: Ein Wert wird an die Adresse des Webhooks gebunden.",
+    "actionWebhookHeaderSecretPlaceholder": "Geheimer Wert",
+    "actionWebhookHeaderMakeSecret": "Wert geheim machen",
+    "actionWebhookHeaderMakePlain": "Wert als normal festlegen"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

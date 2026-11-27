@@ -1418,9 +1418,12 @@
     "profileMemoryCompactConfirmTitle": "压缩记忆？",
     "profileMemoryCompactConfirm": "模型会把 {file} 改写得更短，去掉重复和过时的内容。此请求会消耗 token。保存前你会看到更改，并可以拒绝。",
     "actionWebhookHeaderReplacePlaceholder": "已保存。输入新值以替换",
-    "actionWebhookHeadersInfo": "标头的值保存在安全存储中，只发送到 Webhook 的地址。如需令牌，请添加例如 Authorization: Bearer …",
+    "actionWebhookHeadersInfo": "普通值保存在设置中，可以包含变量。加锁后值为机密：它会存入安全存储，且只发送到 Webhook 的地址——用于令牌，例如 Authorization: Bearer …",
     "actionWebhookHeaderUnsaved": "尚未保存：请点击值旁边的“保存”。它会存入安全存储。",
-    "actionWebhookHeaderNeedsUrl": "请先输入有效的 URL：值会绑定到 Webhook 的地址。"
+    "actionWebhookHeaderNeedsUrl": "请先输入有效的 URL：值会绑定到 Webhook 的地址。",
+    "actionWebhookHeaderSecretPlaceholder": "机密值",
+    "actionWebhookHeaderMakeSecret": "设为机密值",
+    "actionWebhookHeaderMakePlain": "设为普通值"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

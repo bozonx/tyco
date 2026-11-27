@@ -1418,9 +1418,12 @@
     "profileMemoryCompactConfirmTitle": "Sažeti memoriju?",
     "profileMemoryCompactConfirm": "Model će prepisati {file} kraće, uklanjajući ponavljanja i zastarjelo. Zahtjev troši tokene. Prije spremanja vidjet ćete promjene i moći ih odbiti.",
     "actionWebhookHeaderReplacePlaceholder": "Spremljeno. Unesite novu vrijednost za zamjenu",
-    "actionWebhookHeadersInfo": "Vrijednosti zaglavlja čuvaju se u sigurnoj pohrani i šalju se samo na adresu webhooka. Za token dodajte npr. Authorization: Bearer …",
+    "actionWebhookHeadersInfo": "Obična vrijednost čuva se u postavkama i može sadržavati varijable. S lokotom je vrijednost tajna: ide u sigurnu pohranu i šalje se samo na adresu webhooka — koristite je za tokene, npr. Authorization: Bearer …",
     "actionWebhookHeaderUnsaved": "Još nije spremljeno: pritisnite Spremi pokraj vrijednosti. Ide u sigurnu pohranu.",
-    "actionWebhookHeaderNeedsUrl": "Najprije unesite valjani URL: vrijednost se veže uz adresu webhooka."
+    "actionWebhookHeaderNeedsUrl": "Najprije unesite valjani URL: vrijednost se veže uz adresu webhooka.",
+    "actionWebhookHeaderSecretPlaceholder": "Tajna vrijednost",
+    "actionWebhookHeaderMakeSecret": "Učini vrijednost tajnom",
+    "actionWebhookHeaderMakePlain": "Učini vrijednost običnom"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

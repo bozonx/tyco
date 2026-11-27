@@ -1,91 +1,26 @@
-//! Custom webhook headers are persisted only as origin-bound secret references.
+//! Webhook header values the user marked secret are kept in the secret store,
+//! bound to an origin; the config holds only `tyco-secret:<id>` references.
+//! The webview stores a value and makes the reference; the settings save only
+//! removes the values no config refers to any more. A plain header value stays
+//! in the config as it is: it may hold variables.
 use serde_json::Value;
 use std::collections::HashSet;
 
 use crate::errors::AppError;
-use crate::services::secrets::{normalize_origin, SecretStore, SECRET_REF_PREFIX};
-use crate::services::variables::{self, Place, VariableValues};
+use crate::services::secrets::{SecretStore, SECRET_REF_PREFIX};
 
 /// The secrets the app makes for webhooks; it removes them once unused.
 const WEBHOOK_HEADER_PREFIX: &str = "webhook.header.";
 
-/// The id of a header that has just become secret. It is made once and never
-/// changes with the value, nor with the device the value was typed on: the
-/// config holding it is shared by every device, each with its own value
-/// under it. Ids of earlier versions stay valid as they are.
-fn new_header_secret_id() -> String {
-    format!(
-        "{WEBHOOK_HEADER_PREFIX}{}",
-        crate::services::random_id::new_uuid()
-    )
-}
-
-/// Replaces the header values typed in plain text with references to new
-/// secrets, made by `new_id`, holding the values and bound to the origin of
-/// the URL of their webhook on this device.
-fn protect_headers(
-    config: &mut Value,
-    variables: &VariableValues,
-    mut new_id: impl FnMut() -> String,
-    mut store: impl FnMut(&str, &str, &str) -> Result<(), AppError>,
-) -> Result<bool, AppError> {
-    let Some(commands) = config.get_mut("commands").and_then(Value::as_array_mut) else {
-        return Ok(false);
-    };
-    let mut changed = false;
-    for command in commands {
-        if command["operationId"] != "webhook" {
-            continue;
-        }
-        let command_id = command["id"].as_str().unwrap_or_default().to_owned();
-        let Some(tool) = command.get_mut("operationConfig") else {
-            continue;
-        };
-        let url = tool["url"].as_str().unwrap_or_default().to_owned();
-        let Some(headers) = tool.get_mut("headers").and_then(Value::as_object_mut) else {
-            continue;
-        };
-        for (name, value) in headers {
-            let Some(raw) = value.as_str() else {
-                continue;
-            };
-            if raw.trim().is_empty() || raw.contains(SECRET_REF_PREFIX) {
-                continue;
-            }
-            let origin = variables::substitute(&url, variables, Place::Url)
-                .and_then(|url| normalize_origin(&url))
-                .map_err(|error| {
-                    let message = format!(
-                        "The secret header \"{name}\" of the webhook \"{command_id}\" cannot be saved: {error}"
-                    );
-                    match error {
-                        AppError::VariableNotSet(_) => AppError::VariableNotSet(message),
-                        _ => AppError::InvalidInput(message),
-                    }
-                })?;
-            let id = new_id();
-            store(&id, raw, &origin)?;
-            *value = Value::String(format!("{SECRET_REF_PREFIX}{id}"));
-            changed = true;
-        }
-    }
-    Ok(changed)
-}
-
-/// Rolls back freshly created header secrets if the config transaction fails.
+/// Removes the header secrets a saved config dropped, once the save is done.
 pub struct PendingHeaderSecrets<'a> {
     store: &'a SecretStore,
-    created: Vec<String>,
-    committed: bool,
 }
 
 impl PendingHeaderSecrets<'_> {
-    /// Preserve keys when a failed rollback leaves the disk state uncertain.
-    pub fn retain(mut self) {
-        self.committed = true;
-    }
-    pub fn commit(mut self, previous: &Value, next: &Value) {
-        self.committed = true;
+    /// Keeps every key when the disk state is uncertain.
+    pub fn retain(self) {}
+    pub fn commit(self, previous: &Value, next: &Value) {
         let mut retained = referenced_secrets(next);
         // A removed command can still be restored by the settings undo action.
         let next_ids: HashSet<&str> = next["commands"]
@@ -104,44 +39,8 @@ impl PendingHeaderSecrets<'_> {
     }
 }
 
-impl Drop for PendingHeaderSecrets<'_> {
-    fn drop(&mut self) {
-        if !self.committed {
-            for id in &self.created {
-                if let Err(error) = self.store.remove(id) {
-                    log::warn!("Could not roll back webhook header secret: {error}");
-                }
-            }
-        }
-    }
-}
-
-pub fn protect_for_save<'a>(
-    store: &'a SecretStore,
-    config: &mut Value,
-    variables: &VariableValues,
-) -> Result<PendingHeaderSecrets<'a>, AppError> {
-    let known: HashSet<String> = store.ids().into_iter().collect();
-    let mut pending = PendingHeaderSecrets {
-        store,
-        created: Vec::new(),
-        committed: false,
-    };
-    let mut protected = config.clone();
-    protect_headers(
-        &mut protected,
-        variables,
-        new_header_secret_id,
-        |id, value, origin| {
-            store.set(id, value, Some(vec![origin.to_owned()]))?;
-            if !known.contains(id) {
-                pending.created.push(id.to_owned());
-            }
-            Ok(())
-        },
-    )?;
-    *config = protected;
-    Ok(pending)
+pub fn track_for_save(store: &SecretStore) -> PendingHeaderSecrets<'_> {
+    PendingHeaderSecrets { store }
 }
 
 /// References can be shared by copied commands and opaque plugin settings.
@@ -232,104 +131,6 @@ mod tests {
         assert!(!store.ids().contains(&"webhook.header.obsolete".into()));
         cleanup(&store, &referenced_secrets(&config), None);
         assert_eq!(store.ids(), vec![String::from("webhook.header.shared")]);
-    }
-
-    #[test]
-    fn replaces_headers_with_origin_bound_references_of_their_own() {
-        let mut config = serde_json::json!({"commands":[{"id":"one", "operationId":"webhook", "operationConfig":{"url":"https://hooks.example/path", "headers":{"x-api-key":"private-key", "Authorization":"Bearer token"}}}]});
-        let mut stored = Vec::new();
-        assert!(protect_headers(
-            &mut config,
-            &VariableValues::default(),
-            new_header_secret_id,
-            |id, value, origin| {
-                stored.push((id.to_owned(), value.to_owned(), origin.to_owned()));
-                Ok(())
-            }
-        )
-        .unwrap());
-        assert_eq!(stored.len(), 2);
-        assert!(stored.iter().all(|(id, _, origin)| {
-            crate::services::secrets::origins::is_valid_id(id)
-                && id.starts_with(WEBHOOK_HEADER_PREFIX)
-                && origin == "https://hooks.example"
-        }));
-        assert_ne!(stored[0].0, stored[1].0);
-        assert!(!config.to_string().contains("private-key"));
-        assert!(!protect_headers(
-            &mut config,
-            &VariableValues::default(),
-            new_header_secret_id,
-            |_, _, _| panic!("References must not be rebound")
-        )
-        .unwrap());
-    }
-
-    #[test]
-    fn the_id_of_a_header_does_not_hold_its_value() {
-        // the shared config goes to a cloud: a digest of a weak value could
-        // be guessed from it
-        let mut config = serde_json::json!({"commands":[{"id":"one", "operationId":"webhook", "operationConfig":{"url":"https://hooks.example", "headers":{"x-key":"1234"}}}]});
-        let mut ids = Vec::new();
-        protect_headers(
-            &mut config,
-            &VariableValues::default(),
-            || String::from("webhook.header.fixed"),
-            |id, _, _| {
-                ids.push(id.to_owned());
-                Ok(())
-            },
-        )
-        .unwrap();
-        assert_eq!(ids, ["webhook.header.fixed"]);
-        assert_eq!(
-            config["commands"][0]["operationConfig"]["headers"]["x-key"],
-            "tyco-secret:webhook.header.fixed"
-        );
-    }
-    #[test]
-    fn a_header_key_is_bound_to_the_url_of_this_device() {
-        let config = serde_json::json!({"commands":[{"id":"one", "operationId":"webhook",
-            "operationConfig":{"url":"{{var:HOOKS}}/run", "headers":{"x-key":"private"}}}]});
-        let values = VariableValues::from_pairs(&[("HOOKS", "https://hooks.example")]);
-        let mut origins = Vec::new();
-        protect_headers(
-            &mut config.clone(),
-            &values,
-            new_header_secret_id,
-            |_, _, origin| {
-                origins.push(origin.to_owned());
-                Ok(())
-            },
-        )
-        .unwrap();
-        assert_eq!(origins, ["https://hooks.example"]);
-
-        // without a value here there is no origin: the key is not stored
-        let mut unset = config.clone();
-        let error = protect_headers(
-            &mut unset,
-            &VariableValues::default(),
-            new_header_secret_id,
-            |_, _, _| panic!("nothing is stored"),
-        )
-        .unwrap_err();
-        assert!(matches!(&error, AppError::VariableNotSet(message) if message.contains("HOOKS")));
-        assert_eq!(unset, config);
-    }
-
-    #[test]
-    fn refuses_to_drop_credentials_when_storage_fails() {
-        let mut config = serde_json::json!({"commands":[{"id":"one", "operationId":"webhook", "operationConfig":{"url":"https://hooks.example", "headers":{"x-key":"private"}}}]});
-        let original = config.clone();
-        assert!(protect_headers(
-            &mut config,
-            &VariableValues::default(),
-            new_header_secret_id,
-            |_, _, _| Err(AppError::ServiceUnavailable("Keychain locked".into()))
-        )
-        .is_err());
-        assert_eq!(config, original);
     }
 
     #[test]

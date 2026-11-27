@@ -64,9 +64,7 @@ describe('WebhookActionFields.vue', () => {
   })
 
   it('edits headers as rows', async () => {
-    const wrapper = mountFields(
-      webhook({ headers: { Accept: 'tyco-secret:webhook.header.a' } })
-    )
+    const wrapper = mountFields(webhook({ headers: { Accept: 'text/plain' } }))
     // the editor hands each change back, as the settings do
     await wrapper.setProps({
       onUpdate: (field: string, value: unknown) => {
@@ -86,7 +84,7 @@ describe('WebhookActionFields.vue', () => {
       .vm.$emit('click', new MouseEvent('click'))
     // the empty row stays in the editor until it gets a name
     expect(updates(wrapper)).toEqual([
-      ['headers', { 'Content-Type': 'tyco-secret:webhook.header.a' }],
+      ['headers', { 'Content-Type': 'text/plain' }],
       ['headers', {}],
     ])
   })
@@ -163,9 +161,10 @@ describe('WebhookActionFields.vue', () => {
     expect(secrets.setSecret).not.toHaveBeenCalled()
   })
 
-  it('stores the value of a new header and refers to it by a new id', async () => {
+  it('stores the value of a new secret header and refers to it by a new id', async () => {
     const wrapper = mountFields(webhook({ headers: {} }))
     await button(wrapper, 'common.add').trigger('click')
+    // a name that tells of a key makes the row secret
     await wrapper.get('input.header-name').setValue('Authorization')
     await wrapper.get('input[type="password"]').setValue('Bearer t')
     // nothing in plain text reaches the config
@@ -186,11 +185,36 @@ describe('WebhookActionFields.vue', () => {
     ])
   })
 
-  it('offers a value in plain text to be saved rather than keeping it', () => {
+  it('keeps a plain value in the config, with its variables', async () => {
+    const wrapper = mountFields(
+      webhook({ headers: { 'X-Device': '{{var:TYCO_DEVICE_ID}}' } })
+    )
+    expect(wrapper.find('input[type="password"]').exists()).toBe(false)
+    const field = wrapper
+      .findAllComponents({ name: 'ActionTemplateField' })
+      .at(-1)!
+    expect(field.props('modelValue')).toBe('{{var:TYCO_DEVICE_ID}}')
+    expect(field.props('canUseVariables')).toBe(true)
+    field.vm.$emit('update:modelValue', 'v2')
+    expect(updates(wrapper)).toEqual([['headers', { 'X-Device': 'v2' }]])
+  })
+
+  it('makes a plain value secret: it waits to be saved, out of the config', async () => {
     const wrapper = mountFields(webhook({ headers: { 'X-Key': 'plain' } }))
+    await wrapper.get('[data-testid="header-secret-toggle"]').trigger('click')
     const value = wrapper.get('input[type="password"]')
     expect((value.element as HTMLInputElement).value).toBe('plain')
-    expect(wrapper.text()).toContain('settings.actionWebhookHeaderUnsaved')
+    expect(updates(wrapper)).toEqual([['headers', {}]])
+  })
+
+  it('makes a secret value plain and removes the stored one', async () => {
+    const wrapper = mountFields(
+      webhook({ headers: { 'X-Key': 'tyco-secret:webhook.header.a' } })
+    )
+    await wrapper.get('[data-testid="header-secret-toggle"]').trigger('click')
+    await flushPromises()
+    expect(updates(wrapper)).toEqual([['headers', { 'X-Key': '' }]])
+    expect(secrets.removeSecret).toHaveBeenCalledWith('webhook.header.a')
   })
 
   it('provides info tooltips on field rows rather than input controls', () => {

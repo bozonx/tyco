@@ -4,10 +4,10 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
+use super::origins::normalize_origin;
 use super::origins::vault_namespace;
 use super::*;
 use crate::services::test_support::TestDir;
-use crate::services::variables::VariableValues;
 
 /// A vault in memory that can be made unreachable or read-only.
 #[derive(Default)]
@@ -312,34 +312,31 @@ fn a_development_home_gets_its_own_namespace() {
 fn two_devices_keep_their_own_keys_under_one_shared_reference() {
     let laptop = in_memory();
     let desktop = in_memory();
-    let mut config = serde_json::json!({"commands": [{
+    let header_id = String::from("webhook.header.shared");
+    let header_ref = serde_json::Value::String(format!("{SECRET_REF_PREFIX}{header_id}"));
+    let config = serde_json::json!({"commands": [{
         "id": "hook",
         "operationId": "webhook",
         "operationConfig": {
             "url": "https://hooks.example/path",
-            "headers": {"x-key": "laptop value"}
+            "headers": {"x-key": header_ref}
         }
     }]});
 
-    // the laptop makes the header secret
-    let pending =
-        webhook::protect_for_save(&laptop, &mut config, &VariableValues::default()).unwrap();
-    pending.commit(&config.clone(), &config);
-    let header_ref = config["commands"][0]["operationConfig"]["headers"]["x-key"].clone();
-    let header_id = header_ref
-        .as_str()
-        .and_then(|value| value.strip_prefix(SECRET_REF_PREFIX))
-        .unwrap()
-        .to_owned();
+    // the laptop stores its value under the id the config refers to
+    laptop
+        .set(
+            &header_id,
+            "laptop value",
+            Some(vec!["https://hooks.example".into()]),
+        )
+        .unwrap();
 
     // the synced config reaches the desktop, which has no keys yet: its
     // startup cleanup and its save change neither the config nor the laptop
     webhook::cleanup_after_startup(&desktop, &config);
-    let synced = config.clone();
-    let pending =
-        webhook::protect_for_save(&desktop, &mut config, &VariableValues::default()).unwrap();
-    pending.commit(&synced, &config);
-    assert_eq!(config, synced, "a save without new values rebinds nothing");
+    webhook::track_for_save(&desktop).commit(&config, &config);
+    webhook::track_for_save(&laptop).commit(&config, &config);
 
     // the desktop enters its own value under the same id
     desktop

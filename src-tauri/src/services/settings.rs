@@ -67,10 +67,8 @@ struct AppSettingsHost<'a> {
 
 impl<'a> SettingsHost for AppSettingsHost<'a> {
     type Secrets = webhook::PendingHeaderSecrets<'a>;
-    fn protect(&self, config: &mut Value) -> Result<Self::Secrets, AppError> {
-        // the origin of a key comes from the URL as it is on this device
-        let variables = storage::variable_values(self.app, config);
-        webhook::protect_for_save(self.secrets, config, &variables)
+    fn protect(&self, _config: &mut Value) -> Result<Self::Secrets, AppError> {
+        Ok(webhook::track_for_save(self.secrets))
     }
     fn with_disk_changes(&self, config: &Value) -> Result<Value, AppError> {
         let files = self.app.state::<persist::ConfigFiles>();
