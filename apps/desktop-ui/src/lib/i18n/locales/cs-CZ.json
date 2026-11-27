@@ -1418,7 +1418,9 @@
     "profileMemoryCompactConfirmTitle": "Zhustit paměť?",
     "profileMemoryCompactConfirm": "Model přepíše {file} kratší: odstraní opakování a zastaralé položky. Požadavek spotřebuje tokeny. Před uložením uvidíte změny a můžete je odmítnout.",
     "actionWebhookHeaderReplacePlaceholder": "Uloženo. Zadejte novou hodnotu pro nahrazení",
-    "actionWebhookHeadersInfo": "Hodnoty hlaviček se ukládají do zabezpečeného úložiště a posílají se jen na adresu webhooku. Pro token přidejte např. Authorization: Bearer …"
+    "actionWebhookHeadersInfo": "Hodnoty hlaviček se ukládají do zabezpečeného úložiště a posílají se jen na adresu webhooku. Pro token přidejte např. Authorization: Bearer …",
+    "actionWebhookHeaderUnsaved": "Zatím neuloženo: stiskněte Uložit vedle hodnoty. Uloží se do zabezpečeného úložiště.",
+    "actionWebhookHeaderNeedsUrl": "Nejprve zadejte platnou URL: hodnota se váže na adresu webhooku."
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

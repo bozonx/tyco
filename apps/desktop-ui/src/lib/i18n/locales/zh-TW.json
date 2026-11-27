@@ -1418,7 +1418,9 @@
     "profileMemoryCompactConfirmTitle": "壓縮記憶？",
     "profileMemoryCompactConfirm": "模型會把 {file} 改寫得更短，去除重複和過時的內容。此請求會消耗 token。儲存前你會看到變更，並可以拒絕。",
     "actionWebhookHeaderReplacePlaceholder": "已儲存。輸入新值以取代",
-    "actionWebhookHeadersInfo": "標頭的值保存在安全儲存區中，只會傳送到 Webhook 的位址。若需權杖，請新增例如 Authorization: Bearer …"
+    "actionWebhookHeadersInfo": "標頭的值保存在安全儲存區中，只會傳送到 Webhook 的位址。若需權杖，請新增例如 Authorization: Bearer …",
+    "actionWebhookHeaderUnsaved": "尚未儲存：請按值旁邊的「儲存」。它會存入安全儲存區。",
+    "actionWebhookHeaderNeedsUrl": "請先輸入有效的 URL：值會綁定到 Webhook 的位址。"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

@@ -64,7 +64,9 @@ describe('WebhookActionFields.vue', () => {
   })
 
   it('edits headers as rows', async () => {
-    const wrapper = mountFields(webhook({ headers: { Accept: 'text/plain' } }))
+    const wrapper = mountFields(
+      webhook({ headers: { Accept: 'tyco-secret:webhook.header.a' } })
+    )
     // the editor hands each change back, as the settings do
     await wrapper.setProps({
       onUpdate: (field: string, value: unknown) => {
@@ -84,13 +86,15 @@ describe('WebhookActionFields.vue', () => {
       .vm.$emit('click', new MouseEvent('click'))
     // the empty row stays in the editor until it gets a name
     expect(updates(wrapper)).toEqual([
-      ['headers', { 'Content-Type': 'text/plain' }],
+      ['headers', { 'Content-Type': 'tyco-secret:webhook.header.a' }],
       ['headers', {}],
     ])
   })
 
   it('keeps a row with a repeated name in the editor only', async () => {
-    const wrapper = mountFields(webhook({ headers: { Accept: 'a' } }))
+    const wrapper = mountFields(
+      webhook({ headers: { Accept: 'tyco-secret:webhook.header.a' } })
+    )
     await button(wrapper, 'common.add').trigger('click')
     await wrapper.findAll('input.header-name').at(1)!.setValue('accept')
     expect(updates(wrapper)).toEqual([])
@@ -146,18 +150,47 @@ describe('WebhookActionFields.vue', () => {
     expect(updates(wrapper)).toEqual([])
   })
 
-  it('refuses a secret value for an invalid URL', async () => {
+  it('saves no value before the URL is valid, and says why', async () => {
     const wrapper = mountFields(
       webhook({
-        url: 'not a url',
+        url: '',
         headers: { Authorization: 'tyco-secret:webhook.header.a' },
       })
     )
     await wrapper.get('input[type="password"]').setValue('token')
+    expect(button(wrapper, 'common.save').attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('settings.actionWebhookHeaderNeedsUrl')
+    expect(secrets.setSecret).not.toHaveBeenCalled()
+  })
+
+  it('stores the value of a new header and refers to it by a new id', async () => {
+    const wrapper = mountFields(webhook({ headers: {} }))
+    await button(wrapper, 'common.add').trigger('click')
+    await wrapper.get('input.header-name').setValue('Authorization')
+    await wrapper.get('input[type="password"]').setValue('Bearer t')
+    // nothing in plain text reaches the config
+    expect(updates(wrapper)).toEqual([])
+    expect(wrapper.text()).toContain('settings.actionWebhookHeaderUnsaved')
     await button(wrapper, 'common.save').trigger('click')
     await flushPromises()
-    expect(toastKey).toHaveBeenCalledWith('settings.invalidBaseUrl', 'error')
-    expect(secrets.setSecret).not.toHaveBeenCalled()
+    const [[id, value, origins]] = secrets.setSecret.mock.calls as unknown as [
+      [string, string, string[]],
+    ]
+    expect(id).toMatch(/^webhook\.header\./)
+    expect([value, origins]).toEqual([
+      'Bearer t',
+      ['https://hooks.example.com'],
+    ])
+    expect(updates(wrapper)).toEqual([
+      ['headers', { Authorization: `tyco-secret:${id}` }],
+    ])
+  })
+
+  it('offers a value in plain text to be saved rather than keeping it', () => {
+    const wrapper = mountFields(webhook({ headers: { 'X-Key': 'plain' } }))
+    const value = wrapper.get('input[type="password"]')
+    expect((value.element as HTMLInputElement).value).toBe('plain')
+    expect(wrapper.text()).toContain('settings.actionWebhookHeaderUnsaved')
   })
 
   it('provides info tooltips on field rows rather than input controls', () => {

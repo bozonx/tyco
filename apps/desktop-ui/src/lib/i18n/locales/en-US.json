@@ -1418,7 +1418,9 @@
     "profileMemoryCompactConfirmTitle": "Compact the memory?",
     "profileMemoryCompactConfirm": "The model rewrites {file} shorter, removing repetitions and outdated items. The request uses tokens. You see the changes before they are saved and can reject them.",
     "actionWebhookHeaderReplacePlaceholder": "Saved. Enter a new value to replace it",
-    "actionWebhookHeadersInfo": "Header values are kept in the secure store and sent only to the webhook’s address. For a token, add e.g. Authorization: Bearer …"
+    "actionWebhookHeadersInfo": "Header values are kept in the secure store and sent only to the webhook’s address. For a token, add e.g. Authorization: Bearer …",
+    "actionWebhookHeaderUnsaved": "Not saved yet: press Save next to the value. It goes to the secure store.",
+    "actionWebhookHeaderNeedsUrl": "Enter a valid URL first: a value is bound to the webhook’s address."
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

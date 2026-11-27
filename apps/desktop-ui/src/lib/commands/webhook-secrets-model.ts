@@ -1,10 +1,15 @@
-import { substituteVariables, type VariableValues } from '@tyco/shared'
+import {
+  substituteVariables,
+  WEBHOOK_HEADER_SECRET_PREFIX,
+  type VariableValues,
+} from '@tyco/shared'
 import { httpOrigin } from '../net/secrets'
 
 export interface WebhookSecretsDependencies {
   getUrl: () => string
   /** Whether the saved config still refers to the secret anywhere */
   isSecretReferenced?: (id: string) => boolean
+  createId: () => string
   setSecret: (id: string, value: string, origins: string[]) => Promise<void>
   removeSecret: (id: string) => Promise<void>
   afterRender: () => Promise<void>
@@ -79,7 +84,18 @@ export function createWebhookSecretsModel(deps: WebhookSecretsDependencies) {
     }
   }
 
+  /**
+   * Stores the value of a header that has none yet under a new id, bound to the
+   * origin of the URL here; resolves with the id, or `null` when nothing was
+   * stored
+   */
+  async function createSecret(value: string): Promise<string | null> {
+    const id = `${WEBHOOK_HEADER_SECRET_PREFIX}${deps.createId()}`
+    return (await replaceSecret(id, value)) ? id : null
+  }
+
   return {
+    createSecret,
     replaceSecret,
     removeUnusedSecret: (id: string) =>
       removeUnusedSecret(id).catch(deps.reportRemoveError),

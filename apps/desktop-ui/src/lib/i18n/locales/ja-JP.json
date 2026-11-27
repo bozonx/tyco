@@ -1418,7 +1418,9 @@
     "profileMemoryCompactConfirmTitle": "記憶を圧縮しますか？",
     "profileMemoryCompactConfirm": "モデルが {file} を短く書き直し、重複や古い内容を取り除きます。リクエストはトークンを消費します。保存前に変更を確認し、取り消すこともできます。",
     "actionWebhookHeaderReplacePlaceholder": "保存済み。置き換える新しい値を入力してください",
-    "actionWebhookHeadersInfo": "ヘッダーの値は安全なストアに保存され、Webhook のアドレスにのみ送信されます。トークンには例えば Authorization: Bearer … を追加します"
+    "actionWebhookHeadersInfo": "ヘッダーの値は安全なストアに保存され、Webhook のアドレスにのみ送信されます。トークンには例えば Authorization: Bearer … を追加します",
+    "actionWebhookHeaderUnsaved": "まだ保存されていません。値の横の「保存」を押してください。安全なストアに保存されます。",
+    "actionWebhookHeaderNeedsUrl": "先に有効な URL を入力してください。値は Webhook のアドレスに紐づけられます。"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

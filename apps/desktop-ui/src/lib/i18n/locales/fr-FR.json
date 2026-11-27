@@ -1418,7 +1418,9 @@
     "profileMemoryCompactConfirmTitle": "Compacter la mémoire ?",
     "profileMemoryCompactConfirm": "Le modèle réécrit {file} plus court en supprimant les répétitions et ce qui est dépassé. La requête consomme des jetons. Vous verrez les changements avant l’enregistrement et pourrez les refuser.",
     "actionWebhookHeaderReplacePlaceholder": "Enregistré. Saisissez une nouvelle valeur pour la remplacer",
-    "actionWebhookHeadersInfo": "Les valeurs des en-têtes sont conservées dans le stockage sécurisé et envoyées uniquement à l’adresse du webhook. Pour un jeton, ajoutez p. ex. Authorization: Bearer …"
+    "actionWebhookHeadersInfo": "Les valeurs des en-têtes sont conservées dans le stockage sécurisé et envoyées uniquement à l’adresse du webhook. Pour un jeton, ajoutez p. ex. Authorization: Bearer …",
+    "actionWebhookHeaderUnsaved": "Pas encore enregistré : cliquez sur Enregistrer à côté de la valeur. Elle ira dans le stockage sécurisé.",
+    "actionWebhookHeaderNeedsUrl": "Saisissez d’abord une URL valide : la valeur est liée à l’adresse du webhook."
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

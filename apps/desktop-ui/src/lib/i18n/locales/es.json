@@ -1418,7 +1418,9 @@
     "profileMemoryCompactConfirmTitle": "¿Compactar la memoria?",
     "profileMemoryCompactConfirm": "El modelo reescribirá {file} más corto, quitando repeticiones y lo obsoleto. La petición consume tokens. Verás los cambios antes de guardarlos y podrás descartarlos.",
     "actionWebhookHeaderReplacePlaceholder": "Guardado. Introduce un valor nuevo para reemplazarlo",
-    "actionWebhookHeadersInfo": "Los valores de los encabezados se guardan en el almacén seguro y solo se envían a la dirección del webhook. Para un token, añade p. ej. Authorization: Bearer …"
+    "actionWebhookHeadersInfo": "Los valores de los encabezados se guardan en el almacén seguro y solo se envían a la dirección del webhook. Para un token, añade p. ej. Authorization: Bearer …",
+    "actionWebhookHeaderUnsaved": "Aún no se ha guardado: pulsa Guardar junto al valor. Irá al almacén seguro.",
+    "actionWebhookHeaderNeedsUrl": "Introduce primero una URL válida: el valor se vincula a la dirección del webhook."
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

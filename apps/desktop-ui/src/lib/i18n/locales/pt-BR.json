@@ -1418,7 +1418,9 @@
     "profileMemoryCompactConfirmTitle": "Compactar a memória?",
     "profileMemoryCompactConfirm": "O modelo reescreve {file} de forma mais curta, removendo repetições e o que está desatualizado. A solicitação consome tokens. Você verá as mudanças antes de salvar e poderá recusá-las.",
     "actionWebhookHeaderReplacePlaceholder": "Salvo. Digite um novo valor para substituí-lo",
-    "actionWebhookHeadersInfo": "Os valores dos cabeçalhos ficam no armazenamento seguro e são enviados apenas ao endereço do webhook. Para um token, adicione, por exemplo, Authorization: Bearer …"
+    "actionWebhookHeadersInfo": "Os valores dos cabeçalhos ficam no armazenamento seguro e são enviados apenas ao endereço do webhook. Para um token, adicione, por exemplo, Authorization: Bearer …",
+    "actionWebhookHeaderUnsaved": "Ainda não salvo: clique em Salvar ao lado do valor. Ele vai para o armazenamento seguro.",
+    "actionWebhookHeaderNeedsUrl": "Informe primeiro uma URL válida: o valor fica vinculado ao endereço do webhook."
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {

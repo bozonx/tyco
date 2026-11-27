@@ -4,6 +4,7 @@ import { createWebhookSecretsModel } from './webhook-secrets-model'
 function setup() {
   const deps = {
     getUrl: vi.fn(() => 'https://example.com/hook'),
+    createId: () => 'new-id',
     setSecret: vi.fn().mockResolvedValue(undefined),
     removeSecret: vi.fn().mockResolvedValue(undefined),
     afterRender: vi.fn().mockResolvedValue(undefined),
@@ -50,6 +51,15 @@ describe('webhook header secrets', () => {
     deps.setSecret.mockRejectedValue(error)
     expect(await model.replaceSecret('header-1', 'v')).toBe(false)
     expect(deps.reportSaveError).toHaveBeenCalledWith(error)
+  })
+  it('stores a new value under a new header id', async () => {
+    const { deps, model } = setup()
+    expect(await model.createSecret('v')).toBe('webhook.header.new-id')
+    expect(deps.setSecret).toHaveBeenCalledWith('webhook.header.new-id', 'v', [
+      'https://example.com',
+    ])
+    deps.getUrl.mockReturnValue('')
+    expect(await model.createSecret('v')).toBeNull()
   })
   it('replaces the value of a secret under its id, bound to the URL here', async () => {
     const { deps, model } = setup()

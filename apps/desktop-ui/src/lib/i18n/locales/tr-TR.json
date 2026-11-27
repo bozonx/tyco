@@ -1418,7 +1418,9 @@
     "profileMemoryCompactConfirmTitle": "Bellek sıkıştırılsın mı?",
     "profileMemoryCompactConfirm": "Model {file} dosyasını tekrarları ve eskimiş öğeleri çıkararak daha kısa yeniden yazar. İstek token harcar. Kaydetmeden önce değişiklikleri görür ve reddedebilirsiniz.",
     "actionWebhookHeaderReplacePlaceholder": "Kaydedildi. Değiştirmek için yeni değer girin",
-    "actionWebhookHeadersInfo": "Başlık değerleri güvenli depoda tutulur ve yalnızca webhook adresine gönderilir. Bir belirteç için örneğin Authorization: Bearer … ekleyin"
+    "actionWebhookHeadersInfo": "Başlık değerleri güvenli depoda tutulur ve yalnızca webhook adresine gönderilir. Bir belirteç için örneğin Authorization: Bearer … ekleyin",
+    "actionWebhookHeaderUnsaved": "Henüz kaydedilmedi: değerin yanındaki Kaydet'e basın. Güvenli depoya kaydedilir.",
+    "actionWebhookHeaderNeedsUrl": "Önce geçerli bir URL girin: değer webhook adresine bağlanır."
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

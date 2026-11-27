@@ -1418,7 +1418,9 @@
     "profileMemoryCompactConfirmTitle": "Skompaktować pamięć?",
     "profileMemoryCompactConfirm": "Model przepisze {file} krócej, usuwając powtórzenia i nieaktualne wpisy. Zapytanie zużywa tokeny. Przed zapisaniem zobaczysz zmiany i możesz je odrzucić.",
     "actionWebhookHeaderReplacePlaceholder": "Zapisano. Wpisz nową wartość, aby ją zastąpić",
-    "actionWebhookHeadersInfo": "Wartości nagłówków są przechowywane w bezpiecznym magazynie i wysyłane tylko na adres webhooka. Dla tokenu dodaj np. Authorization: Bearer …"
+    "actionWebhookHeadersInfo": "Wartości nagłówków są przechowywane w bezpiecznym magazynie i wysyłane tylko na adres webhooka. Dla tokenu dodaj np. Authorization: Bearer …",
+    "actionWebhookHeaderUnsaved": "Jeszcze nie zapisano: kliknij Zapisz obok wartości. Trafi do bezpiecznego magazynu.",
+    "actionWebhookHeaderNeedsUrl": "Najpierw podaj poprawny URL: wartość jest powiązana z adresem webhooka."
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

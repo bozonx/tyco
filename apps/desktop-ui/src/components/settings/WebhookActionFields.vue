@@ -55,57 +55,57 @@
       :info="t('settings.actionWebhookHeadersInfo')"
       :warning="warningsOf('headers')"
     >
-      <div
-        v-for="(header, headerIndex) in headerRows"
-        :key="headerIndex"
-        class="action-field-row"
-      >
-        <FieldInput
-          class="header-name"
-          :aria-label="t('settings.actionWebhookHeaderName')"
-          :model-value="header[0]"
-          :placeholder="t('settings.actionWebhookHeaderName')"
-          @update:model-value="updateHeader(headerIndex, 0, $event)"
-        />
-        <template v-if="secretIdOf(header[1])">
+      <div v-if="headerRows.length" class="header-rows">
+        <div
+          v-for="(header, headerIndex) in headerRows"
+          :key="headerIndex"
+          class="action-field-row"
+        >
+          <FieldInput
+            class="header-name"
+            :aria-label="t('settings.actionWebhookHeaderName')"
+            :model-value="header[0]"
+            :placeholder="t('settings.actionWebhookHeaderName')"
+            @update:model-value="updateHeader(headerIndex, 0, $event)"
+          />
           <FieldInput
             class="flex-1"
             type="password"
+            autocomplete="off"
             :aria-label="t('settings.actionWebhookHeaderValue')"
             :model-value="secretDrafts[headerIndex] ?? ''"
-            :placeholder="t('settings.actionWebhookHeaderReplacePlaceholder')"
+            :placeholder="
+              secretIdOf(header[1])
+                ? t('settings.actionWebhookHeaderReplacePlaceholder')
+                : t('settings.actionWebhookHeaderValue')
+            "
             @update:model-value="secretDrafts[headerIndex] = $event"
+            @keydown.enter.prevent="saveHeaderValue(headerIndex)"
           />
           <Button
             variant="primary"
             size="sm"
-            :disabled="!secretDrafts[headerIndex]?.trim()"
-            @click="replaceHeaderSecret(headerIndex)"
+            :disabled="!canSaveHeaderValue(headerIndex)"
+            @click="saveHeaderValue(headerIndex)"
           >
             {{ t('common.save') }}
           </Button>
-        </template>
-        <FieldInput
-          v-else
-          class="flex-1"
-          :aria-label="t('settings.actionWebhookHeaderValue')"
-          :model-value="header[1]"
-          :placeholder="t('settings.actionWebhookHeaderValue')"
-          @update:model-value="updateHeader(headerIndex, 1, $event)"
-        />
-        <IconButton
-          variant="ghost"
-          size="sm"
-          @click="removeHeader(headerIndex)"
-          :label="t('common.remove')"
-          icon="mdi:close"
-        />
+          <IconButton
+            variant="ghost"
+            size="sm"
+            @click="removeHeader(headerIndex)"
+            :label="t('common.remove')"
+            icon="mdi:close"
+          />
+        </div>
       </div>
-      <VariableReferenceHints
-        :templates="
-          headerRows.map(([, value]) => (secretIdOf(value) ? '' : value))
-        "
-      />
+      <p v-if="hasUnsavedHeaderValue" class="action-field-hint text-muted">
+        {{
+          originHere
+            ? t('settings.actionWebhookHeaderUnsaved')
+            : t('settings.actionWebhookHeaderNeedsUrl')
+        }}
+      </p>
       <p v-if="hasHeaderMissingHere" class="action-field-warning">
         {{ t('settings.secretNotSetOnDevice') }}
       </p>
@@ -134,7 +134,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 import { useCommandValidation } from '../../composables/use-command-validation'
 import { useI18n } from '../../composables/use-i18n'
@@ -154,7 +154,7 @@ import {
 } from '../../lib/commands/webhook-header-rows'
 import { createWebhookSecretsModel } from '../../lib/commands/webhook-secrets-model'
 import { clientLogger } from '../../lib/logger'
-import { httpOrigin, secretIdFromRef } from '../../lib/net/secrets'
+import { httpOrigin, secretIdFromRef, secretRef } from '../../lib/net/secrets'
 import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import Button from '../common/Button.vue'
@@ -163,7 +163,6 @@ import FieldRow from '../common/FieldRow.vue'
 import IconButton from '../common/IconButton.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import ActionTemplateField from './ActionTemplateField.vue'
-import VariableReferenceHints from './VariableReferenceHints.vue'
 import type { CommandConfig } from '@tyco/shared'
 import {
   ACTION_TEXT_PLACEHOLDER as TEXT,
@@ -192,37 +191,57 @@ const urlHere = computed(() => {
 })
 const secretsStore = useSecretsStore()
 const { toastKey, toastError, toastText } = useToast()
-// the rows live here, so a row without a name or with a repeated one is kept
-// while it is edited; the config gets the valid headers only
+// the rows live here, so a row without a name, with a repeated one or
+// without a saved value is kept while it is edited; the config gets only the
+// named headers whose value is in the secret store
 const headerRows = ref<WebhookHeaderRow[]>([])
-const secretDrafts = reactive<Record<number, string>>({})
+/** What is typed into the value of each row, not saved yet */
+const secretDrafts = ref<string[]>([])
 const configHeaders = computed(() =>
   props.command.operationId === 'webhook' ? webhook.value.headers : {}
 )
+const secretIdOf = (value: string): string | null => secretIdFromRef(value)
+const savedHeaders = (rows: readonly WebhookHeaderRow[]) =>
+  webhookHeadersFromRows(rows.filter(([, value]) => secretIdOf(value)))
 watch(
   [() => props.command.id, configHeaders],
   ([id], [previousId]) => {
     if (
       id === previousId &&
-      isSameWebhookHeaders(
-        webhookHeadersFromRows(headerRows.value),
-        configHeaders.value
-      )
+      isSameWebhookHeaders(savedHeaders(headerRows.value), configHeaders.value)
     )
       return
-    headerRows.value = webhookHeaderRows(configHeaders.value)
-    for (const key of Object.keys(secretDrafts)) delete secretDrafts[+key]
+    // a value in plain text, e.g. written by hand into the file, waits in
+    // its field for the user to save it into the secret store
+    const rows = webhookHeaderRows(configHeaders.value)
+    headerRows.value = rows.map(([name, value]) => [
+      name,
+      secretIdOf(value) ? value : '',
+    ])
+    secretDrafts.value = rows.map(([, value]) =>
+      secretIdOf(value) ? '' : value
+    )
   },
   { immediate: true }
 )
 const duplicateHeaders = computed(() =>
   duplicateWebhookHeaderRows(headerRows.value)
 )
-const secretIdOf = (value: string): string | null => secretIdFromRef(value)
+/** The origin a value is bound to: the one of the URL on this device */
+const originHere = computed(() => httpOrigin(urlHere.value))
+const hasUnsavedHeaderValue = computed(() =>
+  secretDrafts.value.some((draft) => draft.trim())
+)
+const canSaveHeaderValue = (index: number) =>
+  Boolean(
+    originHere.value &&
+    secretDrafts.value[index]?.trim() &&
+    headerRows.value[index]?.[0].trim()
+  )
 
 function setHeaders(rows: WebhookHeaderRow[]) {
   headerRows.value = rows
-  const headers = webhookHeadersFromRows(rows)
+  const headers = savedHeaders(rows)
   if (!isSameWebhookHeaders(headers, configHeaders.value))
     update('headers', headers)
 }
@@ -233,22 +252,34 @@ function updateHeader(index: number, part: 0 | 1, value: string) {
 
 function addHeader() {
   const rows = addWebhookHeaderRow(headerRows.value)
-  if (rows) setHeaders(rows)
+  if (!rows) return
+  secretDrafts.value = [...secretDrafts.value, '']
+  setHeaders(rows)
 }
 
 function removeHeader(index: number) {
   const id = secretIdOf(headerRows.value[index]?.[1] ?? '')
-  for (const key of Object.keys(secretDrafts)) delete secretDrafts[+key]
+  secretDrafts.value = secretDrafts.value.filter((_, i) => i !== index)
   setHeaders(removeWebhookHeaderRow(headerRows.value, index))
   if (id) void removeUnusedSecret(id)
 }
 
-async function replaceHeaderSecret(index: number) {
+/**
+ * Stores the typed value in the secret store: under the id the header has, or
+ * under a new one that the header then refers to
+ */
+async function saveHeaderValue(index: number) {
+  if (!canSaveHeaderValue(index)) return
+  const value = secretDrafts.value[index] ?? ''
   const id = secretIdOf(headerRows.value[index]?.[1] ?? '')
-  if (!id) return
-  if (await replaceSecret(id, secretDrafts[index] ?? '')) {
-    delete secretDrafts[index]
-  }
+  const saved = id
+    ? (await replaceSecret(id, value)) && id
+    : await createSecret(value)
+  if (!saved) return
+  secretDrafts.value = secretDrafts.value.map((draft, i) =>
+    i === index ? '' : draft
+  )
+  if (!id) updateHeader(index, 1, secretRef(saved))
 }
 
 /** Secret headers whose value this device has not been given yet */
@@ -263,7 +294,7 @@ const hasHeaderMissingHere = computed(() =>
  * the proxy refuses to send them there until their value is saved again
  */
 const headerSecretOrigins = computed(() => {
-  const origin = httpOrigin(urlHere.value)
+  const origin = originHere.value
   if (!origin) return []
   const elsewhere = headerRows.value.flatMap(([, value]) => {
     const id = secretIdOf(value)
@@ -274,23 +305,25 @@ const headerSecretOrigins = computed(() => {
 })
 
 const session = useSettingsSessionStore()
-const { replaceSecret, removeUnusedSecret } = createWebhookSecretsModel({
-  getUrl: () => webhook.value.url,
-  isSecretReferenced: (id) =>
-    isSecretReferenced(session.draft?.commands ?? [], id),
-  setSecret: secretsStore.setSecret,
-  removeSecret: secretsStore.removeSecret,
-  afterRender: nextTick,
-  persist: session.persist,
-  isSaved: session.isSaved,
-  notifyInvalidOrigin: () => toastKey('settings.invalidBaseUrl', 'error'),
-  variables,
-  notifyVariablesNotSet: (names) =>
-    toastText(`${t('toast.variablesNotSet')}\n${names.join(', ')}`, 'error'),
-  notifySavedOnDevice: () => toastKey('settings.keySavedOnDevice', 'success'),
-  reportSaveError: (error) => toastError(error, 'settings.keySaveFailed'),
-  reportRemoveError: (error) => toastError(error, 'settings.keyRemoveFailed'),
-})
+const { createSecret, replaceSecret, removeUnusedSecret } =
+  createWebhookSecretsModel({
+    getUrl: () => webhook.value.url,
+    createId: () => crypto.randomUUID(),
+    isSecretReferenced: (id) =>
+      isSecretReferenced(session.draft?.commands ?? [], id),
+    setSecret: secretsStore.setSecret,
+    removeSecret: secretsStore.removeSecret,
+    afterRender: nextTick,
+    persist: session.persist,
+    isSaved: session.isSaved,
+    notifyInvalidOrigin: () => toastKey('settings.invalidBaseUrl', 'error'),
+    variables,
+    notifyVariablesNotSet: (names) =>
+      toastText(`${t('toast.variablesNotSet')}\n${names.join(', ')}`, 'error'),
+    notifySavedOnDevice: () => toastKey('settings.keySavedOnDevice', 'success'),
+    reportSaveError: (error) => toastError(error, 'settings.keySaveFailed'),
+    reportRemoveError: (error) => toastError(error, 'settings.keyRemoveFailed'),
+  })
 
 onMounted(() => {
   const hasSecretHeader = headerRows.value.some(([, value]) =>
@@ -312,6 +345,16 @@ onMounted(() => {
 .action-field-warning {
   font-size: var(--text-caption);
   color: var(--color-warning);
+}
+
+.action-field-hint {
+  font-size: var(--text-caption);
+}
+
+.header-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm, 0.5rem);
 }
 
 .header-name {

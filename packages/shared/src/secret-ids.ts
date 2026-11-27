@@ -16,3 +16,6 @@ export const sttSecretId = (provider: SttProvider): string =>
   provider === 'geminiLive' ? 'llm.google' : `stt.${provider}`
 
 export const WEB_SECRET_IDS = { jina: 'web.jina' } as const
+
+/** The value of a webhook header, made once when the header is first saved */
+export const WEBHOOK_HEADER_SECRET_PREFIX = 'webhook.header.'

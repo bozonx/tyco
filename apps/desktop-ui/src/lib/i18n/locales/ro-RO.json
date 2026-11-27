@@ -1418,7 +1418,9 @@
     "profileMemoryCompactConfirmTitle": "Compactezi memoria?",
     "profileMemoryCompactConfirm": "Modelul rescrie {file} mai scurt, eliminând repetările și ce e depășit. Cererea consumă tokeni. Vei vedea modificările înainte de salvare și le poți respinge.",
     "actionWebhookHeaderReplacePlaceholder": "Salvat. Introduceți o valoare nouă pentru a o înlocui",
-    "actionWebhookHeadersInfo": "Valorile antetelor sunt păstrate în spațiul de stocare securizat și trimise doar la adresa webhook-ului. Pentru un token, adăugați de ex. Authorization: Bearer …"
+    "actionWebhookHeadersInfo": "Valorile antetelor sunt păstrate în spațiul de stocare securizat și trimise doar la adresa webhook-ului. Pentru un token, adăugați de ex. Authorization: Bearer …",
+    "actionWebhookHeaderUnsaved": "Încă nesalvat: apăsați Salvează lângă valoare. Ajunge în spațiul de stocare securizat.",
+    "actionWebhookHeaderNeedsUrl": "Introduceți mai întâi un URL valid: valoarea este legată de adresa webhook-ului."
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
