@@ -173,20 +173,28 @@
             </div>
           </div>
           <div v-else class="settings-section-content">
-            <SettingsAccessList
-              :entries="accessEntries"
-              :candidates="accessCandidates"
-              :add-label="t('settings.grantProfileAccess')"
-              :empty-message="
-                profiles.length === 0
-                  ? t('settings.noProfilesYet')
-                  : t('settings.noProfilesWithAccess')
-              "
-              openable
-              @change="changeAccess"
-              @delete-allowed="changeDeleteAllowed"
-              @open="(profileId) => navigate(profileTab(profileId))"
-            />
+            <div class="settings-entity-list">
+              <SettingsEntityItem
+                v-for="entry in accessEntries"
+                :key="entry.id"
+                :title="entry.title"
+                :description="entry.warning"
+                openable
+                open-target="title"
+                @open="navigate(profileTab(entry.id))"
+              >
+                <Badge :tone="entry.tone">{{ entry.label }}</Badge>
+              </SettingsEntityItem>
+              <StateMessage
+                v-if="accessEntries.length === 0"
+                density="compact"
+                :message="
+                  profiles.length === 0
+                    ? t('settings.noProfilesYet')
+                    : t('settings.noProfilesWithAccess')
+                "
+              />
+            </div>
           </div>
         </SettingsSection>
       </fieldset>
@@ -231,6 +239,7 @@ import type { ConvertProjectOptions } from '../../lib/ai-profiles/ai-projects-mo
 import { vaultOfRef } from '../../lib/ai-profiles/profile-ref'
 import {
   DEFAULT_PROJECT_ACCESS_LEVEL,
+  PROJECT_ACCESS_LABEL_KEYS,
   type ProjectAccessLevel,
   hasFileToolsOff,
   isDeleteAllowed,
@@ -254,10 +263,6 @@ import InlineNotice from '../common/InlineNotice.vue'
 import PathDisplay from '../common/PathDisplay.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import StateMessage from '../common/StateMessage.vue'
-import SettingsAccessList, {
-  type AccessListCandidate,
-  type AccessListEntry,
-} from './SettingsAccessList.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsProjectConvertDialog from './SettingsProjectConvertDialog.vue'
@@ -354,6 +359,11 @@ function changeType(external: boolean) {
   change()
 }
 
+const ACCESS_LEVEL_TONES: Record<
+  ProjectAccessLevel,
+  'neutral' | 'accent' | 'success'
+> = { read: 'neutral', readWrite: 'accent', full: 'success', custom: 'neutral' }
+
 /** The access a new project gives on creation, by profile */
 const pendingAccess = ref<Record<string, ProjectAccessLevel>>({})
 
@@ -378,18 +388,21 @@ function togglePendingAccess(profileId: string, enabled: boolean) {
   }
 }
 
-const accessEntries = computed<AccessListEntry[]>(() =>
+/** The profiles with access, as the profiles set it */
+const accessEntries = computed(() =>
   profiles.value.flatMap((profile) => {
     const level = accessLevelOf(profile)
     if (!level) return []
+    const permission = profile.projectPermissions[props.projectId]
     return [
       {
         id: profile.id,
         title: profile.name,
-        level,
-        isDeleteAllowed: isDeleteAllowed(
-          profile.projectPermissions[props.projectId]
-        ),
+        label:
+          level === 'full' && isDeleteAllowed(permission)
+            ? `${t(PROJECT_ACCESS_LABEL_KEYS[level])} · ${t('settings.accessDeleteWithoutAsking')}`
+            : t(PROJECT_ACCESS_LABEL_KEYS[level]),
+        tone: ACCESS_LEVEL_TONES[level],
         warning: hasFileToolsOff(profile)
           ? t('settings.projectAccessFileToolsOff')
           : undefined,
@@ -397,32 +410,6 @@ const accessEntries = computed<AccessListEntry[]>(() =>
     ]
   })
 )
-
-const accessCandidates = computed<AccessListCandidate[]>(() =>
-  profiles.value
-    .filter((profile) => !accessLevelOf(profile))
-    .map((profile) => ({ id: profile.id, label: profile.name }))
-)
-
-function changeDeleteAllowed(profileId: string, isAllowed: boolean) {
-  void aiProfilesStore
-    .setProjectDeleteAllowed(profileId, props.projectId, isAllowed)
-    .catch(toastError)
-}
-
-function changeAccess(
-  profileId: string,
-  level: ProjectAccessLevel | undefined
-) {
-  if (isNew.value) {
-    const { [profileId]: _removed, ...rest } = pendingAccess.value
-    pendingAccess.value = level ? { ...rest, [profileId]: level } : rest
-    return
-  }
-  void aiProfilesStore
-    .setProjectAccess(profileId, props.projectId, level)
-    .catch(toastError)
-}
 
 async function handlePickFolder() {
   try {

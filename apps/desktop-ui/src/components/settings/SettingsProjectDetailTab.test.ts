@@ -78,7 +78,6 @@ function createStore() {
     openProjectFolder: vi.fn(async () => {}),
     pickFolder: vi.fn(async (): Promise<string | null> => '/work'),
     setProjectAccess: vi.fn(async () => {}),
-    setProjectDeleteAllowed: vi.fn(async () => {}),
   })
 }
 
@@ -276,37 +275,25 @@ describe('SettingsProjectDetailTab.vue', () => {
     wrapper.unmount()
   })
 
-  it('lists the profiles with access and offers the others', async () => {
+  it('shows the profiles with access without changing them', async () => {
     store.profiles.push(
       profile({ notes: { read: 'allow', write: 'ask', delete: 'ask' } }),
       { ...profile({}), id: 'reader', name: 'Reader' }
     )
     const wrapper = mountTab()
-    const list = wrapper.findComponent({ name: 'SettingsAccessList' })
-    expect(list.props('entries')).toEqual([
-      expect.objectContaining({
-        id: 'writer',
-        level: 'readWrite',
-        warning: 'settings.projectAccessFileToolsOff',
-      }),
-    ])
-    expect(list.props('candidates')).toEqual([
-      { id: 'reader', label: 'Reader' },
-    ])
-    await list.vm.$emit('change', 'reader', 'read')
-    await list.vm.$emit('change', 'writer', undefined)
-    await list.vm.$emit('deleteAllowed', 'writer', true)
-    await list.vm.$emit('open', 'writer')
-
-    expect(store.setProjectAccess.mock.calls).toEqual([
-      ['reader', 'notes', 'read'],
-      ['writer', 'notes', undefined],
-    ])
-    expect(store.setProjectDeleteAllowed).toHaveBeenCalledWith(
-      'writer',
-      'notes',
-      true
+    // the access is shown here and changed on the page of the profile
+    const items = wrapper
+      .findAllComponents({ name: 'SettingsEntityItem' })
+      .filter((item) => item.props('title') === 'Writer')
+    expect(items).toHaveLength(1)
+    expect(items[0]!.props('description')).toBe(
+      'settings.projectAccessFileToolsOff'
     )
+    expect(items[0]!.text()).toContain('settings.accessLevelReadWrite')
+    expect(wrapper.text()).not.toContain('Reader')
+    expect(wrapper.findComponent({ name: 'FieldSelect' }).exists()).toBe(false)
+    items[0]!.vm.$emit('open')
+    expect(store.setProjectAccess).not.toHaveBeenCalled()
     expect(context.navigate).toHaveBeenCalledWith('ai-profile:writer')
   })
 

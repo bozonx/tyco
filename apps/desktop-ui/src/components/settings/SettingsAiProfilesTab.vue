@@ -229,7 +229,7 @@
       :confirm-text="
         projectToDelete?.isExternal
           ? t('settings.disconnectProjectAction')
-          : t('settings.deleteProject')
+          : t('settings.deleteProjectWithFiles')
       "
       :danger="!projectToDelete?.isExternal"
       @confirm="handleDeleteProject"
