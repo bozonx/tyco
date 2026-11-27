@@ -59,7 +59,7 @@ describe('settings config preparation', () => {
       translation: { targetLanguages: 'invalid' },
       chat: { history: { retentionDays: -1, storage: false } },
       language: { ui: '', user: 7 },
-      editor: { history: { maxItems: {} } },
+      editor: { history: { isSecretSanitizingEnabled: {} } },
     }
     const original = structuredClone(input)
     const result = model().prepare(input)
@@ -87,9 +87,10 @@ describe('settings config preparation', () => {
     )
     expect(result.chat.history).toEqual(DEFAULT_USER_CONFIG.chat.history)
     expect(result.language).toEqual({ ui: 'auto' })
-    expect(result.editor.history.maxItems).toBe(
-      DEFAULT_USER_CONFIG.editor.history.maxItems
-    )
+    expect(result.editor.history).toEqual({
+      storage: 'disk',
+      isSecretSanitizingEnabled: true,
+    })
     expect(model().prepare(result)).toEqual(result)
   })
 

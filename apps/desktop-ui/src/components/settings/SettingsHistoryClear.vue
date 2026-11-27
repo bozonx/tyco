@@ -1,15 +1,14 @@
 <template>
-  <FieldRow :label="t('history.clear')" :hint="countHint" inline>
-    <Button
-      size="sm"
-      variant="ghost"
-      icon="mdi:trash-can-outline"
-      :loading="isClearing"
-      @click="isConfirmOpen = true"
-    >
-      {{ label }}
-    </Button>
-  </FieldRow>
+  <Button
+    size="sm"
+    variant="ghost"
+    icon="mdi:trash-can-outline"
+    :loading="isClearing"
+    :disabled="isEmpty"
+    @click="isConfirmOpen = true"
+  >
+    {{ t('history.clear') }}
+  </Button>
   <ConfirmModal
     :open="isConfirmOpen"
     :title="confirmTitle"
@@ -20,6 +19,7 @@
     @cancel="isConfirmOpen = false"
   />
 </template>
+
 <script setup lang="ts">
 import { ref } from 'vue'
 
@@ -28,13 +28,16 @@ import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
-import FieldRow from '../common/FieldRow.vue'
 
+/**
+ * The clear button in the header of a history section. Clearing is the only way
+ * the settings delete a history: turning it off never does, see
+ * `createHistoryKeepingModel`
+ */
 const props = defineProps<{
-  label: string
-  countHint: string
   confirmTitle: string
   confirmMessage: string
+  isEmpty?: boolean
   clear: () => Promise<unknown>
 }>()
 const { t } = useI18n()

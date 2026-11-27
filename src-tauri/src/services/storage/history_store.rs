@@ -22,7 +22,6 @@ pub struct HistorySettings {
     pub editor: editor::EditorHistoryPolicy,
     pub dialog: dialogs::DialogHistoryPolicy,
     pub chat: chats::ChatHistoryPolicy,
-    pub profile_chat: chats::ChatHistoryPolicy,
 }
 
 impl HistorySettings {
@@ -31,7 +30,6 @@ impl HistorySettings {
             editor: editor::EditorHistoryPolicy::from_config(config),
             dialog: dialogs::DialogHistoryPolicy::from_config(config),
             chat: chats::ChatHistoryPolicy::from_config(config),
-            profile_chat: chats::ChatHistoryPolicy::for_profiles(config),
         }
     }
 }
@@ -121,8 +119,7 @@ impl HistoryStorageCoordinator {
                 log::warn!("Settings committed; dialog history cleanup will be retried: {error}");
             }
         }
-        let chat_settings_changed =
-            before.chat != after.chat || before.profile_chat != after.profile_chat;
+        let chat_settings_changed = before.chat != after.chat;
         if chat_settings_changed || self.chat_cleanup_pending.load(Ordering::SeqCst) {
             let config = app.state::<AppState>().user_config();
             let chat_cleanup = enforce_chat_history_policies(app, &after, &config);

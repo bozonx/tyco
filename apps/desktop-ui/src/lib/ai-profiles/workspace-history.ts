@@ -2,14 +2,14 @@ import type { ChatHistoryConfig, VaultChatHistory } from '@tyco/shared'
 
 import { isStricterRetention } from '../history/history-retention'
 
-/** A choice that follows the default of all workspaces */
+/** A choice that follows the chat settings of the app */
 export const WORKSPACE_DEFAULT = 'default'
 
 export type WorkspaceSavingChoice = typeof WORKSPACE_DEFAULT | 'disk' | 'off'
 
-/** The default of all workspaces saves chats */
+/** The chat settings of the app save chats */
 export const isDefaultSaving = (defaults: ChatHistoryConfig): boolean =>
-  defaults.storage !== 'off' && defaults.isChatSavingEnabled !== false
+  defaults.storage !== 'off'
 
 /** The chats of the workspace are saved, by its own setting or the default */
 export function isWorkspaceSaving(

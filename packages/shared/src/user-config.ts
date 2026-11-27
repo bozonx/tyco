@@ -73,8 +73,6 @@ export const DEFAULT_EXTERNAL_ACCESS: ExternalAccess = {
 
 export interface EditorHistoryConfig {
   storage: EditorHistoryStorage
-  /** The most entries kept; turning the history off is `storage: 'off'` */
-  maxItems: number
   /** Absent: entries are kept indefinitely */
   retentionDays?: number
   isSecretSanitizingEnabled: boolean
@@ -90,19 +88,15 @@ export interface ChatHistoryConfig {
   retentionDays?: number
   /** Absent: quick requests are saved along with the chats */
   isQuickRequestSavingEnabled?: boolean
-  /** Absent: regular chats are saved */
-  isChatSavingEnabled?: boolean
 }
 
-/** The settings of the "Ask AI" chat */
+/** The settings of the chats */
 export interface ChatConfig {
+  /**
+   * The history of the chats of "Ask AI" and of every profile whose workspace
+   * sets nothing of its own
+   */
   history: ChatHistoryConfig
-}
-
-/** The settings all AI profiles share */
-export interface AiProfilesConfig {
-  /** The history of every profile chat; "Ask AI" keeps its own */
-  chatHistory: ChatHistoryConfig
 }
 
 export type EditorShortcutId =
@@ -303,7 +297,6 @@ export interface UserConfig {
   chatPrompts: ChatPromptsConfig
   favorites: FavoritesConfig
   aiVaults: AiVaultsConfig
-  aiProfiles: AiProfilesConfig
   markdown: MarkdownConfig
   plugins: Record<string, PluginEntryConfig>
   /** The tool sources switched off everywhere, see `ToolCatalogSettings` */

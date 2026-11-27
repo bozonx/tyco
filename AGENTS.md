@@ -63,6 +63,12 @@ Run the desktop app with `pnpm tauri:dev`, not `pnpm tauri dev`.
   or confirmation toasts when saving succeeds normally. Show nothing on
   normal saves; only when a save fails (or conflicts), show a toast (and any
   applicable error/conflict recovery banner).
+- **Turning a history off never deletes it.** Configuring a history (on, off,
+  where it is kept) and clearing it are separate actions: a settings change
+  must not delete stored history or ask whether to delete it. Clearing is the
+  clear button in the header of the history section, with its own
+  confirmation. Only a shorter retention period may remove entries, after a
+  confirmation (`lib/history/history-settings-model.ts`).
 - **No red delete or clear buttons.** Delete, remove, and clear buttons and
   menu items ("Delete", "Remove", "Clear") must be ordinary controls (`neutral`
   or `ghost`, or `primary` in confirmation dialogs) — never style them red

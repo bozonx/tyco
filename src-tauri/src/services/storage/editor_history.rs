@@ -21,6 +21,8 @@ use crate::errors::AppError;
 use crate::models::{EditorHistoryEntry, EditorHistoryFailure, EditorHistoryItem};
 use crate::services::clock::now_ms;
 
+/// The most entries kept. Not a setting: the retention period decides what
+/// goes, this only keeps the journals from growing without end.
 pub(super) const DEFAULT_EDITOR_HISTORY_LIMIT: usize = 1000;
 /// The folder of the device journals in the user data folder.
 const SHARED_JOURNALS_DIR: &str = "history/editor";
@@ -525,11 +527,10 @@ fn clear_history(
     Ok(())
 }
 
-/// Brings this device's journal in line with `policy`: removes it when the
-/// history is kept in memory only, and drops expired entries and those over
-/// the limit otherwise, also while the history is off. At startup the
-/// memory-only mode means that the history of the previous run is gone, also
-/// when that run ended without a chance to clean up.
+/// Brings this device's journal in line with `policy`: drops expired entries
+/// and those over the limit, also while the history is off. The memory-only
+/// mode leaves the journal as it is: it neither reads nor writes it, and
+/// changing a setting never deletes the history.
 pub(super) fn enforce_editor_history_policy(
     app: &AppHandle,
     policy: &EditorHistoryPolicy,
@@ -542,13 +543,10 @@ fn enforce_policy(
     policy: &EditorHistoryPolicy,
     now_ms: u64,
 ) -> Result<(), AppError> {
-    let own = location.own_path()?;
     if policy.is_memory_only {
-        remove_journal(&own)?;
-    } else {
-        compact_journal(location, &own, policy, now_ms)?;
+        return Ok(());
     }
-    Ok(())
+    compact_journal(location, &location.own_path()?, policy, now_ms)
 }
 
 /// Rewrites this device's journal with what the policy keeps, see
@@ -611,20 +609,11 @@ fn commit_history_transition<T>(
     let was_in_memory = is_in_memory(before, memory);
     // a history turned off stays where it was
     let stays_in_memory = after.is_memory_only || (!after.is_recording && was_in_memory);
-    let to_memory = !was_in_memory && after.is_memory_only;
     let to_disk = was_in_memory && !stays_in_memory;
-    let own = if to_memory || to_disk {
+    let own = if to_disk {
         own?
     } else {
         own.unwrap_or_default()
-    };
-    let prepared_memory = if to_memory {
-        let paths = location.journal_paths(&own);
-        let mut items = merge_journals(&read_journals(&paths, &own)?);
-        after.enforce(&mut items, now_ms());
-        Some(items)
-    } else {
-        None
     };
     let original_target = if to_disk {
         match fs::read(&own) {
@@ -636,17 +625,14 @@ fn commit_history_transition<T>(
         None
     };
     // Persist a session-to-disk migration before publishing the new policy.
-    // Until config commits, memory remains authoritative.
+    // Until config commits, memory remains authoritative. The memory is added
+    // to the journal, which the memory-only mode left as it was.
     let prepared = if to_disk {
         let mut items = memory.clone();
         after.enforce(&mut items, now_ms());
-        write_records(
+        append_records(
             &own,
-            &items
-                .into_iter()
-                .rev()
-                .map(HistoryRecord::Item)
-                .collect::<Vec<_>>(),
+            items.into_iter().rev().map(HistoryRecord::Item).collect(),
         )
     } else {
         Ok(())
@@ -669,14 +655,13 @@ fn commit_history_transition<T>(
             return Err(error);
         }
     };
-    let cleanup = if let Some(items) = prepared_memory {
-        *memory = items;
-        remove_journal(&own)
-    } else if to_disk {
+    // Changing the storage never deletes the history, also not the journal
+    // a memory-only mode leaves behind: the user clears it on purpose.
+    let cleanup = if to_disk {
         memory.clear();
         Ok(())
     } else if after.is_memory_only {
-        remove_journal(&own)
+        Ok(())
     } else if stays_in_memory {
         after.enforce(memory, now_ms());
         Ok(())

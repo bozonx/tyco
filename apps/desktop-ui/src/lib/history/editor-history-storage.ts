@@ -5,7 +5,7 @@ import { historyRetentionChoices } from './history-retention'
  * Retention periods offered by the settings; 0 is the choice that keeps the
  * entries forever, saved as no `retentionDays`
  */
-const EDITOR_HISTORY_RETENTION_DAYS = [0, 1, 7, 30, 90] as const
+const EDITOR_HISTORY_RETENTION_DAYS = [0, 1, 7, 30, 90, 365] as const
 
 /** The editor history keeps nothing */
 export function isEditorHistoryOff(

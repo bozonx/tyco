@@ -16,7 +16,7 @@ const defaults = (value: Partial<ChatHistoryConfig>) =>
 
 describe('workspace chat history', () => {
   it('follows the default until the workspace sets its own', () => {
-    const off = defaults({ storage: 'off', isChatSavingEnabled: false })
+    const off = defaults({ storage: 'off' })
     expect(isWorkspaceSaving({}, off)).toBe(false)
     expect(isWorkspaceSaving({ storage: 'disk' }, off)).toBe(true)
     expect(isWorkspaceSaving({ storage: 'off' }, defaults({}))).toBe(false)

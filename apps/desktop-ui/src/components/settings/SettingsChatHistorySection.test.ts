@@ -52,34 +52,30 @@ describe('SettingsChatHistorySection.vue', () => {
   })
 
   const createConfig = (
-    chatHistory: Partial<ChatHistoryConfig> = {},
-    profileChatHistory: Partial<ChatHistoryConfig> = {}
-  ): Pick<UserConfig, 'chat' | 'aiProfiles'> => ({
+    chatHistory: Partial<ChatHistoryConfig> = {}
+  ): Pick<UserConfig, 'chat'> => ({
     chat: { history: { storage: 'disk', ...chatHistory } },
-    aiProfiles: { chatHistory: { storage: 'disk', ...profileChatHistory } },
   })
 
-  const mountTab = (
-    userConfig = createConfig(),
-    scope: 'askAi' | 'profiles' = 'askAi'
-  ) => {
+  const mountTab = (userConfig = createConfig()) => {
     return mount(SettingsChatHistorySection, {
-      props: { scope },
       global: {
         provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: {
             props: ['title', 'info'],
             template:
-              '<section class="section-stub" :data-title="title" :data-info="info"><slot name="actions" /><slot /></section>',
+              '<section class="section-stub" :data-title="title" :data-info="info"><header class="actions-stub"><slot name="actions" /></header><slot /></section>',
           },
           FieldRow: {
             props: ['label', 'info', 'hint', 'nested'],
             template:
-              '<div class="field-row-stub" :data-label="label" :data-info="info" :data-hint="hint"><slot /></div>',
+              '<div class="field-row-stub" :data-label="label" :data-info="info"><slot /></div>',
           },
           FieldSelect: {
+            name: 'FieldSelect',
             props: ['modelValue', 'options'],
+            emits: ['update:modelValue'],
             template:
               '<select class="field-select-stub" :data-val="modelValue" />',
           },
@@ -102,228 +98,100 @@ describe('SettingsChatHistorySection.vue', () => {
     })
   }
 
-  it('renders chat history controls in chat history block', () => {
-    const wrapper = mountTab()
+  const keepingSelect = (wrapper: ReturnType<typeof mountTab>) =>
+    wrapper.findAllComponents({ name: 'FieldSelect' })[0]!
 
-    const chatSection = wrapper.get('.section-stub')
-    const enabledRow = chatSection.find(
-      '[data-label="settings.chatHistoryEnabled"]'
-    )
-    expect(enabledRow.exists()).toBe(true)
-    expect(enabledRow.attributes('data-info')).toBe(
-      'settings.chatHistoryEnabledInfo'
-    )
-    expect(enabledRow.attributes('data-hint')).toBeUndefined()
+  it('offers one choice of how the chats are kept', () => {
+    const wrapper = mountTab(createConfig({ retentionDays: 30 }))
+
     expect(
-      chatSection
-        .find('[data-label="settings.chatHistoryRetentionDays"]')
-        .exists()
+      wrapper.find('[data-label="settings.chatHistoryKeeping"]').exists()
     ).toBe(true)
-    expect(chatSection.find('.btn-stub').text()).toBe('settings.deleteAllChats')
-    expect(mockLoadChatHistory).toHaveBeenCalled()
+    const select = keepingSelect(wrapper)
+    expect(select.props('modelValue')).toBe(30)
+    expect(
+      (select.props('options') as { id: unknown }[]).map(({ id }) => id)
+    ).toEqual(['off', 7, 30, 90, 365, 0])
+    expect(
+      wrapper.find('[data-label="settings.chatQuickRequestsSaved"]').exists()
+    ).toBe(true)
   })
 
-  it('displays the chat count in the clear history row', () => {
-    mockChatHistory.value = [
-      { id: '1', title: 'Chat 1' },
-      { id: '2', title: 'Chat 2' },
-    ]
-    const wrapper = mountTab()
-    const clearRow = wrapper
-      .findAll('.field-row-stub')
-      .find((row) => row.attributes('data-label') === 'history.clear')
-    expect(clearRow?.attributes('data-hint')).toBe(
-      'settings.chatCount:{"count":2}'
-    )
+  it('hides the quick request switch while chats are not saved', () => {
+    const wrapper = mountTab(createConfig({ storage: 'off' }))
+
+    expect(keepingSelect(wrapper).props('modelValue')).toBe('off')
+    expect(
+      wrapper.find('[data-label="settings.chatQuickRequestsSaved"]').exists()
+    ).toBe(false)
   })
 
-  it('opens confirm modal on clear chat history button click and clears on confirmation', async () => {
-    const wrapper = mountTab()
+  it('turns saving off without deleting anything or asking', async () => {
+    const config = createConfig({ retentionDays: 30 })
+    const wrapper = mountTab(config)
 
-    const chatSection = wrapper.get('.section-stub')
-    const clearButton = chatSection.find('.btn-stub')
+    keepingSelect(wrapper).vm.$emit('update:modelValue', 'off')
+    await flushPromises()
+
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
-
-    await clearButton.trigger('click')
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(true)
-
-    await wrapper.find('.confirm-btn').trigger('click')
-    expect(mockClearChatHistory).toHaveBeenCalledTimes(1)
-    expect(mockToast).toHaveBeenCalledWith('history.cleared', 'info')
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
+    expect(mockClearChatHistory).not.toHaveBeenCalled()
+    expect(config.chat.history).toEqual({ storage: 'off', retentionDays: 30 })
   })
 
-  it('hides quick requests saving when chat saving is off', async () => {
+  it('asks before a shorter retention period removes older chats', async () => {
     const config = createConfig()
     const wrapper = mountTab(config)
 
-    const chatSection = wrapper.get('.section-stub')
-    let checkboxes = chatSection.findAll('.field-checkbox-stub')
-    expect(checkboxes).toHaveLength(2)
+    keepingSelect(wrapper).vm.$emit('update:modelValue', 7)
+    await flushPromises()
+    expect(config.chat.history.retentionDays).toBeUndefined()
+    await wrapper.find('.cancel-btn').trigger('click')
+    expect(config.chat.history.retentionDays).toBeUndefined()
 
-    // Initially both on, retention days visible
-    expect(
-      chatSection
-        .find('[data-label="settings.chatHistoryRetentionDays"]')
-        .exists()
-    ).toBe(true)
-
-    // Turn off quick requests saving (checkbox 1)
-    await checkboxes[1].setValue(false)
-    expect(config.chat.history.isQuickRequestSavingEnabled).toBe(false)
-    expect(config.chat.history.storage).toBe('disk')
-    expect(
-      chatSection
-        .find('[data-label="settings.chatHistoryRetentionDays"]')
-        .exists()
-    ).toBe(true)
-
-    // Turn off chat saving (checkbox 0)
-    await checkboxes[0].setValue(false)
-    expect(config.chat.history.isChatSavingEnabled).toBe(false)
-    expect(config.chat.history.storage).toBe('off')
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
-
-    // Quick requests checkbox and retention days are now hidden
-    checkboxes = chatSection.findAll('.field-checkbox-stub')
-    expect(checkboxes).toHaveLength(1)
-    expect(
-      chatSection
-        .find('[data-label="settings.chatQuickRequestsSaved"]')
-        .exists()
-    ).toBe(false)
-    expect(
-      chatSection
-        .find('[data-label="settings.chatHistoryRetentionDays"]')
-        .exists()
-    ).toBe(false)
-
-    // Turn chat saving back on
-    await checkboxes[0].setValue(true)
-    expect(config.chat.history.storage).toBe('disk')
-    expect(config.chat.history.isChatSavingEnabled).toBeUndefined()
-    expect(config.chat.history.isQuickRequestSavingEnabled).toBe(false)
-
-    checkboxes = chatSection.findAll('.field-checkbox-stub')
-    expect(checkboxes).toHaveLength(2)
-    expect(
-      chatSection
-        .find('[data-label="settings.chatHistoryRetentionDays"]')
-        .exists()
-    ).toBe(true)
-
-    // Turn quick requests back on
-    await checkboxes[1].setValue(true)
-    expect(config.chat.history.isQuickRequestSavingEnabled).toBeUndefined()
+    keepingSelect(wrapper).vm.$emit('update:modelValue', 7)
+    await flushPromises()
+    await wrapper.find('.confirm-btn').trigger('click')
+    expect(config.chat.history).toEqual({ storage: 'disk', retentionDays: 7 })
   })
 
-  it('turns the chat history on without asking', async () => {
-    const config = createConfig({ storage: 'off' })
+  it('turns quick request saving off and on', async () => {
+    const config = createConfig()
     const wrapper = mountTab(config)
 
-    const chatSection = wrapper.get('.section-stub')
-    let checkboxes = chatSection.findAll('.field-checkbox-stub')
-    expect(checkboxes).toHaveLength(1)
-    expect(
-      chatSection
-        .find('[data-label="settings.chatQuickRequestsSaved"]')
-        .exists()
-    ).toBe(false)
-    // Initially off, retention days hidden
-    expect(
-      chatSection
-        .find('[data-label="settings.chatHistoryRetentionDays"]')
-        .exists()
-    ).toBe(false)
-
-    await checkboxes[0].setValue(true)
-
-    expect(config.chat.history.storage).toBe('disk')
-    expect(config.chat.history.isChatSavingEnabled).toBeUndefined()
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
-
-    checkboxes = chatSection.findAll('.field-checkbox-stub')
-    expect(checkboxes).toHaveLength(2)
-    expect(
-      chatSection
-        .find('[data-label="settings.chatQuickRequestsSaved"]')
-        .exists()
-    ).toBe(true)
-    expect(
-      chatSection
-        .find('[data-label="settings.chatHistoryRetentionDays"]')
-        .exists()
-    ).toBe(true)
+    await wrapper.get('.field-checkbox-stub').setValue(false)
+    expect(config.chat.history.isQuickRequestSavingEnabled).toBe(false)
+    await wrapper.get('.field-checkbox-stub').setValue(true)
+    expect(config.chat.history).not.toHaveProperty(
+      'isQuickRequestSavingEnabled'
+    )
   })
 
-  describe('for the profiles', () => {
-    it('edits the settings all profiles share', async () => {
-      const config = createConfig({ storage: 'disk' }, { storage: 'disk' })
-      const wrapper = mountTab(config, 'profiles')
+  it('counts the chats of "Ask AI" and of the profiles in the title', async () => {
+    mockChatHistory.value = [{ id: 'a', title: 'A' }]
+    mockCountAllProfileChats.mockResolvedValue(2)
+    const wrapper = mountTab()
+    await flushPromises()
 
-      const section = wrapper.get('.section-stub')
-      expect(section.attributes('data-title')).toBe(
-        'settings.sectionProfileChatHistory'
-      )
-      expect(section.attributes('data-info')).toBe(
-        'settings.profileChatHistoryHint'
-      )
-      const checkboxes = section.findAll('.field-checkbox-stub')
-      expect(checkboxes).toHaveLength(2)
-      await checkboxes[0].setValue(false)
-      expect(config.aiProfiles.chatHistory.storage).toBe('off')
-      expect(config.aiProfiles.chatHistory.isChatSavingEnabled).toBe(false)
-      expect(config.chat.history.storage).toBe('disk')
-      expect(mockLoadChatHistory).not.toHaveBeenCalled()
-    })
+    expect(wrapper.get('.section-stub').attributes('data-title')).toBe(
+      'settings.sectionChatHistory (settings.chatCount:{"count":3})'
+    )
+  })
 
-    it('counts the chats of all profiles and recounts for new profiles', async () => {
-      mockCountAllProfileChats.mockResolvedValue(3)
-      const wrapper = mountTab(createConfig(), 'profiles')
-      await flushPromises()
-      const clearRow = () =>
-        wrapper
-          .findAll('.field-row-stub')
-          .find((row) => row.attributes('data-label') === 'history.clear')
-      expect(clearRow()?.attributes('data-hint')).toBe(
-        'settings.chatCount:{"count":3}'
-      )
+  it('clears every chat from the header only after confirmation', async () => {
+    mockChatHistory.value = [{ id: 'a', title: 'A' }]
+    const wrapper = mountTab()
+    await flushPromises()
 
-      mockCountAllProfileChats.mockResolvedValue(5)
-      mockProfiles.value = [{ id: 'writer' }]
-      await flushPromises()
-      expect(clearRow()?.attributes('data-hint')).toBe(
-        'settings.chatCount:{"count":5}'
-      )
-    })
+    await wrapper.get('.actions-stub .btn-stub').trigger('click')
+    expect(mockClearChatHistory).not.toHaveBeenCalled()
+    expect(wrapper.get('.confirm-modal-stub').attributes('data-message')).toBe(
+      'settings.clearChatsConfirmDialog'
+    )
+    await wrapper.get('.confirm-btn').trigger('click')
+    await flushPromises()
 
-    it('clears the chats of every profile after confirmation', async () => {
-      mockCountAllProfileChats.mockResolvedValue(2)
-      const wrapper = mountTab(createConfig(), 'profiles')
-      await flushPromises()
-
-      await wrapper.get('.btn-stub').trigger('click')
-      expect(
-        wrapper.get('.confirm-modal-stub').attributes('data-message')
-      ).toBe('settings.clearProfileChatsConfirmDialog')
-      mockCountAllProfileChats.mockResolvedValue(0)
-      await wrapper.get('.confirm-btn').trigger('click')
-      await flushPromises()
-
-      expect(mockClearAllProfileChats).toHaveBeenCalledTimes(1)
-      expect(mockClearChatHistory).not.toHaveBeenCalled()
-      expect(mockToast).toHaveBeenCalledWith('history.cleared', 'info')
-    })
-
-    it('reports a failed clear', async () => {
-      mockClearAllProfileChats.mockRejectedValueOnce(new Error('denied'))
-      const wrapper = mountTab(createConfig(), 'profiles')
-
-      await wrapper.get('.btn-stub').trigger('click')
-      await wrapper.get('.confirm-btn').trigger('click')
-      await flushPromises()
-
-      expect(mockToast).toHaveBeenCalledWith('history.operationFailed', 'error')
-    })
+    expect(mockClearChatHistory).toHaveBeenCalledOnce()
+    expect(mockClearAllProfileChats).toHaveBeenCalledOnce()
+    expect(mockToast).toHaveBeenCalledWith('history.cleared', 'info')
   })
 })

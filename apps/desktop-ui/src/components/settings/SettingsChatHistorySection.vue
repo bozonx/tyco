@@ -1,53 +1,41 @@
 <template>
   <SettingsSection
-    :title="t(texts.titleKey)"
-    :info="texts.infoKey && t(texts.infoKey)"
+    :title="`${t('settings.sectionChatHistory')} (${t('settings.chatCount', { count: chatCount })})`"
+    :info="t('settings.chatHistoryHint')"
   >
-    <FieldRow
-      :label="t('settings.chatHistoryEnabled')"
-      :info="t('settings.chatHistoryEnabledInfo')"
-      inline
-    >
-      <FieldSwitch
-        :model-value="isChatSavingChecked"
-        @update:model-value="setChatSavingEnabled"
+    <template #actions>
+      <SettingsHistoryClear
+        :is-empty="chatCount === 0"
+        :confirm-title="t('history.clearConfirmTitle')"
+        :confirm-message="t('settings.clearChatsConfirmDialog')"
+        :clear="chats.clear"
       />
-    </FieldRow>
-
+    </template>
     <FieldRow
-      v-if="isChatSavingChecked"
-      :label="t('settings.chatQuickRequestsSaved')"
-      :info="t('settings.chatQuickRequestsSavedInfo')"
-      inline
-    >
-      <FieldSwitch
-        :model-value="isQuickRequestSavingChecked"
-        @update:model-value="setQuickRequestSaving"
-      />
-    </FieldRow>
-
-    <FieldRow
-      v-if="isRetentionVisible"
-      :label="t('settings.chatHistoryRetentionDays')"
-      :info="t('settings.chatHistoryRetentionDaysHint')"
+      :label="t('settings.chatHistoryKeeping')"
+      :info="t('settings.chatHistoryKeepingHint')"
       inline
     >
       <FieldSelect
         size="sm"
         class="w-44 shrink-0"
-        :model-value="history.retentionDays ?? 0"
-        :options="retentionOptions"
-        @update:model-value="setRetentionDays"
+        :model-value="historyKeepingChoice(history)"
+        :options="keepingOptions"
+        @update:model-value="setKeeping"
       />
     </FieldRow>
 
-    <SettingsHistoryClear
-      :label="t('settings.deleteAllChats')"
-      :count-hint="t('settings.chatCount', { count: chatCount })"
-      :confirm-title="t('history.clearConfirmTitle')"
-      :confirm-message="t(texts.confirmKey)"
-      :clear="scopeChats.clear"
-    />
+    <FieldRow
+      v-if="history.storage !== 'off'"
+      :label="t('settings.chatQuickRequestsSaved')"
+      :info="t('settings.chatQuickRequestsSavedInfo')"
+      inline
+    >
+      <FieldSwitch
+        :model-value="history.isQuickRequestSavingEnabled !== false"
+        @update:model-value="setQuickRequestSaving"
+      />
+    </FieldRow>
 
     <ConfirmModal
       :open="pendingChange !== null"
@@ -67,13 +55,13 @@ import { computed, onMounted } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSettingsHistoryChats } from '../../composables/use-settings-history-chats'
-import {
-  type ChatHistoryScope,
-  chatHistoryConfig,
-  chatHistoryRetentionChoices,
-} from '../../lib/chat/chat-history-settings'
+import { chatHistoryRetentionChoices } from '../../lib/chat/chat-history-settings'
 import { historyRetentionOptions } from '../../lib/history/history-retention'
-import { createHistorySettingsModel } from '../../lib/history/history-settings-model'
+import {
+  createHistoryKeepingModel,
+  historyKeepingChoice,
+  historyKeepingOptions,
+} from '../../lib/history/history-settings-model'
 import { toHtmlLang } from '../../lib/locale/language'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -82,90 +70,46 @@ import FieldSwitch from '../common/FieldSwitch.vue'
 import SettingsHistoryClear from './SettingsHistoryClear.vue'
 import SettingsSection from './SettingsSection.vue'
 
-const props = withDefaults(defineProps<{ scope?: ChatHistoryScope }>(), {
-  scope: 'askAi',
-})
-
-const TEXTS = {
-  askAi: {
-    titleKey: 'settings.sectionChatHistory',
-    infoKey: 'settings.chatHistoryHint',
-    confirmKey: 'settings.clearChatsConfirmDialog',
-  },
-  profiles: {
-    titleKey: 'settings.sectionProfileChatHistory',
-    infoKey: 'settings.profileChatHistoryHint',
-    confirmKey: 'settings.clearProfileChatsConfirmDialog',
-  },
-} as const
-
+/** The chats of "Ask AI" and of the profiles whose workspace sets nothing */
 const { t } = useI18n()
 const { draft: userConfig, effectiveAppLanguage } = useSettingsContext()
 
-const texts = computed(() => TEXTS[props.scope])
-const history = computed(() => chatHistoryConfig(userConfig.value, props.scope))
+const history = computed(() => userConfig.value.chat.history)
 
-const scopeChats = useSettingsHistoryChats(props.scope)
-
+const chats = useSettingsHistoryChats()
 onMounted(() => {
   // the count stays at what was last read
-  scopeChats.load().catch(() => {})
+  chats.load().catch(() => {})
 })
-
-const chatCount = computed(() => scopeChats.count.value)
-
-const isChatSavingChecked = computed(
-  () =>
-    history.value.storage !== 'off' &&
-    history.value.isChatSavingEnabled !== false
-)
-
-const isQuickRequestSavingChecked = computed(
-  () =>
-    isChatSavingChecked.value &&
-    history.value.isQuickRequestSavingEnabled !== false
-)
-
-const isRetentionVisible = computed(() => isChatSavingChecked.value)
-
-function setChatSavingEnabled(isEnabled: boolean) {
-  if (isEnabled) {
-    history.value.storage = 'disk'
-    delete history.value.isChatSavingEnabled
-  } else {
-    history.value.isChatSavingEnabled = false
-    history.value.storage = 'off'
-  }
-}
+const chatCount = computed(() => chats.count.value)
 
 function setQuickRequestSaving(isEnabled: boolean) {
-  if (isEnabled) {
-    delete history.value.isQuickRequestSavingEnabled
-  } else {
-    history.value.isQuickRequestSavingEnabled = false
-  }
+  if (isEnabled) delete history.value.isQuickRequestSavingEnabled
+  else history.value.isQuickRequestSavingEnabled = false
 }
 
-const { pendingChange, confirmChange, cancelChange, setRetentionDays } =
-  createHistorySettingsModel({
-    getRetentionDays: () => history.value.retentionDays,
-    setRetentionDays: (days) => {
-      if (days === undefined) delete history.value.retentionDays
-      else history.value.retentionDays = days
-    },
+const periodName = (days: number) =>
+  historyRetentionOptions(
+    [days],
+    toHtmlLang(effectiveAppLanguage.value),
+    t('settings.editorHistoryRetentionForever')
+  )[0]!.name
+
+const { pendingChange, confirmChange, cancelChange, setKeeping } =
+  createHistoryKeepingModel({
+    getHistory: () => history.value,
     retentionMessage: (days) =>
-      t('settings.chatHistoryRetentionConfirm', {
-        period:
-          retentionOptions.value.find((option) => option.id === days)?.name ??
-          '',
-      }),
+      t('settings.chatHistoryRetentionConfirm', { period: periodName(days) }),
   })
 
-const retentionOptions = computed(() =>
-  historyRetentionOptions(
+const keepingOptions = computed(() =>
+  historyKeepingOptions(
     chatHistoryRetentionChoices(history.value.retentionDays),
-    toHtmlLang(effectiveAppLanguage.value),
-    t('settings.chatHistoryRetentionNever')
+    {
+      off: t('settings.workspaceHistory.notSaved'),
+      forever: t('settings.editorHistoryRetentionForever'),
+      period: periodName,
+    }
   )
 )
 </script>

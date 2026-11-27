@@ -9,7 +9,7 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('SettingsHistoryTab.vue', () => {
-  it('holds the action history, dialog history, and the chats of Ask AI in every mode', () => {
+  it('holds the action history, dialog history, and the chats in every mode', () => {
     const mountTab = (isInDevelopment: boolean) =>
       mount(SettingsHistoryTab, {
         global: {
@@ -22,8 +22,7 @@ describe('SettingsHistoryTab.vue', () => {
               template: '<div class="dialog-history-stub" />',
             },
             SettingsChatHistorySection: {
-              props: ['scope'],
-              template: '<div class="chat-history-stub" :data-scope="scope" />',
+              template: '<div class="chat-history-stub" />',
             },
           },
         },
@@ -32,8 +31,6 @@ describe('SettingsHistoryTab.vue', () => {
     expect(mountTab(true).find('.editor-history-stub').exists()).toBe(true)
     expect(mountTab(false).find('.editor-history-stub').exists()).toBe(true)
     expect(mountTab(false).find('.dialog-history-stub').exists()).toBe(true)
-    expect(
-      mountTab(false).get('.chat-history-stub').attributes('data-scope')
-    ).toBe('askAi')
+    expect(mountTab(false).findAll('.chat-history-stub')).toHaveLength(1)
   })
 })

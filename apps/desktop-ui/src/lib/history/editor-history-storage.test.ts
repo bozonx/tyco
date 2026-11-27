@@ -23,7 +23,6 @@ describe('isEditorHistoryOff', () => {
           history: {
             ...DEFAULT_USER_CONFIG.editor.history,
             storage: 'session',
-            maxItems: 10,
           },
         },
       })
@@ -33,10 +32,12 @@ describe('isEditorHistoryOff', () => {
 
 describe('editorHistoryRetentionChoices', () => {
   it('offers the standard periods', () => {
-    expect(editorHistoryRetentionChoices(7)).toEqual([0, 1, 7, 30, 90])
+    expect(editorHistoryRetentionChoices(7)).toEqual([0, 1, 7, 30, 90, 365])
   })
 
   it('keeps a custom saved period', () => {
-    expect(editorHistoryRetentionChoices(14)).toEqual([0, 1, 7, 14, 30, 90])
+    expect(editorHistoryRetentionChoices(14)).toEqual([
+      0, 1, 7, 14, 30, 90, 365,
+    ])
   })
 })

@@ -80,10 +80,14 @@ fn cleanup_failure_preserves_the_committed_policy_and_can_be_retried() {
     let path = own(&location);
     let mut memory = Vec::new();
     write_items(&path, &[recent("a", "private")]);
+    let retention = EditorHistoryPolicy {
+        retention_days: 1,
+        ..policy()
+    };
     let HistoryCommit {
         value: revision,
         is_cleanup_pending: pending,
-    } = commit_history_transition(&location, &policy(), &memory_only(), &mut memory, || {
+    } = commit_history_transition(&location, &policy(), &retention, &mut memory, || {
         // Simulate a filesystem failure after the config has committed.
         fs::remove_file(&path).unwrap();
         fs::create_dir(&path).unwrap();
@@ -96,16 +100,9 @@ fn cleanup_failure_preserves_the_committed_policy_and_can_be_retried() {
     let HistoryCommit {
         is_cleanup_pending: pending,
         ..
-    } = commit_history_transition(
-        &location,
-        &memory_only(),
-        &memory_only(),
-        &mut memory,
-        || Ok(2u64),
-    )
-    .unwrap();
+    } = commit_history_transition(&location, &policy(), &retention, &mut memory, || Ok(2u64))
+        .unwrap();
     assert!(!pending);
-    assert!(!path.exists());
 }
 
 #[test]
@@ -302,30 +299,36 @@ fn clearing_on_one_device_hides_the_entries_of_every_device() {
 }
 
 #[test]
-fn switching_to_memory_only_moves_the_journals_into_memory() {
+fn switching_to_memory_only_keeps_the_journal() {
     let dir = TestDir::new("switch-on");
     let location = HistoryLocation::at(&dir, LAPTOP);
     write_items(&own(&location), &[recent("a", "stored")]);
+    let original = fs::read(own(&location)).unwrap();
     let mut memory = Vec::new();
 
     commit_history_transition(&location, &policy(), &memory_only(), &mut memory, || Ok(()))
         .unwrap();
+    // and so does the startup in that mode
+    enforce_policy(&location, &memory_only(), now_ms()).unwrap();
 
-    assert!(!own(&location).exists());
-    assert_eq!(history_texts(&memory), ["stored"]);
+    assert_eq!(fs::read(own(&location)).unwrap(), original);
+    assert!(memory.is_empty());
 }
 
 #[test]
-fn switching_memory_only_off_writes_the_memory_to_the_journal() {
+fn switching_memory_only_off_adds_the_memory_to_the_journal() {
     let dir = TestDir::new("switch-off");
     let location = HistoryLocation::at(&dir, LAPTOP);
-    let mut memory = vec![recent("a", "in memory")];
+    let mut stored = recent("a", "stored");
+    stored.created_at_ms -= 1000;
+    write_items(&own(&location), &[stored]);
+    let mut memory = vec![recent("b", "in memory")];
 
     commit_history_transition(&location, &memory_only(), &policy(), &mut memory, || Ok(()))
         .unwrap();
 
     assert!(memory.is_empty());
-    assert_eq!(texts(&location), ["in memory"]);
+    assert_eq!(texts(&location), ["in memory", "stored"]);
 }
 
 #[test]

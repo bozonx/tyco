@@ -349,36 +349,13 @@ fn chat_history_policy_reads_the_settings() {
             saves_chats: false,
         }
     );
-    assert_eq!(
-        ChatHistoryPolicy::from_config(
-            &json!({"chat":{"history":{"storage":"disk","isChatSavingEnabled":false,"isQuickRequestSavingEnabled":true}}})
-        ),
-        ChatHistoryPolicy {
-            is_enabled: false,
-            retention_days: 0,
-            saves_quick_requests: false,
-            saves_chats: false,
-        }
-    );
 }
 
 #[test]
-fn profile_chats_follow_their_own_settings() {
-    let config = json!({
-        "chat": {"history": {"storage": "off"}},
-        "aiProfiles": {"chatHistory": {"storage": "disk", "retentionDays": 7}}
-    });
+fn profile_chats_follow_the_chat_settings() {
+    let config = json!({"chat": {"history": {"storage": "disk", "retentionDays": 7}}});
     assert_eq!(
-        ChatHistoryPolicy::from_config(&config),
-        ChatHistoryPolicy {
-            is_enabled: false,
-            retention_days: 0,
-            saves_quick_requests: false,
-            saves_chats: false,
-        }
-    );
-    assert_eq!(
-        ChatHistoryPolicy::for_profiles(&config),
+        ChatHistoryPolicy::for_vault(&config, &Default::default()),
         ChatHistoryPolicy {
             is_enabled: true,
             retention_days: 7,
@@ -387,7 +364,7 @@ fn profile_chats_follow_their_own_settings() {
         }
     );
     assert_eq!(
-        ChatHistoryPolicy::for_profiles(&json!({})),
+        ChatHistoryPolicy::from_config(&json!({})),
         ChatHistoryPolicy {
             is_enabled: true,
             retention_days: 0,
@@ -1068,7 +1045,7 @@ fn the_policy_reads_whether_quick_requests_are_saved() {
         "chat": { "history": { "storage": "disk", "isQuickRequestSavingEnabled": false } },
     });
     assert!(!ChatHistoryPolicy::from_config(&config).saves_quick_requests);
-    assert!(ChatHistoryPolicy::for_profiles(&config).saves_quick_requests);
+    assert!(ChatHistoryPolicy::from_config(&json!({})).saves_quick_requests);
 }
 
 #[test]
@@ -1100,12 +1077,12 @@ fn the_list_carries_no_recent_prompts_while_the_index_keeps_them() {
 }
 
 #[test]
-fn a_vault_overrides_the_default_profile_policy() {
+fn a_vault_overrides_the_chat_policy() {
     use crate::services::ai_vault::{VaultChatHistory, VaultHistoryStorage};
-    let config = json!({"aiProfiles": {"chatHistory": {"storage": "disk", "retentionDays": 7}}});
+    let config = json!({"chat": {"history": {"storage": "disk", "retentionDays": 7}}});
     assert_eq!(
         ChatHistoryPolicy::for_vault(&config, &VaultChatHistory::default()),
-        ChatHistoryPolicy::for_profiles(&config)
+        ChatHistoryPolicy::from_config(&config)
     );
     let kept = ChatHistoryPolicy::for_vault(
         &config,
@@ -1125,8 +1102,7 @@ fn a_vault_overrides_the_default_profile_policy() {
     );
     assert!(!off.is_enabled && !off.saves_chats);
     assert_eq!(off.retention_days, 7);
-    let default_off =
-        json!({"aiProfiles": {"chatHistory": {"storage": "off", "isChatSavingEnabled": false}}});
+    let default_off = json!({"chat": {"history": {"storage": "off"}}});
     let on = ChatHistoryPolicy::for_vault(
         &default_off,
         &VaultChatHistory {

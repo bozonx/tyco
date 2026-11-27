@@ -1,8 +1,16 @@
 <template>
   <SettingsSection
-    :title="t('settings.workspaceHistory.title')"
+    :title="`${t('settings.workspaceHistory.title')} (${t('settings.chatCount', { count: chatCount })})`"
     :info="t('settings.workspaceHistory.hint')"
   >
+    <template #actions>
+      <SettingsHistoryClear
+        :is-empty="chatCount === 0"
+        :confirm-title="t('history.clearConfirmTitle')"
+        :confirm-message="t('settings.workspaceHistory.clearConfirm')"
+        :clear="clearChats"
+      />
+    </template>
     <FieldRow
       :label="t('settings.chatHistoryEnabled')"
       :info="t('settings.workspaceHistory.syncedHint')"
@@ -34,14 +42,6 @@
       />
     </FieldRow>
 
-    <SettingsHistoryClear
-      :label="t('settings.deleteAllChats')"
-      :count-hint="t('settings.chatCount', { count: chatCount })"
-      :confirm-title="t('history.clearConfirmTitle')"
-      :confirm-message="t('settings.workspaceHistory.clearConfirm')"
-      :clear="clearChats"
-    />
-
     <ConfirmModal
       :open="pendingHistory !== null"
       :title="t('settings.historyDeleteConfirmTitle')"
@@ -71,10 +71,7 @@ import {
   withSaving,
   workspaceRetentionDays,
 } from '../../lib/ai-profiles/workspace-history'
-import {
-  chatHistoryConfig,
-  chatHistoryRetentionChoices,
-} from '../../lib/chat/chat-history-settings'
+import { chatHistoryRetentionChoices } from '../../lib/chat/chat-history-settings'
 import { historyRetentionOptions } from '../../lib/history/history-retention'
 import { toHtmlLang } from '../../lib/locale/language'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
@@ -95,11 +92,9 @@ const { effectiveAppLanguage } = useSettingsContext()
 const desktopStore = useDesktopStore()
 const store = useAiProfilesStore()
 
-// the settings of a workspace apply at once, so they follow the saved
-// default, not an unsaved draft of it
-const defaults = computed(() =>
-  chatHistoryConfig(desktopStore.userConfig, 'profiles')
-)
+// the settings of a workspace apply at once, so they follow the saved chat
+// settings, not an unsaved draft of them
+const defaults = computed(() => desktopStore.userConfig.chat.history)
 const isSaving = computed(() =>
   isWorkspaceSaving(props.vault.chatHistory, defaults.value)
 )

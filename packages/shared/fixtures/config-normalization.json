@@ -27,7 +27,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1.5,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -197,7 +196,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -406,7 +404,6 @@
       "chatPrompts": { "items": [] },
       "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
@@ -435,7 +432,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         }
@@ -600,7 +596,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -842,7 +837,6 @@
       "chatPrompts": { "items": [] },
       "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
@@ -871,7 +865,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         }
@@ -1025,7 +1018,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -1271,7 +1263,6 @@
       "chatPrompts": { "items": [] },
       "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
@@ -1300,7 +1291,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         }
@@ -1459,7 +1449,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -1710,7 +1699,6 @@
       "chatPrompts": { "items": [] },
       "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
@@ -1739,7 +1727,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         }
@@ -1888,7 +1875,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -2127,7 +2113,6 @@
       "chatPrompts": { "items": [] },
       "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
@@ -2156,7 +2141,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         }
@@ -2310,7 +2294,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -2556,7 +2539,6 @@
       "chatPrompts": { "items": [] },
       "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
@@ -2585,7 +2567,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         }
@@ -2740,7 +2721,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -2987,7 +2967,6 @@
       "chatPrompts": { "items": [] },
       "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
@@ -3016,7 +2995,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         }
@@ -3185,7 +3163,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -3425,7 +3402,6 @@
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [] },
       "favorites": { "items": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
@@ -3454,7 +3430,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         }
@@ -3627,7 +3602,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -3874,7 +3848,6 @@
       "styling": { "items": [], "slots": {} },
       "chatPrompts": { "items": [] },
       "favorites": { "items": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
@@ -3903,7 +3876,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         }
@@ -4088,7 +4060,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -4399,7 +4370,6 @@
       "chatPrompts": { "items": [] },
       "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",
@@ -4428,7 +4398,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         }
@@ -4629,7 +4598,6 @@
         "diffViewMode": "unified",
         "history": {
           "storage": "disk",
-          "maxItems": 1000,
           "retentionDays": 30,
           "isSecretSanitizingEnabled": true
         },
@@ -4944,7 +4912,6 @@
       "chatPrompts": { "items": [] },
       "favorites": { "items": [] },
       "aiVaults": { "attached": [] },
-      "aiProfiles": { "chatHistory": { "storage": "disk" } },
       "dialog": {
         "isEnabled": false,
         "source": "microphoneAndSystem",

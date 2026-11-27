@@ -46,7 +46,8 @@ pub enum HistoryStorage {
     Disk,
 }
 
-/// `chat.history` and `aiProfiles.chatHistory`.
+/// `chat.history`: the chats of "Ask AI" and of every profile whose
+/// workspace sets nothing of its own.
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ChatHistoryConfig {
@@ -58,19 +59,11 @@ pub struct ChatHistoryConfig {
     /// Quick requests are saved with the chats; `None` when missing.
     #[serde(default, deserialize_with = "lenient")]
     pub is_quick_request_saving_enabled: Option<bool>,
-    /// Regular chats are saved; `None` when missing.
-    #[serde(default, deserialize_with = "lenient")]
-    pub is_chat_saving_enabled: Option<bool>,
 }
 
-/// The history of the chats of "Ask AI".
+/// The history of the chats, see `ChatHistoryConfig`.
 pub fn chat_history(config: &Value) -> ChatHistoryConfig {
     section_at(config, "/chat/history")
-}
-
-/// The history every profile chat follows.
-pub fn profile_chat_history(config: &Value) -> ChatHistoryConfig {
-    section_at(config, "/aiProfiles/chatHistory")
 }
 
 /// Whether the "Ask AI" chat may search and read the web:
@@ -106,9 +99,6 @@ pub fn ai_command_tools(config: &Value, command_id: &str) -> Vec<Value> {
 pub struct EditorHistoryConfig {
     #[serde(default, deserialize_with = "lenient")]
     pub storage: HistoryStorage,
-    /// `None` when missing or not a count.
-    #[serde(default, deserialize_with = "lenient")]
-    pub max_items: Option<usize>,
     /// 0 keeps the entries forever.
     #[serde(default, deserialize_with = "lenient")]
     pub retention_days: u64,
@@ -638,34 +628,23 @@ mod tests {
     #[test]
     fn history_sections_read_each_field_on_its_own() {
         let config = json!({
-            "chat": {"history": {"storage": "off", "retentionDays": 7}},
-            "aiProfiles": {"chatHistory": {"storage": "bogus", "retentionDays": "x"}},
-            "editor": {"history": {"storage": "session", "maxItems": " 7 ",
+            "chat": {"history": {"storage": "off", "retentionDays": "x"}},
+            "editor": {"history": {"storage": "session",
                                    "retentionDays": 3, "isSecretSanitizingEnabled": true}},
         });
         assert_eq!(
             chat_history(&config),
             ChatHistoryConfig {
                 storage: HistoryStorage::Off,
-                retention_days: 7,
+                retention_days: 0,
                 is_quick_request_saving_enabled: None,
-                is_chat_saving_enabled: None,
             }
         );
-        assert_eq!(profile_chat_history(&config), ChatHistoryConfig::default());
         let editor = editor_history(&config);
         assert_eq!(editor.storage, HistoryStorage::Session);
-        assert_eq!(editor.max_items, None);
         assert_eq!(editor.retention_days, 3);
         assert!(editor.is_secret_sanitizing_enabled);
         assert_eq!(editor_history(&json!({})), EditorHistoryConfig::default());
-        let max_items = |value: Value| {
-            editor_history(&json!({"editor": {"history": {"maxItems": value}}})).max_items
-        };
-        assert_eq!(max_items(json!(0)), Some(0));
-        assert_eq!(max_items(json!(5)), Some(5));
-        assert_eq!(max_items(json!(-3)), None);
-        assert_eq!(max_items(json!("0")), None);
     }
 
     #[test]

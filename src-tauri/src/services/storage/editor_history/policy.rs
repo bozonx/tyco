@@ -53,7 +53,7 @@ impl EditorHistoryPolicy {
 
         Self {
             is_recording: storage != EditorHistoryStorageMode::Off,
-            max_entries: history.max_items.unwrap_or(DEFAULT_EDITOR_HISTORY_LIMIT),
+            max_entries: DEFAULT_EDITOR_HISTORY_LIMIT,
             is_memory_only: storage == EditorHistoryStorageMode::Session,
             retention_days: if on_disk { history.retention_days } else { 0 },
             should_redact_secrets: on_disk && history.is_secret_sanitizing_enabled,
@@ -150,13 +150,13 @@ mod tests {
 
     #[test]
     fn policy_reads_the_settings() {
-        let config = json!({"editor":{"history":{"storage":"disk","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true}}});
+        let config = json!({"editor":{"history":{"storage":"disk","retentionDays":7,"isSecretSanitizingEnabled":true}}});
 
         assert_eq!(
             EditorHistoryPolicy::from_config(&config),
             EditorHistoryPolicy {
                 is_recording: true,
-                max_entries: 20,
+                max_entries: DEFAULT_EDITOR_HISTORY_LIMIT,
                 is_memory_only: false,
                 retention_days: 7,
                 should_redact_secrets: true,
@@ -164,21 +164,21 @@ mod tests {
         );
         assert_eq!(
             EditorHistoryPolicy::from_config(
-                &json!({"editor":{"history":{"storage":"session","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true}}})
+                &json!({"editor":{"history":{"storage":"session","retentionDays":7,"isSecretSanitizingEnabled":true}}})
             ),
             EditorHistoryPolicy {
-                max_entries: 20,
+                max_entries: DEFAULT_EDITOR_HISTORY_LIMIT,
                 is_memory_only: true,
                 ..policy()
             }
         );
         assert_eq!(
             EditorHistoryPolicy::from_config(
-                &json!({"editor":{"history":{"storage":"off","maxItems":20,"retentionDays":7}}})
+                &json!({"editor":{"history":{"storage":"off","retentionDays":7}}})
             ),
             EditorHistoryPolicy {
                 is_recording: false,
-                max_entries: 20,
+                max_entries: DEFAULT_EDITOR_HISTORY_LIMIT,
                 retention_days: 7,
                 ..policy()
             }

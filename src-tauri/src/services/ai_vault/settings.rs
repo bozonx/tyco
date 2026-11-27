@@ -4,7 +4,7 @@
 //! the settings never conflicts with it in a sync.
 //!
 //! Each setting is optional: a missing one follows the app-wide default
-//! (`aiProfiles.chatHistory` for the chat history). Fields this build does not
+//! (`chat.history` for the chat history). Fields this build does not
 //! know are kept when the file is written.
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};

@@ -733,23 +733,17 @@ pub struct ChatHistoryPolicy {
 }
 
 impl ChatHistoryPolicy {
-    /// The policy of the chats of "Ask AI".
+    /// The policy of the chats of "Ask AI", and of the profile chats of a
+    /// vault that sets nothing of its own.
     pub fn from_config(user_config: &Value) -> Self {
         user_config::chat_history(user_config).into()
     }
 
-    /// The default policy of profile chats, for a vault that sets nothing.
-    pub fn for_profiles(user_config: &Value) -> Self {
-        user_config::profile_chat_history(user_config).into()
-    }
-
     /// The policy of the profile chats of a vault: its own settings over the
-    /// default of the app.
+    /// chat settings of the app.
     pub fn for_vault(user_config: &Value, vault: &VaultChatHistory) -> Self {
-        let mut config = user_config::profile_chat_history(user_config);
+        let mut config = user_config::chat_history(user_config);
         if let Some(storage) = vault.storage {
-            // the vault decides alone whether its chats are saved
-            config.is_chat_saving_enabled = None;
             config.storage = match storage {
                 VaultHistoryStorage::Off => HistoryStorage::Off,
                 VaultHistoryStorage::Disk => HistoryStorage::Disk,
@@ -796,8 +790,7 @@ impl ChatHistoryPolicy {
 
 impl From<ChatHistoryConfig> for ChatHistoryPolicy {
     fn from(config: ChatHistoryConfig) -> Self {
-        let storage_enabled = config.storage != HistoryStorage::Off;
-        let saves_chats = storage_enabled && config.is_chat_saving_enabled.unwrap_or(true);
+        let saves_chats = config.storage != HistoryStorage::Off;
         let saves_quick_requests =
             saves_chats && config.is_quick_request_saving_enabled.unwrap_or(true);
         Self {

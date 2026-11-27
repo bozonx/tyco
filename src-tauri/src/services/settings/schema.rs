@@ -1231,8 +1231,7 @@ mod tests {
     fn rejects_bad_types_counts_duplicate_ids_and_dangling_references() {
         let defaults = crate::services::settings::defaults::default_user_config();
         for (path, value) in [
-            ("/editor/history/maxItems", json!(1.5)),
-            ("/editor/history/maxItems", json!(0)),
+            ("/editor/history/retentionDays", json!(1.5)),
             ("/editor/history/retentionDays", json!(0)),
             ("/transformations/items/0/id", json!("Deep edit")),
             ("/actionPages/0/inputMode", json!("none")),
@@ -1303,7 +1302,7 @@ mod tests {
     #[test]
     fn startup_repair_is_idempotent_and_removes_dangling_references() {
         let mut config = crate::services::settings::defaults::default_user_config();
-        config["editor"]["history"]["maxItems"] = json!(1.5);
+        config["editor"]["history"]["retentionDays"] = json!(1.5);
         config["stt"]["correctionMode"] = json!("yes");
         config["actionPages"] = json!([{
             "inputMode": "selection",

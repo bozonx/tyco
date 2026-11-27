@@ -41,6 +41,7 @@ vi.mock('../../composables/use-editor-history-changes', () => ({
 describe('SettingsEditorHistorySection.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockHistory.editorHistory = [{ id: 'a' }]
   })
 
   const createConfig = (
@@ -52,7 +53,6 @@ describe('SettingsEditorHistorySection.vue', () => {
       diffViewMode: 'unified',
       history: {
         storage: 'disk',
-        maxItems: 100,
         retentionDays: 30,
         isSecretSanitizingEnabled: true,
         ...editorHistory,
@@ -68,7 +68,7 @@ describe('SettingsEditorHistorySection.vue', () => {
           SettingsSection: {
             props: ['title'],
             template:
-              '<section class="section-stub" :data-title="title"><slot name="actions" /><slot /></section>',
+              '<section class="section-stub" :data-title="title"><header class="actions-stub"><slot name="actions" /></header><slot /></section>',
           },
           FieldRow: {
             props: ['label', 'info', 'nested', 'hint'],
@@ -81,11 +81,6 @@ describe('SettingsEditorHistorySection.vue', () => {
             emits: ['update:modelValue'],
             template:
               '<select class="field-select-stub" :data-val="modelValue" />',
-          },
-          FieldNumber: {
-            props: ['modelValue'],
-            template:
-              '<input class="field-input-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" @change="$emit(\'change\')" />',
           },
           FieldSwitch: {
             props: ['modelValue'],
@@ -106,73 +101,37 @@ describe('SettingsEditorHistorySection.vue', () => {
     })
   }
 
-  it('renders editor history rows when storage is disk', () => {
+  const keepingSelect = (wrapper: ReturnType<typeof mountTab>) =>
+    wrapper.findAllComponents({ name: 'FieldSelect' })[0]!
+
+  it('offers one choice of how the history is kept', () => {
     const wrapper = mountTab(createConfig({ storage: 'disk' }))
 
-    const editorSection = wrapper.get('.section-stub')
+    const select = keepingSelect(wrapper)
+    expect(select.props('modelValue')).toBe(30)
     expect(
-      editorSection
-        .find('[data-label="settings.editorHistoryStorage"]')
-        .exists()
-    ).toBe(true)
+      (select.props('options') as { id: unknown }[]).map(({ id }) => id)
+    ).toEqual(['off', 'session', 1, 7, 30, 90, 365, 0])
     expect(
-      editorSection
-        .find('[data-label="settings.editorHistoryMaxItems"]')
-        .exists()
-    ).toBe(true)
-    expect(
-      editorSection
-        .find('[data-label="settings.editorHistoryRetentionDays"]')
-        .exists()
-    ).toBe(true)
-    expect(
-      editorSection
+      wrapper
         .find('[data-label="settings.sanitizeSecretsInEditorHistory"]')
         .exists()
     ).toBe(true)
   })
 
-  it('hides retention and secret masking when storage is session', () => {
-    const wrapper = mountTab(createConfig({ storage: 'session' }))
+  it.each(['session', 'off'] as const)(
+    'hides secret masking when the history is %s',
+    (storage) => {
+      const wrapper = mountTab(createConfig({ storage }))
 
-    const editorSection = wrapper.get('.section-stub')
-    expect(
-      editorSection
-        .find('[data-label="settings.editorHistoryStorage"]')
-        .exists()
-    ).toBe(true)
-    expect(
-      editorSection
-        .find('[data-label="settings.editorHistoryMaxItems"]')
-        .exists()
-    ).toBe(true)
-    expect(
-      editorSection
-        .find('[data-label="settings.editorHistoryRetentionDays"]')
-        .exists()
-    ).toBe(false)
-    expect(
-      editorSection
-        .find('[data-label="settings.sanitizeSecretsInEditorHistory"]')
-        .exists()
-    ).toBe(false)
-  })
-
-  it('hides all nested options when storage is off', () => {
-    const wrapper = mountTab(createConfig({ storage: 'off' }))
-
-    const editorSection = wrapper.get('.section-stub')
-    expect(
-      editorSection
-        .find('[data-label="settings.editorHistoryStorage"]')
-        .exists()
-    ).toBe(true)
-    expect(
-      editorSection
-        .find('[data-label="settings.editorHistoryMaxItems"]')
-        .exists()
-    ).toBe(false)
-  })
+      expect(keepingSelect(wrapper).props('modelValue')).toBe(storage)
+      expect(
+        wrapper
+          .find('[data-label="settings.sanitizeSecretsInEditorHistory"]')
+          .exists()
+      ).toBe(false)
+    }
+  )
 
   it('opens confirm modal on clear editor history button click and clears on confirmation', async () => {
     const wrapper = mountTab()
@@ -202,73 +161,45 @@ describe('SettingsEditorHistorySection.vue', () => {
     expect(mockToast).not.toHaveBeenCalledWith('history.cleared', 'info')
   })
 
-  it('shows how many entries are stored, also while the history is off', async () => {
+  it('shows how many entries are stored in the title, also while the history is off', async () => {
     mockHistory.editorHistory = [{ id: 'a' }, { id: 'b' }]
     const wrapper = mountTab(createConfig({ storage: 'off' }))
     await flushPromises()
 
     expect(mockHistory.loadEditorHistory).toHaveBeenCalled()
-    expect(
-      wrapper.get('[data-label="history.clear"]').attributes('data-hint')
-    ).toBe('settings.editorHistoryCount')
-    mockHistory.editorHistory = []
+    expect(wrapper.get('.section-stub').attributes('data-title')).toBe(
+      'settings.sectionEditorHistory (settings.editorHistoryCount)'
+    )
+    expect(wrapper.find('.actions-stub .btn-stub').exists()).toBe(true)
   })
 
-  it('turns the history off without deleting anything or asking', async () => {
+  it.each(['off', 'session'] as const)(
+    'turns the history to %s without deleting anything or asking',
+    async (choice) => {
+      const config = createConfig({ storage: 'disk' })
+      const wrapper = mountTab(config)
+
+      keepingSelect(wrapper).vm.$emit('update:modelValue', choice)
+      await flushPromises()
+
+      expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
+      expect(mockClearEditorHistory).not.toHaveBeenCalled()
+      expect(config.editor.history).toMatchObject({
+        storage: choice,
+        retentionDays: 30,
+      })
+    }
+  )
+
+  it('asks before a shorter retention period removes older entries', async () => {
     const config = createConfig({ storage: 'disk' })
     const wrapper = mountTab(config)
 
-    wrapper
-      .findAllComponents({ name: 'FieldSelect' })[0]
-      .vm.$emit('update:modelValue', 'off')
+    keepingSelect(wrapper).vm.$emit('update:modelValue', 7)
     await flushPromises()
 
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
-    expect(config.editor.history.storage).toBe('off')
-  })
-
-  it('asks before moving the history off the disk', async () => {
-    const config = createConfig({ storage: 'disk' })
-    const wrapper = mountTab(config)
-
-    wrapper
-      .findAllComponents({ name: 'FieldSelect' })[0]
-      .vm.$emit('update:modelValue', 'session')
-    await flushPromises()
-
-    expect(config.editor.history.storage).toBe('disk')
+    expect(config.editor.history.retentionDays).toBe(30)
     await wrapper.find('.confirm-btn').trigger('click')
-    expect(config.editor.history.storage).toBe('session')
-  })
-
-  it('applies a lower limit only once the field is left and the user agrees', async () => {
-    const config = createConfig({ maxItems: 100 })
-    const wrapper = mountTab(config)
-    const input = wrapper.get('.field-input-stub')
-
-    await input.setValue('5')
-    expect(config.editor.history.maxItems).toBe(100)
-    await input.setValue('50')
-    expect(config.editor.history.maxItems).toBe(100)
-    await input.trigger('change')
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(true)
-
-    await wrapper.find('.cancel-btn').trigger('click')
-    expect(config.editor.history.maxItems).toBe(100)
-
-    await input.setValue('50')
-    await input.trigger('change')
-    await wrapper.find('.confirm-btn').trigger('click')
-    expect(config.editor.history.maxItems).toBe(50)
-  })
-
-  it('applies a higher limit at once', async () => {
-    const config = createConfig({ maxItems: 100 })
-    const wrapper = mountTab(config)
-
-    await wrapper.get('.field-input-stub').setValue('200')
-
-    expect(config.editor.history.maxItems).toBe(200)
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
+    expect(config.editor.history.retentionDays).toBe(7)
   })
 })
