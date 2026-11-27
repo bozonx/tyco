@@ -22,6 +22,10 @@ pub struct ActivationSnapshot {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub quick_input_text: Option<String>,
+    /// The requested AI profile for this screenshot activation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub screenshot_profile_id: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub screenshots: Vec<super::ChatImage>,
     #[serde(skip_serializing_if = "Option::is_none")]

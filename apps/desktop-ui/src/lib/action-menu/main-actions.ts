@@ -1,8 +1,10 @@
 import {
   DEFAULT_ACTION_PAGES,
+  PROFILE_ACTION_KINDS,
   SHORTCUT_SLOT_KEYS,
   STANDARD_ACTION_IDS,
   type MainActionConfig,
+  type ProfileActionKind,
   type ShortcutSlots,
   type StandardActionId,
 } from '@tyco/shared'
@@ -53,13 +55,7 @@ function isValidActionSlot(slot: unknown): slot is MainActionConfig {
       typeof item.profileId === 'string' &&
       item.profileId.trim().length > 0 &&
       typeof item.action === 'string' &&
-      [
-        'quickAiRequest',
-        'voiceQuickAiRequest',
-        'screenshotQuickAiRequest',
-        'voiceScreenshotQuickAiRequest',
-        'chat',
-      ].includes(item.action)
+      PROFILE_ACTION_KINDS.includes(item.action as ProfileActionKind)
     )
   }
   if (item.type === 'actionPage') {

@@ -14,10 +14,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import ContentPadding from '../components/common/ContentPadding.vue'
 import QuickAiRequestMenu from '../components/menu/QuickAiRequestMenu.vue'
 import { useSelectionActionContext } from '../composables/use-selection-action-context'
-import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
 
 const props = withDefaults(
@@ -30,8 +31,12 @@ const props = withDefaults(
 )
 
 const desktopStore = useDesktopStore()
-const actionMenuStore = useActionMenuStore()
-const effectiveProfileId =
-  props.profileId ?? actionMenuStore.consumePendingProfileId?.() ?? null
+const effectiveProfileId = computed(
+  () =>
+    props.profileId ??
+    (props.screenshotMode
+      ? (desktopStore.desktopState.screenshotProfileId ?? null)
+      : null)
+)
 const { text, shortcutsDisabled } = useSelectionActionContext()
 </script>

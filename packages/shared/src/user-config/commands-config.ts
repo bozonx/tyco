@@ -316,6 +316,7 @@ export const PROFILE_ACTION_KINDS = [
   'screenshotQuickAiRequest',
   'voiceScreenshotQuickAiRequest',
   'chat',
+  'askInNewChat',
 ] as const
 export type ProfileActionKind = (typeof PROFILE_ACTION_KINDS)[number]
 

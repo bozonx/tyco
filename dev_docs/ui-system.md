@@ -467,6 +467,11 @@ chip can cancel a running job and link to the history after completion.
 
 ## Quick window reveal
 
+Profile actions can open the current or a new chat with the selected text as
+context. The four quick request modes open a separate conversation. Continuing
+from a quick request opens a new chat in the same profile, preserving any
+existing conversation or captured images.
+
 A new quick activation keeps the main window visible until the quick frontend
 acknowledges its rendered frame. The frontend waits for two animation frames
 and discards callbacks from superseded activations. GTK maps the quick window

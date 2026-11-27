@@ -99,7 +99,11 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   areProfilesLoaded?: () => boolean
   /** The prompt library the items of the `chatPrompt` type refer to */
   chatPrompts?: () => readonly ChatPromptConfig[] | undefined
-  openProfileChat?: (profileId: string, text: string) => Promise<void> | void
+  openProfileChat?: (
+    profileId: string,
+    text: string,
+    newChat?: boolean
+  ) => Promise<void> | void
   openActionPage?: (pageIndex: number, text?: string) => Promise<void> | void
 }
 
@@ -238,7 +242,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     if (!profile) return undefined
     return {
       id: `profileChat:${profileId}`,
-      name: translate('settings.askInProfileChat', { profile: profile.name }),
+      name: `${translate('action.askInCurrentChat')}: ${profile.name}`,
       icon: 'mdi:chat-question-outline',
       action: async (text: string) => {
         await deps.openProfileChat?.(profileId, text)
@@ -296,16 +300,17 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           },
         }
       case 'chat':
+      case 'askInNewChat': {
+        const newChat = action === 'askInNewChat'
         return {
           id: baseId,
-          name: translate('settings.askInProfileChat', {
-            profile: profile.name,
-          }),
-          icon: 'mdi:chat-question-outline',
+          name: `${translate(newChat ? 'action.askInNewChat' : 'action.askInCurrentChat')}: ${profile.name}`,
+          icon: newChat ? 'mdi:chat-plus-outline' : 'mdi:chat-question-outline',
           action: async (text: string) => {
-            await deps.openProfileChat?.(profileId, text)
+            await deps.openProfileChat?.(profileId, text, newChat)
           },
         }
+      }
     }
   }
 

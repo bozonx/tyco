@@ -42,7 +42,8 @@ pub fn open_main_editor(
 /// selection. `action_page_index` picks a page of the action menu or of the
 /// prompts;
 /// `history_origin` filters the history it opens; `settings_tab` is the tab
-/// the settings open on.
+/// the settings open on. `profile_id` is the AI profile for screenshot modes.
+#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 pub fn activate_mode(
     app: AppHandle,
@@ -52,6 +53,7 @@ pub fn activate_mode(
     text: Option<String>,
     settings_tab: Option<String>,
     action_origin: Option<ActivationMode>,
+    profile_id: Option<String>,
 ) -> Result<(), AppError> {
     if !ActivationMode::PUBLIC_MODES.contains(&mode) {
         return Err(AppError::InvalidInput(format!(
@@ -76,6 +78,9 @@ pub fn activate_mode(
     activation.settings_tab = settings_tab;
     activation.selected_text = text;
     activation.action_origin = action_origin;
+    if mode.is_screenshot() {
+        activation.screenshot_profile_id = profile_id;
+    }
     runtime::activate(&app, activation)
 }
 

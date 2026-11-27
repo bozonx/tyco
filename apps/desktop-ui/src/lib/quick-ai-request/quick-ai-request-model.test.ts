@@ -390,10 +390,26 @@ describe('QuickAiRequestModel', () => {
     expect(deps.openMainChat).toHaveBeenCalledWith({
       attachment: { text: 'Selected original text', source: 'selection' },
       question: 'Draft',
+      newChat: true,
       profileId: 'writer',
     })
     expect(deps.transferChat).not.toHaveBeenCalled()
     expect(deps.closeOverlay).toHaveBeenCalled()
+  })
+
+  it('opens a new profile chat from an empty quick request', async () => {
+    const { model, deps } = createSetup({
+      context: { kind: 'selection' },
+      initialProfileId: 'writer',
+    })
+
+    await model.switchToChat()
+
+    expect(deps.openMainChat).toHaveBeenCalledWith({
+      newChat: true,
+      profileId: 'writer',
+    })
+    expect(deps.transferChat).not.toHaveBeenCalled()
   })
 
   it('moves the conversation to the main chat as an ordinary chat with its id', async () => {

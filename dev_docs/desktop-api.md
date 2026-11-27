@@ -75,6 +75,10 @@ DesktopSnapshot
 The prompts and limits of the AI actions are not state: the webview takes them
 from `APP_CONFIG` in `@tyco/shared`.
 
+A screenshot activation carries its requested AI profile in
+`screenshotProfileId`. The profile is published with the captured images only
+when that activation succeeds.
+
 The revision advances under the state mutex for every update. Initial reads,
 events and settings write responses pass through the same revision gate. A delayed
 response cannot replace a newer event. UI navigation also rejects older snapshots.

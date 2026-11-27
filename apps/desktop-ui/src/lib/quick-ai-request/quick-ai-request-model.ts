@@ -110,6 +110,7 @@ export interface QuickAiRequestModelDependencies {
   openMainChat: (params: {
     attachment?: ChatAttachment
     question?: string
+    newChat: true
     profileId?: string
   }) => Promise<void>
   /** Hands the conversation, its id and images, to the main window */
@@ -555,6 +556,7 @@ export function createQuickAiRequestModel(
             ? { text: sourceText.value, source: 'selection' }
             : undefined,
           question: draft,
+          newChat: true,
           profileId: pId,
         })
       }

@@ -103,6 +103,8 @@ describe('SettingsMainActionsTab.vue', () => {
     expect(texts).toContain('settings.hotkeyActions.selectionCorrection')
     expect(texts).toContain('action.askInCurrentChat')
     expect(texts).toContain('action.askInNewChat')
+    expect(texts).toContain('action.askInCurrentChat: Assistant')
+    expect(texts).toContain('action.askInNewChat: Assistant')
     expect(texts).not.toContain('action.askInChat')
     expect(texts).toContain('action.quickAiRequest…')
     expect(texts).toContain('action.transformationMenu…')

@@ -108,6 +108,7 @@ export interface DesktopCommands {
       text?: string | null
       settingsTab?: string | null
       actionOrigin?: ActivationMode | null
+      profileId?: string | null
     }
     result: void
   }

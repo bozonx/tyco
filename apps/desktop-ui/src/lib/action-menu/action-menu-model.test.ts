@@ -728,7 +728,7 @@ describe('createActionMenuModel', () => {
       mainActions: () => ({ q: { type: 'profileChat', profileId: 'writer' } }),
     })
     const [action] = store.getShortcutActions()
-    expect(action?.name).toBe('Ask in chat: Writer')
+    expect(action?.name).toBe('To current chat: Writer')
     await action?.action('text for writer')
     expect(openProfileChat).toHaveBeenCalledWith('writer', 'text for writer')
   })
@@ -804,6 +804,7 @@ describe('createActionMenuModel', () => {
           action: 'voiceScreenshotQuickAiRequest',
         },
         t: { type: 'profile', profileId: 'writer', action: 'chat' },
+        a: { type: 'profile', profileId: 'writer', action: 'askInNewChat' },
       }),
     })
     const slots = store.getShortcutActions()
@@ -835,6 +836,13 @@ describe('createActionMenuModel', () => {
     )
 
     await slots[4]?.action('chat text')
-    expect(openProfileChat).toHaveBeenCalledWith('writer', 'chat text')
+    expect(openProfileChat).toHaveBeenCalledWith('writer', 'chat text', false)
+
+    await slots[5]?.action('new chat text')
+    expect(openProfileChat).toHaveBeenCalledWith(
+      'writer',
+      'new chat text',
+      true
+    )
   })
 })

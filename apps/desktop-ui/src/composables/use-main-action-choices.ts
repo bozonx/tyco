@@ -130,8 +130,8 @@ export function useMainActionChoices(
         },
         name:
           action === 'chat'
-            ? t('settings.askInProfileChat', { profile: profile.name })
-            : `${t(`action.${action}`)}: ${profile.name}…`,
+            ? `${t('action.askInCurrentChat')}: ${profile.name}`
+            : `${t(`action.${action}`)}: ${profile.name}${action === 'askInNewChat' ? '' : '…'}`,
         group: { kind: 'profile' as const, profileId: profile.id },
       }))
     }),
@@ -262,7 +262,7 @@ export function useMainActionChoices(
     if (slot.type === 'profileChat') {
       const profile = aiProfilesStore.getProfile(configProfileKey(slot))
       return profile
-        ? t('settings.askInProfileChat', { profile: profile.name })
+        ? `${t('action.askInCurrentChat')}: ${profile.name}`
         : t('settings.mainActionProfileRemoved')
     }
     if (slot.type === 'profile') {

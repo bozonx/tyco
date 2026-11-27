@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
 import { defineStore } from 'pinia'
 import { APP_CONFIG } from '@tyco/shared'
 
@@ -29,16 +29,8 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   const correctionWorkflowStore = useCorrectionWorkflowStore()
   const aiProfilesStore = useAiProfilesStore()
 
-  const pendingProfileId = ref<string | null>(null)
-  const consumePendingProfileId = () => {
-    const id = pendingProfileId.value
-    pendingProfileId.value = null
-    return id
-  }
-
   const model = createActionMenuModel({
     activateMode: async (mode, profileId) => {
-      pendingProfileId.value = profileId ?? null
       if (mode === 'listen') {
         const nextActivationId = desktopStore.desktopState.activationId + 1
         useVoiceReferenceStore().offerOrigin({
@@ -47,7 +39,10 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
           activationId: nextActivationId,
         })
       }
-      await useIpcStore().callOrNotify('activate_mode', { mode })
+      await useIpcStore().callOrNotify('activate_mode', {
+        mode,
+        ...(profileId ? { profileId } : {}),
+      })
     },
     openVoiceInput: async (text) => {
       const nextActivationId = desktopStore.desktopState.activationId + 1
@@ -132,9 +127,10 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     connectedVaultIds: () => aiProfilesStore.connectedVaultIds,
     areProfilesLoaded: () => aiProfilesStore.isLoaded,
     chatPrompts: () => desktopStore.userConfig.chatPrompts?.items,
-    openProfileChat: async (profileId, text) => {
+    openProfileChat: async (profileId, text, newChat) => {
       const profileChat = useProfileChatStore(profileId)
-      await profileChat.attachToChat(text)
+      if (newChat) await profileChat.attachToNewChat(text)
+      else await profileChat.attachToCurrentChat(text)
     },
     openActionPage: async (pageIndex, text) => {
       if (
@@ -177,5 +173,5 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     { immediate: true }
   )
 
-  return { ...model, consumePendingProfileId }
+  return model
 })
