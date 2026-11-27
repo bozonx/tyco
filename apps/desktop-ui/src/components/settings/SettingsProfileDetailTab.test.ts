@@ -128,7 +128,7 @@ describe('SettingsProfileDetailTab.vue', () => {
     expect(context.navigate).toHaveBeenCalledWith('ai-profile:created')
   })
 
-  it('connects projects and warns while the file tools are off', async () => {
+  it('connects projects and switches the project files', async () => {
     store.projects.push(
       {
         id: 'docs',
@@ -149,7 +149,12 @@ describe('SettingsProfileDetailTab.vue', () => {
     }
     const wrapper = mountTab()
     await flushPromises()
-    expect(wrapper.text()).toContain('settings.profileFileToolsOff')
+    const filesSwitch = wrapper
+      .findAllComponents({ name: 'FieldSwitch' })
+      .find((item) => item.props('label') === 'settings.projectFilesSwitch')!
+    expect(filesSwitch.props('modelValue')).toBe(false)
+    // the file tools are not listed one by one with the other tools
+    expect(wrapper.text()).not.toContain('chatTools.files.group')
     const list = wrapper.findComponent({ name: 'SettingsAccessList' })
     expect(list.props('entries')).toEqual([
       expect.objectContaining({ id: 'docs', level: 'read' }),
@@ -171,6 +176,13 @@ describe('SettingsProfileDetailTab.vue', () => {
     )
     await list.vm.$emit('open', 'docs')
     expect(context.navigate).toHaveBeenCalledWith('ai-project:docs')
+    await filesSwitch.vm.$emit('update:modelValue', true)
+    await flushPromises()
+    expect(store.updateProfile).toHaveBeenLastCalledWith(
+      'writer',
+      { tools: { sources: {}, tools: {}, commandIds: [] } },
+      undefined
+    )
   })
 
   it('shows the folder of an existing profile', async () => {

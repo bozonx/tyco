@@ -105,6 +105,19 @@ describe('tool catalog', () => {
     ).toBe('off')
   })
 
+  it('switches the file tools only as a whole source', () => {
+    const readFile = {
+      source: FILES_SOURCE,
+      name: 'read_file',
+      risk: 'read',
+      defaultPolicy: 'allow',
+    } as const
+    const asking = settings({ tools: { 'core:files:read_file': 'ask' } })
+    expect(effectiveToolState(undefined, asking, readFile)).toBe('allow')
+    const off = withSourceEnabled(undefined, FILES_SOURCE, false)
+    expect(effectiveToolState(undefined, off, readFile)).toBe('off')
+  })
+
   it('keeps only the differences from the defaults', () => {
     expect(withSourceEnabled(undefined, WEB_SOURCE, true).sources).toEqual({})
     expect(withToolState(undefined, webFetch, 'allow').tools).toEqual({})

@@ -78,18 +78,23 @@ pub fn tool_key(kind: &str, id: &str, tool: &str) -> String {
 /// Whether a core tool is on in the profile: its source is not switched off
 /// and the tool itself is not `off`. Core sources are on by default.
 pub fn is_core_tool_enabled(profile: &AiProfile, source_id: &str, tool_name: &str) -> bool {
-    let Some(settings) = profile.tools.as_ref() else {
-        return true;
-    };
-    let is_source_on = settings
-        .sources
-        .get(&source_key(CORE_SOURCE_KIND, source_id))
-        .is_none_or(|source| source.is_enabled);
-    is_source_on
-        && settings
-            .tools
-            .get(&tool_key(CORE_SOURCE_KIND, source_id, tool_name))
-            != Some(&ToolState::Off)
+    is_core_source_enabled(profile, source_id)
+        && profile.tools.as_ref().is_none_or(|settings| {
+            settings
+                .tools
+                .get(&tool_key(CORE_SOURCE_KIND, source_id, tool_name))
+                != Some(&ToolState::Off)
+        })
+}
+
+/// Whether the profile has a core source on; it is by default.
+pub fn is_core_source_enabled(profile: &AiProfile, source_id: &str) -> bool {
+    profile.tools.as_ref().is_none_or(|settings| {
+        settings
+            .sources
+            .get(&source_key(CORE_SOURCE_KIND, source_id))
+            .is_none_or(|source| source.is_enabled)
+    })
 }
 
 /// Whether a tool is available at all: neither its source nor the tool is
@@ -164,7 +169,8 @@ pub fn ensure_web_tool_allowed(
 }
 
 /// Checks that a file tool may be called: it is not switched off everywhere
-/// and, in a profile's chat, not in the profile. The "Ask AI" chat reaches
+/// and, in a profile's chat, the profile has its file source on. A profile
+/// does not set the file tools one by one: the project permissions decide. The "Ask AI" chat reaches
 /// its attachments only and an AI command no files at all; the file tools
 /// enforce that by the roots they are given.
 pub fn ensure_file_tool_allowed(
@@ -173,7 +179,7 @@ pub fn ensure_file_tool_allowed(
     tool_name: &str,
 ) -> Result<(), AppError> {
     if is_tool_available(config, CORE_SOURCE_KIND, FILES_SOURCE_ID, tool_name)
-        && profile.is_none_or(|profile| is_core_tool_enabled(profile, FILES_SOURCE_ID, tool_name))
+        && profile.is_none_or(|profile| is_core_source_enabled(profile, FILES_SOURCE_ID))
     {
         Ok(())
     } else {
@@ -312,6 +318,12 @@ mod tests {
             &[("core:files:write_file", ToolState::Ask)],
         )));
         assert!(ensure_file_tool_allowed(&config, Some(&asking), "write_file").is_ok());
+        // the profile does not switch file tools one by one: the projects decide
+        let file_tool_off = profile(Some(settings(
+            &[],
+            &[("core:files:delete_path", ToolState::Off)],
+        )));
+        assert!(ensure_file_tool_allowed(&config, Some(&file_tool_off), "delete_path").is_ok());
         let files_off = profile(Some(settings(&[("core:files", false)], &[])));
         assert!(ensure_file_tool_allowed(&config, Some(&files_off), "read_file").is_err());
         // a profile chat without its profile is refused

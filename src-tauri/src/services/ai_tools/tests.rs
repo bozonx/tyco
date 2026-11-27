@@ -861,18 +861,18 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
     ));
     assert!(error.contains("not available"), "{error}");
 
-    // one file tool turned off is refused, the others still run
+    // a profile does not switch file tools one by one: the projects decide
     let one_off = ProfileToolSettings {
         tools: HashMap::from([("core:files:read_file".to_string(), ai_vault::ToolState::Off)]),
         ..Default::default()
     };
     ai_vault::save_profile(&vault, profile(Some(one_off)), None).unwrap();
     let files = ConversationFiles::load(&vault, &paths, "writer", Attachments::none()).unwrap();
-    let error = message(run(
+    let outcome = run(
         &files,
         serde_json::json!({"operation": "readFile", "path": "workspace/a.md"}),
-    ));
-    assert!(error.contains("turned off"), "{error}");
+    );
+    assert!(outcome.is_ok() || !message(outcome).contains("turned off"));
     assert!(run(
         &files,
         serde_json::json!({"operation": "listDir", "path": "workspace"})
@@ -1269,7 +1269,7 @@ fn editing_utf8_preserves_the_bom() {
 }
 
 #[test]
-fn a_file_tool_off_in_the_profile_still_reads_the_attachments() {
+fn a_file_tool_off_in_the_profile_is_ignored() {
     let (dir, _) = fixture("ai_files_attachments_tool_off");
     fs::write(dir.join("workspace/b.txt"), "b").unwrap();
     let settings = ProfileToolSettings {
@@ -1287,9 +1287,9 @@ fn a_file_tool_off_in_the_profile_still_reads_the_attachments() {
         serde_json::json!({"operation": "readFile", "path": "attachments/a.txt"}),
     )
     .is_ok());
-    let error = message(run(
+    assert!(run(
         &files,
         serde_json::json!({"operation": "readFile", "path": "workspace/b.txt"}),
-    ));
-    assert!(error.contains("turned off"), "{error}");
+    )
+    .is_ok());
 }

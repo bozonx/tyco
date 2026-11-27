@@ -102,14 +102,24 @@
         :title="t('settings.projectsTitle')"
         :info="t('settings.projectPermissionsHint')"
       >
-        <div class="settings-section-content">
-          <InlineNotice
-            v-if="hasFileToolsOff(profile)"
-            density="compact"
-            kind="warning"
-            icon="mdi:alert-outline"
-            :message="t('settings.profileFileToolsOff')"
+        <template #actions>
+          <Badge v-if="!areFilesAvailable" tone="muted">
+            {{ t('toolPermissions.sourceOffEverywhere') }}
+          </Badge>
+          <FieldSwitch
+            :label="t('settings.projectFilesSwitch')"
+            :disabled="!areFilesAvailable"
+            :model-value="areFilesAvailable && !hasFileToolsOff(profile)"
+            @update:model-value="setFilesEnabled"
           />
+        </template>
+        <div
+          class="settings-section-content"
+          :class="{
+            'opacity-60': !areFilesAvailable || hasFileToolsOff(profile),
+          }"
+          :inert="!areFilesAvailable || hasFileToolsOff(profile)"
+        >
           <SettingsProfileProjectAccess
             :projects="projects"
             :permissions="profile.projectPermissions"
@@ -185,7 +195,12 @@ import {
   withProjectAccess,
   withProjectDeleteAllowed,
 } from '../../lib/ai-profiles/project-access'
-import { withCommandSelected } from '../../lib/chat-tools/tool-catalog'
+import {
+  FILES_SOURCE,
+  isSourceAvailable,
+  withCommandSelected,
+  withSourceEnabled,
+} from '../../lib/chat-tools/tool-catalog'
 import {
   CORE_CATALOG,
   estimateToolTokens,
@@ -202,6 +217,7 @@ import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import PathDisplay from '../common/PathDisplay.vue'
 import StateMessage from '../common/StateMessage.vue'
@@ -224,10 +240,21 @@ const desktopStore = useDesktopStore()
 const commands = computed(() => desktopStore.userConfig?.commands ?? [])
 
 const pluginToolSources = usePluginToolSources()
+// the file tools are switched with the projects, which decide on them
 const toolSources = computed(() => [
-  ...CORE_CATALOG,
+  ...CORE_CATALOG.filter((entry) => entry.source !== FILES_SOURCE),
   ...pluginToolSources.value,
 ])
+
+const areFilesAvailable = computed(() =>
+  isSourceAvailable(desktopStore.userConfig?.tools, FILES_SOURCE)
+)
+
+function setFilesEnabled(isEnabled: boolean) {
+  void changeSettings({
+    tools: withSourceEnabled(profile.value?.tools, FILES_SOURCE, isEnabled),
+  })
+}
 
 function toggleProfileCommand(commandId: string, enabled: boolean) {
   // the ids of removed commands go with any change of the list

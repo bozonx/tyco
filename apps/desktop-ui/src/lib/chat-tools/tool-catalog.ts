@@ -200,6 +200,13 @@ export function withToolAvailable(
   }
 }
 
+/**
+ * Whether a profile sets the tools of a source one by one. The file tools it
+ * does not: the permissions of each project decide, the source is one switch
+ */
+export const hasPerToolSettings = (source: ToolSourceRef) =>
+  !(source.kind === 'core' && source.id === CORE_SOURCE_IDS.files)
+
 /** Whether the profile has the source on; commands are picked one by one */
 export function isSourceEnabledInProfile(
   settings: ProfileToolSettingsView | undefined,
@@ -227,9 +234,10 @@ export function effectiveToolState(
   if (tool.source.kind === 'commands') {
     if (!settings?.commandIds.includes(tool.name)) return 'off'
   } else if (!isSourceEnabledInProfile(settings, tool.source)) return 'off'
-  return (
-    settings?.tools[toolKey(tool.source, tool.name)] ?? defaultToolPolicy(tool)
-  )
+  const own = hasPerToolSettings(tool.source)
+    ? settings?.tools[toolKey(tool.source, tool.name)]
+    : undefined
+  return own ?? defaultToolPolicy(tool)
 }
 
 /** The policy a profile runs a tool with; undefined when it is off */

@@ -97,9 +97,21 @@ defineSlots<{
 const { t } = useI18n()
 
 const stateOptions = computed(() => [
-  { id: 'off', name: t('settings.accessOff') },
-  { id: 'ask', name: t('settings.accessAsk') },
-  { id: 'allow', name: t('settings.accessAllow') },
+  {
+    id: 'off',
+    name: t('settings.accessOff'),
+    title: t('settings.accessOffHint'),
+  },
+  {
+    id: 'ask',
+    name: t('settings.accessAsk'),
+    title: t('settings.accessAskHint'),
+  },
+  {
+    id: 'allow',
+    name: t('settings.accessAllow'),
+    title: t('settings.accessAllowHint'),
+  },
 ])
 
 const isAvailable = (entry: CatalogSourceEntry) =>

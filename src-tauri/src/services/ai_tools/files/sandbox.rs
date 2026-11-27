@@ -9,7 +9,7 @@ use super::{
     WORKSPACE_ROOT,
 };
 use crate::errors::AppError;
-use crate::services::ai_tools::permissions::{self, CORE_SOURCE_KIND, FILES_SOURCE_ID};
+use crate::services::ai_tools::permissions::{self, FILES_SOURCE_ID};
 use crate::services::ai_vault::{self, AiProfile, ProjectAccessMode};
 
 /// A path resolved inside one of the roots.
@@ -335,12 +335,7 @@ fn workspace_root(vault_root: &Path, profile_id: &str) -> Result<AiFileRoot, App
 
 /// Whether the profile has its file source on; it is by default.
 fn files_enabled(profile: &AiProfile) -> bool {
-    profile.tools.as_ref().is_none_or(|tools| {
-        tools
-            .sources
-            .get(&permissions::source_key(CORE_SOURCE_KIND, FILES_SOURCE_ID))
-            .is_none_or(|source| source.is_enabled)
-    })
+    permissions::is_core_source_enabled(profile, FILES_SOURCE_ID)
 }
 
 #[cfg(all(test, unix))]
