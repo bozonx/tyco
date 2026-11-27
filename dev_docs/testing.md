@@ -269,7 +269,9 @@ Keep this suite small. Its scenarios cover:
 12. Loading a preinstalled plugin package, activation and worker sandbox restrictions (the native installation dialog is not automated).
 13. Lazy settings navigation and plugin removal.
 14. Changing the theme through the UI, restarting the native application with the same isolated home, and restoring the theme and editor history.
-15. On Linux/X11, activating quick input over a separate GTK editor and inserting text through the real UI into that editor.
+15. Executing a quiet command through its dedicated webview and checking the result.
+16. On Linux/X11, preserving a separate GTK editor’s focus and surviving a quick webview reload during a quiet run.
+17. On Linux/X11, activating quick input over a separate GTK editor and inserting text through the real UI into that editor.
 
 Linux needs `tauri-driver`, `WebKitWebDriver`, Xvfb, Openbox, xdotool, xclip, Python with PyGObject/GTK 3 and a session D-Bus:
 

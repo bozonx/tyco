@@ -41,6 +41,16 @@
         "skipTaskbar": true
       },
       {
+        "label": "quiet",
+        "create": false,
+        "title": "TyCo - background commands",
+        "visible": false,
+        "skipTaskbar": true,
+        "focus": false,
+        "focusable": false,
+        "backgroundThrottling": "disabled"
+      },
+      {
         "label": "subtitles",
         "create": false,
         "url": "subtitles.html",

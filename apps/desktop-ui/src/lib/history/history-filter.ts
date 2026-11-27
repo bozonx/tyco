@@ -22,6 +22,7 @@ export const HISTORY_FILTERS: readonly HistoryFilter[] = [
   'translation',
   'aiTask',
   'externalRun',
+  'quietRun',
   'commandRun',
   'problems',
 ]
@@ -46,7 +47,11 @@ export function isProblemHistoryItem(
     'kind' | 'isResultApplied' | 'origin' | 'failure'
   >
 ): boolean {
-  if (item.origin === 'externalRun' || item.origin === 'commandRun')
+  if (
+    item.origin === 'externalRun' ||
+    item.origin === 'commandRun' ||
+    item.origin === 'quietRun'
+  )
     return Boolean(item.failure)
   return (
     item.kind === 'draft' || (item.kind === 'source' && !item.isResultApplied)
@@ -67,6 +72,10 @@ export function filterEditorHistory<
   switch (filter) {
     case 'all':
       return [...items]
+    case 'externalRun':
+      return items.filter(
+        ({ origin }) => origin === 'externalRun' || origin === 'quietRun'
+      )
     case 'problems':
       return items.filter(isProblemHistoryItem)
     case 'voice':

@@ -40,6 +40,8 @@ struct TrayActivity {
 #[derive(Default, serde::Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct QuietRunLabels {
+    accepted: String,
+    stop: String,
     running: String,
     succeeded: String,
     failed: String,
@@ -50,6 +52,7 @@ struct TrayState {
     show_item: MenuItem<tauri::Wry>,
     quit_item: MenuItem<tauri::Wry>,
     quiet_item: MenuItem<tauri::Wry>,
+    stop_item: MenuItem<tauri::Wry>,
     menu: Menu<tauri::Wry>,
     default_icon: tauri::image::Image<'static>,
     recording_icon: tauri::image::Image<'static>,
@@ -60,7 +63,7 @@ struct TrayState {
 
 impl TrayState {
     fn refresh(&self, app: &tauri::AppHandle) -> Result<(), AppError> {
-        let (quiet, icon, tooltip) = {
+        let (quiet, icon, tooltip, stop_label) = {
             let activity = self.activity.locked();
             let quiet = activity.quiet_label.clone();
             let icon = match (quiet.is_some(), activity.is_recording) {
@@ -69,20 +72,31 @@ impl TrayState {
                 (false, true) => &self.recording_icon,
                 (false, false) => &self.default_icon,
             };
-            let tooltip = quiet
-                .clone()
-                .or_else(|| activity.recording_tooltip.clone())
-                .unwrap_or_else(|| activity.default_tooltip.clone());
-            (quiet, icon.clone(), tooltip)
+            let tooltip = match (&activity.recording_tooltip, &quiet) {
+                (Some(recording), Some(quiet)) => format!("{recording}\n{quiet}"),
+                (Some(label), None) | (None, Some(label)) => label.clone(),
+                (None, None) => activity.default_tooltip.clone(),
+            };
+            (
+                quiet,
+                icon.clone(),
+                tooltip,
+                activity.quiet_labels.stop.clone(),
+            )
         };
         let is_listed = self.menu.get(self.quiet_item.id()).is_some();
         if let Some(label) = quiet {
             self.quiet_item.set_text(label)?;
+            if !stop_label.is_empty() {
+                self.stop_item.set_text(stop_label)?;
+            }
             if !is_listed {
                 self.menu.insert(&self.quiet_item, 0)?;
+                self.menu.insert(&self.stop_item, 1)?;
             }
         } else if is_listed {
             self.menu.remove(&self.quiet_item)?;
+            self.menu.remove(&self.stop_item)?;
         }
         if let Some(tray) = app.tray_by_id("main-tray") {
             tray.set_icon(Some(icon))?;
@@ -141,6 +155,7 @@ pub(crate) fn quiet_run_label(
     let tray = app.try_state::<TrayState>();
     let activity = tray.as_ref().map(|tray| tray.activity.locked());
     let label = activity.as_ref().map(|activity| match state {
+        JobState::Accepted => &activity.quiet_labels.accepted,
         JobState::Succeeded => &activity.quiet_labels.succeeded,
         JobState::Failed => &activity.quiet_labels.failed,
         JobState::Cancelled => &activity.quiet_labels.cancelled,
@@ -149,6 +164,7 @@ pub(crate) fn quiet_run_label(
     label.filter(|label| !label.is_empty()).map_or_else(
         || {
             let prefix = match state {
+                JobState::Accepted => "Waiting to start",
                 JobState::Succeeded => "Done",
                 JobState::Failed => "Error",
                 JobState::Cancelled => "Stopped",
@@ -231,6 +247,7 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
     let quiet_item = MenuItemBuilder::with_id("quiet-run-status", "")
         .enabled(false)
         .build(app)?;
+    let stop_item = MenuItemBuilder::with_id("quiet-run-stop", "Stop").build(app)?;
     let menu = MenuBuilder::new(app)
         .items(&[&show_item])
         .separator()
@@ -247,6 +264,7 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
         show_item,
         quit_item,
         quiet_item,
+        stop_item,
         menu: menu.clone(),
         quiet_icon: command_activity_icon(&default_icon),
         quiet_recording_icon: command_activity_icon(&recording_icon),
@@ -270,6 +288,21 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
                     TRAY_SHOW_ID => {
                         if let Err(error) = show_application(app) {
                             log::error!("Could not show the application: {error}");
+                        }
+                    }
+                    "quiet-run-stop" => {
+                        let handle = app.clone();
+                        if let Some(id) = handle
+                            .state::<crate::services::external::jobs::ExternalJobs>()
+                            .active_id_for(true)
+                        {
+                            tauri::async_runtime::spawn_blocking(move || {
+                                let _ = crate::services::external::api::cancel_for_window(
+                                    &handle,
+                                    super::MAIN_WINDOW_LABEL,
+                                    &id,
+                                );
+                            });
                         }
                     }
                     TRAY_QUIT_ID => {

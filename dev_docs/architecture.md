@@ -222,19 +222,25 @@ replacement. A conflicting visible run emits `CommandRunRejected`. The
 `CommandRun` activation carries the request and the overlay claims the job,
 collects missing input when needed, and handles normal result actions.
 
-Quiet external runs reserve the quiet slot. They emit `QuietRunChanged`
-without activating a window. The already loaded quick webview claims the job
-through `claim_external_job` and executes it in a separate session with no
-overlay lifecycle subscriptions. Both windows can recover the active status
-with `get_quiet_run_status`. The tray shows ongoing activity, Linux displays
-short focus-aware status bubbles when supported, and Windows reports
-completion with a desktop notification. The main window chip can cancel the
-job through `cancel_external_job`. A quiet slot conflict returns `Busy`
-to the caller without emitting `CommandRunRejected`.
+Quiet external runs require a separate command grant and reserve the quiet
+slot. A dedicated hidden webview subscribes to job events and registers
+readiness through `get_quiet_run_status`. It claims the job, applies its
+execution config in its own store, and loads plugins for that snapshot. The
+quick overlay and main window keep their own stores. The executor does not
+subscribe to visible activation events. The native backend owns job expiry,
+and the Windows executor uses a separate WebView2 data directory for its
+background timer flags.
+
+The tray and main window chip show progress and offer cancellation. Linux uses
+one desktop notification per run, with completion replacing the start notice.
+Windows sends shell notices through TyCo’s existing tray icon. A focused
+main or quick window suppresses completion notices. The terminal event links
+the chip to the saved quiet history entry.
 
 The backend starts `commandRunTimeoutSec` (0: unbounded) on claim for both
-slots. Reloading the quick webview fails its jobs. Cancellation aborts the
-operation signal, and the backend rejects late completion. Other contexts,
+slots. An unclaimed quiet job expires after ten seconds. Reloading a webview
+fails only the job it owns. Cancellation aborts the operation signal, and the
+backend rejects late completion. Other contexts,
 such as voice commands and tools invoked from chat, use
 `runWithinCommandLimit` in the webview.
 

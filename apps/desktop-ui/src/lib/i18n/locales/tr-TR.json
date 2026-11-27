@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Yanıt blokları" }
   },
   "commandRun": {
+    "stop": "Durdur",
     "quietAccepted": "Başlatılmayı bekliyor: {name}",
     "quietRunning": "Çalışıyor: {name}",
     "quietSucceeded": "Tamamlandı: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "URL'yi girin.",
     "errorUnknownType": "Bilinmeyen komut türü.",
     "external": "Dışarıdan erişilebilir",
+    "allowQuietRun": "Arka planda çalıştırmaya izin ver",
+    "quietRunInfo": "Yerel programlar bu komutu arka planda çalıştırabilir.",
+    "quietOperationUnsupported": "Bir işlem görünür biçimde çalıştırılmalıdır.",
+    "quietToolUnsupported": "Bir araç görünür biçimde çalıştırılmalıdır.",
+    "quietConfirmationRequired": "Bir araç onay gerektiriyor.",
     "externalInfo": "Yerel uygulamalar ve betikler izin verilen bir komutu tyco-ctl run <ID> veya tyco-ctl run --name <ad> ile çalıştırabilir. Bu izin, komutun pencere açmadan da çalıştırılmasını sağlar.",
     "externalSelection": "Seçili metni okuma ve değiştirme",
     "externalSelectionInfo": "Bir uygulama etkin penceredeki seçili metni alabilir ve yerine bir komutun sonucunu koyabilir (tyco-ctl run <kimlik> --selection --replace). Kapalıysa Tyco bu tür her çağrıda izin ister.",
@@ -512,6 +518,7 @@
     "filterAll": "Tümü",
     "filterLabel": "Geçmiş filtresi",
     "filterQuickInput": "Hızlı giriş",
+    "filterQuietRun": "Arka planda çalıştırmalar",
     "filterExternalRun": "Haricî çalıştırmalar",
     "filterCommandRun": "Komut çalıştırmaları",
     "filterProblems": "Sorunlu",

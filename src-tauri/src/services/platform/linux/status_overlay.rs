@@ -30,7 +30,6 @@ const CSS: &str = "
 ";
 
 thread_local! {
-    static QUIET_OVERLAY: RefCell<Option<Overlay>> = const { RefCell::new(None) };
     static OVERLAY: RefCell<Option<Overlay>> = const { RefCell::new(None) };
 }
 
@@ -54,10 +53,6 @@ pub(crate) fn can_show() -> bool {
 
 pub fn update(request: Option<StatusOverlayRequest>) {
     update_overlay(&OVERLAY, request);
-}
-
-pub(crate) fn update_quiet(request: Option<StatusOverlayRequest>) {
-    update_overlay(&QUIET_OVERLAY, request);
 }
 
 fn update_overlay(

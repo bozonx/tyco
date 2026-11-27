@@ -2,6 +2,7 @@
   <div class="history-page">
     <HistoryList
       :items="editorItems"
+      :selected-id="selectedId"
       :search-query="searchQuery"
       :open-title="t('history.placeIntoEditor')"
       :actions="editorActions"
@@ -110,11 +111,14 @@ import { createRemovalUndo } from '../lib/history/removal-undo'
 import { clientLogger } from '../lib/logger'
 import { useDesktopStore } from '../stores/desktop'
 import { useHistoryStore } from '../stores/history'
+import { useQuietRunStore } from '../stores/quiet-run'
 import type { EditorHistoryItem } from '@tyco/shared'
 
 const { toastKey } = useToast()
 const { t } = useI18n()
 const historyStore = useHistoryStore()
+const quietRun = useQuietRunStore()
+const selectedId = ref<string>()
 const desktopStore = useDesktopStore()
 // the text is already in the history and the window stays open
 const copyText = useCopyText({ saveOutput: false })
@@ -156,6 +160,7 @@ const FILTER_LABELS: Record<HistoryFilter, string> = {
   translation: 'history.kindTranslate',
   aiTask: 'history.kindAiTask',
   externalRun: 'history.filterExternalRun',
+  quietRun: 'history.filterQuietRun',
   commandRun: 'history.filterCommandRun',
   problems: 'history.filterProblems',
 }
@@ -261,6 +266,19 @@ const loadEditorHistory = async () => {
 }
 
 // another window or the settings changed it
+watch(
+  () => quietRun.historyId,
+  (id) => {
+    if (!id) return
+    filter.value = 'quietRun'
+    searchQuery.value = ''
+    selectedId.value = id
+    quietRun.historyId = undefined
+    void loadEditorHistory()
+  },
+  { immediate: true }
+)
+
 useEditorHistoryChanges(() => void loadEditorHistory())
 
 const removeEditorItem = (item: HistoryListItem) => removal.remove(item.id)

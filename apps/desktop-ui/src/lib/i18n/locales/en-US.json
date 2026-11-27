@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Reply Blocks" }
   },
   "commandRun": {
+    "stop": "Stop",
     "quietAccepted": "Waiting to start: {name}",
     "quietRunning": "Running: {name}",
     "quietSucceeded": "Done: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "Enter the URL.",
     "errorUnknownType": "Unknown command type.",
     "external": "Available from outside",
+    "allowQuietRun": "Allow quiet runs",
+    "quietRunInfo": "Local programs can run this command in the background.",
+    "quietOperationUnsupported": "An operation requires a visible run.",
+    "quietToolUnsupported": "A tool requires a visible run.",
+    "quietConfirmationRequired": "A tool requires confirmation.",
     "externalInfo": "Local applications and scripts can run an allowed command with tyco-ctl run <ID> or tyco-ctl run --name <name>. This permission also allows runs without opening a window.",
     "externalSelection": "Read and replace selected text",
     "externalSelectionInfo": "An application can get the text selected in the active window and put the result of a command in its place (tyco-ctl run <ID> --selection --replace). When this is off, Tyco asks for permission on every such call.",
@@ -512,6 +518,7 @@
     "filterAll": "All",
     "filterLabel": "History filter",
     "filterQuickInput": "Quick input",
+    "filterQuietRun": "Quiet runs",
     "filterExternalRun": "External runs",
     "filterCommandRun": "Command runs",
     "filterProblems": "Problems",

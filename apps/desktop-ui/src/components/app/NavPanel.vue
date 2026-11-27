@@ -126,9 +126,9 @@ import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useChatStore, useProfileChatStore } from '../../stores/chat'
 import { useDesktopStore } from '../../stores/desktop'
 import { useDialogStatusStore } from '../../stores/dialog-status'
-import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useNavPanelStore } from '../../stores/nav-panel'
+import { useQuietRunStore } from '../../stores/quiet-run'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import IconButton from '../common/IconButton.vue'
@@ -139,7 +139,6 @@ const chatStore = useChatStore()
 const aiProfilesStore = useAiProfilesStore()
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
-const ipcStore = useIpcStore()
 const { t } = useI18n()
 
 const desktopStore = useDesktopStore()
@@ -239,12 +238,10 @@ function openDialog() {
   void appNavigation.goToDialog()
 }
 
-function openExternalHistory() {
+function openExternalHistory(id: string) {
   menuModalsStore.closeAll()
-  void ipcStore.callOrNotify('activate_mode', {
-    mode: 'history',
-    historyOrigin: 'externalRun',
-  })
+  useQuietRunStore().historyId = id
+  void appNavigation.goToHistory()
 }
 
 function openHistory() {

@@ -20,7 +20,7 @@ Modes: editor, quick-input, chat, voice-commands, voice, selection-actions,
        chat-prompts, correction, translation, history, settings.
 Pages: selection-actions:N opens action page N; custom-action:N runs custom action slot N.
 Use --stdin to keep text out of process arguments. Editor history can still keep it.
-Run shows the command in the Tyco overlay; one command runs at a time.
+Run opens the command overlay by default. Use --quiet for the independent background slot.
 Without input, a text command asks for the text in the overlay.
 Use --replace to replace a selection.
 replace correction corrects the selection in place, as its hotkey does.
@@ -604,5 +604,7 @@ mod tests {
                 .exit_code,
             8
         );
+        assert_eq!(ErrorCode::NotReady.exit_code(), 9);
+        assert_eq!(ErrorCode::JobLimitReached.exit_code(), 5);
     }
 }

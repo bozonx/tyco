@@ -128,6 +128,18 @@ impl TycoDbus {
             .map(|result| result.to_string())
     }
 
+    async fn job_status(&self, id: String) -> Result<String, ApiError> {
+        self.dispatch_with_result(Request::JobStatus { id })
+            .await
+            .map(|result| result.to_string())
+    }
+
+    async fn job_cancel(&self, id: String) -> Result<String, ApiError> {
+        self.dispatch_with_result(Request::JobCancel { id })
+            .await
+            .map(|result| result.to_string())
+    }
+
     /// Replaces the selection of the focused window with the output of the
     /// library command `id`.
     async fn replace_selection(&self, id: String) -> Result<(), ApiError> {

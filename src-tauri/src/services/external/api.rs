@@ -102,7 +102,7 @@ pub fn claim_for_window(
     window_label: &str,
     id: &str,
 ) -> Option<CommandRunPayload> {
-    if is_job_window(window_label) {
+    if owns_job(&app.state::<ExternalJobs>(), window_label, id) {
         claim(app, id)
     } else {
         None
@@ -120,6 +120,15 @@ pub fn supply_input_for_window(
     Ok(())
 }
 
+fn owns_job(jobs: &ExternalJobs, label: &str, id: &str) -> bool {
+    label
+        == if jobs.is_quiet(id) {
+            runtime::QUIET_WINDOW_LABEL
+        } else {
+            runtime::QUICK_WINDOW_LABEL
+        }
+}
+
 fn ensure_cancel_window(
     jobs: &ExternalJobs,
     window_label: &str,
@@ -128,7 +137,13 @@ fn ensure_cancel_window(
     if window_label == runtime::MAIN_WINDOW_LABEL && jobs.is_quiet(id) {
         return Ok(());
     }
-    ensure_job_window(window_label, "cancels command runs")
+    if owns_job(jobs, window_label, id) {
+        Ok(())
+    } else {
+        Err(crate::errors::AppError::InvalidInput(
+            "The job belongs to another window".into(),
+        ))
+    }
 }
 
 /// Cancels the run of the window, as Esc in its overlay does.
@@ -149,7 +164,11 @@ pub fn finish_for_window(
     id: &str,
     completion: JobCompletion,
 ) -> Result<Option<tyco_activation_protocol::Job>, crate::errors::AppError> {
-    ensure_job_window(window_label, "finishes external jobs")?;
+    if !owns_job(&app.state::<ExternalJobs>(), window_label, id) {
+        return Err(crate::errors::AppError::InvalidInput(
+            "The job belongs to another window".into(),
+        ));
+    }
     complete(app, id, completion);
     Ok(app.state::<ExternalJobs>().get(id))
 }

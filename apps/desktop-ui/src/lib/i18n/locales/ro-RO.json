@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Blocuri de răspuns" }
   },
   "commandRun": {
+    "stop": "Oprește",
     "quietAccepted": "În așteptarea pornirii: {name}",
     "quietRunning": "În curs: {name}",
     "quietSucceeded": "Finalizat: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "Introduceți URL-ul.",
     "errorUnknownType": "Tip de comandă necunoscut.",
     "external": "Disponibilă din exterior",
+    "allowQuietRun": "Permite rularea în fundal",
+    "quietRunInfo": "Programele locale pot rula această comandă în fundal.",
+    "quietOperationUnsupported": "O operațiune trebuie rulată la vedere.",
+    "quietToolUnsupported": "Un instrument trebuie rulat la vedere.",
+    "quietConfirmationRequired": "Un instrument necesită confirmare.",
     "externalInfo": "Aplicațiile și scripturile locale pot rula o comandă permisă cu tyco-ctl run <ID> sau tyco-ctl run --name <nume>. Această permisiune permite și rularea comenzii fără a deschide o fereastră.",
     "externalSelection": "Citirea și înlocuirea textului selectat",
     "externalSelectionInfo": "O aplicație poate obține textul selectat în fereastra activă și îl poate înlocui cu rezultatul unei comenzi (tyco-ctl run <ID> --selection --replace). Când opțiunea este dezactivată, Tyco cere permisiunea la fiecare astfel de apel.",
@@ -512,6 +518,7 @@
     "filterAll": "Toate",
     "filterLabel": "Filtru istoric",
     "filterQuickInput": "Introducere rapidă",
+    "filterQuietRun": "Rulări în fundal",
     "filterExternalRun": "Rulări externe",
     "filterCommandRun": "Rulări de comenzi",
     "filterProblems": "Problematice",

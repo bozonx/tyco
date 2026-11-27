@@ -231,16 +231,19 @@ pub fn run() {
         })
         // a reloaded command overlay has lost the run it showed
         .on_page_load(|webview, payload| {
-            if webview.label() == runtime::QUICK_WINDOW_LABEL
+            let quiet = webview.label() == runtime::QUIET_WINDOW_LABEL;
+            if (quiet || webview.label() == runtime::QUICK_WINDOW_LABEL)
                 && payload.event() == tauri::webview::PageLoadEvent::Started
             {
-                let app = webview.app_handle().clone();
-                tauri::async_runtime::spawn_blocking(move || {
-                    services::external::api::abandon_active(&app);
-                });
+                services::external::api::abandon_active(webview.app_handle(), quiet);
             }
         })
         .on_window_event(|window, event| {
+            if window.label() == runtime::QUIET_WINDOW_LABEL
+                && matches!(event, tauri::WindowEvent::Destroyed)
+            {
+                services::external::api::abandon_active(window.app_handle(), true);
+            }
             runtime::handle_window_event(window.app_handle(), window.label(), event);
         })
         // a webview of a plain window reports its drops here, a webview

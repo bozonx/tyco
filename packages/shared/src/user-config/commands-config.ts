@@ -267,6 +267,7 @@ export interface CommandConfig {
   isOutputLogged: boolean
   /** Local applications may run it through tyco-ctl and D-Bus */
   isAvailableExternally: boolean
+  isQuietRunAllowed?: boolean
   isEnabled: boolean
   /** The platforms it runs on; absent or empty for every one */
   platforms?: CommandPlatform[]

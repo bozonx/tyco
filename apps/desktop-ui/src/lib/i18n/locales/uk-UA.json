@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Варіанти відповіді" }
   },
   "commandRun": {
+    "stop": "Зупинити",
     "quietAccepted": "Очікує запуску: {name}",
     "quietRunning": "Виконується: {name}",
     "quietSucceeded": "Готово: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "Введіть URL.",
     "errorUnknownType": "Невідомий тип команди.",
     "external": "Доступно ззовні",
+    "allowQuietRun": "Дозволити тихий запуск",
+    "quietRunInfo": "Локальні програми можуть запускати цю команду у фоновому режимі.",
+    "quietOperationUnsupported": "Операція потребує запуску з відкритим вікном.",
+    "quietToolUnsupported": "Один з інструментів потребує запуску з відкритим вікном.",
+    "quietConfirmationRequired": "Один з інструментів потребує підтвердження.",
     "externalInfo": "Дозволену команду можуть запускати локальні застосунки та скрипти: tyco-ctl run <ID> або tyco-ctl run --name <назва>. Цей дозвіл також дає змогу запускати команду без відкриття вікна.",
     "externalSelection": "Читати й замінювати виділений текст",
     "externalSelectionInfo": "Застосунок може отримати текст, виділений в активному вікні, і замінити його результатом команди (tyco-ctl run <ID> --selection --replace). Якщо це вимкнено, Tyco запитує дозвіл на кожен такий виклик.",
@@ -512,6 +518,7 @@
     "filterAll": "Усі",
     "filterLabel": "Фільтр історії",
     "filterQuickInput": "Швидке введення",
+    "filterQuietRun": "Тихі запуски",
     "filterExternalRun": "Зовнішні запуски",
     "filterCommandRun": "Запуски команд",
     "filterProblems": "Проблемні",

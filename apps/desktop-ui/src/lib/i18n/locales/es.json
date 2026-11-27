@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Bloques de respuesta" }
   },
   "commandRun": {
+    "stop": "Detener",
     "quietAccepted": "Pendiente de iniciar: {name}",
     "quietRunning": "En ejecución: {name}",
     "quietSucceeded": "Listo: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "Introduce la URL.",
     "errorUnknownType": "Tipo de comando desconocido.",
     "external": "Disponible desde fuera",
+    "allowQuietRun": "Permitir la ejecución en segundo plano",
+    "quietRunInfo": "Los programas locales pueden ejecutar este comando en segundo plano.",
+    "quietOperationUnsupported": "Una operación requiere una ejecución visible.",
+    "quietToolUnsupported": "Una herramienta requiere una ejecución visible.",
+    "quietConfirmationRequired": "Una herramienta requiere confirmación.",
     "externalInfo": "Las aplicaciones y scripts locales pueden ejecutar un comando permitido con tyco-ctl run <ID> o tyco-ctl run --name <nombre>. Este permiso también permite ejecutar el comando sin abrir una ventana.",
     "externalSelection": "Leer y reemplazar el texto seleccionado",
     "externalSelectionInfo": "Una aplicación puede obtener el texto seleccionado en la ventana activa y poner en su lugar el resultado de un comando (tyco-ctl run <ID> --selection --replace). Si esto está desactivado, Tyco pide permiso en cada llamada de este tipo.",
@@ -512,6 +518,7 @@
     "filterAll": "Todo",
     "filterLabel": "Filtro del historial",
     "filterQuickInput": "Entrada rápida",
+    "filterQuietRun": "Ejecuciones en segundo plano",
     "filterExternalRun": "Ejecuciones externas",
     "filterCommandRun": "Ejecuciones de comandos",
     "filterProblems": "Con problemas",

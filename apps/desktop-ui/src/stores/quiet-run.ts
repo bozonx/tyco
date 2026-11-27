@@ -7,19 +7,23 @@ import { createCommandRunner } from '../lib/commands/command-runner'
 import { commandTakesText } from '../lib/commands/command-runtime'
 import { createExternalJobAdapter } from '../lib/commands/external-job-adapter'
 import { createQuietRunModel } from '../lib/commands/quiet-run-model'
+import { syncI18nLocale } from '../lib/i18n'
 import { resultOrThrow } from '../lib/ipc/ipc-model'
 import { clientLogger } from '../lib/logger'
 import { useDesktopStore } from './desktop'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useIpcStore } from './ipc'
 import { useOperationsStore } from './operations'
+import { usePluginRuntimeStore } from './plugin-runtime'
 
 export const useQuietRunStore = defineStore('quietRun', () => {
   const status = shallowRef<QuietRunEvent>()
   const completion = shallowRef<QuietRunEvent>()
+  const historyId = shallowRef<string>()
   const cancellingJobId = shallowRef<string>()
   let clearTimer: ReturnType<typeof setTimeout> | undefined
   let dispose: (() => void) | undefined
+  let abort: ((id: string) => void) | undefined
   let handleExecution: ((event: QuietRunEvent) => void) | undefined
 
   const clearCompletionOnFocus = () => {
@@ -37,6 +41,7 @@ export const useQuietRunStore = defineStore('quietRun', () => {
     if (handleExecution) return
     const desktop = useDesktopStore()
     const operations = useOperationsStore()
+    const plugins = usePluginRuntimeStore()
     const jobs = createExternalJobAdapter({ call: ipc.call, reportError })
     const runner = createCommandRunner({
       ...useInvocationRunnerDependencies(),
@@ -47,7 +52,11 @@ export const useQuietRunStore = defineStore('quietRun', () => {
       finish: jobs.finishJob,
       run: runner.run,
       takesText: (command) => commandTakesText(command, operations),
-      applyUserConfig: desktop.setExecutionConfig,
+      applyUserConfig: async (config) => {
+        desktop.setExecutionConfig(config)
+        syncI18nLocale(config.language.ui)
+        await plugins.refreshInstalledPlugins()
+      },
       logRun: async (record) => {
         resultOrThrow(await ipc.call('log_command_run', { record }))
       },
@@ -57,6 +66,7 @@ export const useQuietRunStore = defineStore('quietRun', () => {
       if (event.state === 'accepted') void model.run(event).catch(reportError)
       else if (event.state !== 'running') model.abort(event.jobId)
     }
+    abort = model.abort
     dispose = model.dispose
   }
 
@@ -64,11 +74,14 @@ export const useQuietRunStore = defineStore('quietRun', () => {
     handleExecution?.(event)
     const isActive = event.state === 'accepted' || event.state === 'running'
     if (isActive) {
+      clearTimeout(clearTimer)
+      completion.value = undefined
       status.value = event
       return
     }
     if (status.value?.jobId === event.jobId) status.value = undefined
     if (cancellingJobId.value === event.jobId) cancellingJobId.value = undefined
+    if (status.value) return
     clearTimeout(clearTimer)
     completion.value = event
     clearCompletionOnFocus()
@@ -90,8 +103,10 @@ export const useQuietRunStore = defineStore('quietRun', () => {
   return {
     status,
     completion,
+    historyId,
     cancellingJobId,
     startExecutor,
+    abortExecution: (id: string) => abort?.(id),
     refresh,
     update,
     async cancel(id: string) {

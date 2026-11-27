@@ -50,7 +50,7 @@ for (const file of await readdir(resolve(root, 'src-tauri/capabilities'))) {
   )
   assert.ok(
     capability.windows.every((/** @type {string} */ window) =>
-      ['main', 'quick', 'subtitles'].includes(window)
+      ['main', 'quick', 'quiet', 'subtitles'].includes(window)
     ),
     'No wildcard window capabilities'
   )
@@ -78,14 +78,15 @@ for (const file of await readdir(resolve(root, 'src-tauri/capabilities'))) {
       )
         assert.deepEqual(capability.windows, ['main'])
       if (
-        [
-          'claim_external_job',
-          'finish_external_job',
-          'answer_external_access',
-          'supply_command_run_input',
-        ].includes(command)
+        ['answer_external_access', 'supply_command_run_input'].includes(command)
       )
         assert.deepEqual(capability.windows, ['quick'])
+      if (['claim_external_job', 'finish_external_job'].includes(command))
+        assert.ok(
+          capability.windows.length === 1 &&
+            ['quick', 'quiet'].includes(capability.windows[0]),
+          'Only a command executor may claim or finish jobs'
+        )
     }
   }
 }

@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Blokovi odgovora" }
   },
   "commandRun": {
+    "stop": "Zaustavi",
     "quietAccepted": "Čeka pokretanje: {name}",
     "quietRunning": "Izvršava se: {name}",
     "quietSucceeded": "Dovršeno: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "Unesite URL.",
     "errorUnknownType": "Nepoznata vrsta naredbe.",
     "external": "Dostupno izvana",
+    "allowQuietRun": "Dopusti izvršavanje u pozadini",
+    "quietRunInfo": "Lokalni programi mogu izvršiti ovu naredbu u pozadini.",
+    "quietOperationUnsupported": "Operacija zahtijeva vidljivo izvršavanje.",
+    "quietToolUnsupported": "Alat zahtijeva vidljivo izvršavanje.",
+    "quietConfirmationRequired": "Alat zahtijeva potvrdu.",
     "externalInfo": "Lokalne aplikacije i skripte mogu pokrenuti dopuštenu naredbu s tyco-ctl run <ID> ili tyco-ctl run --name <naziv>. Ova dozvola omogućuje i pokretanje bez otvaranja prozora.",
     "externalSelection": "Čitanje i zamjena odabranog teksta",
     "externalSelectionInfo": "Aplikacija može dohvatiti tekst odabran u aktivnom prozoru i zamijeniti ga rezultatom naredbe (tyco-ctl run <ID> --selection --replace). Kad je ovo isključeno, Tyco traži dopuštenje pri svakom takvom pozivu.",
@@ -512,6 +518,7 @@
     "filterAll": "Sve",
     "filterLabel": "Filtar povijesti",
     "filterQuickInput": "Brzi unos",
+    "filterQuietRun": "Izvršavanja u pozadini",
     "filterExternalRun": "Vanjska pokretanja",
     "filterCommandRun": "Pokretanja naredbi",
     "filterProblems": "Problematični",

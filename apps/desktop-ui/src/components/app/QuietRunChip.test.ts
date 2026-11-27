@@ -26,7 +26,7 @@ it('shows the running command, cancels it, and opens history on completion', asy
       command: 'cancel_external_job',
       args: { id: 'job' },
     })
-    store.update({ ...run, state: 'cancelled' })
+    store.update({ ...run, state: 'cancelled', historyId: 'record' })
     await nextTick()
     await wrapper.get('button').trigger('click')
     expect(wrapper.emitted('openHistory')).toHaveLength(1)
@@ -36,7 +36,7 @@ it('shows the running command, cancels it, and opens history on completion', asy
   }
 })
 
-it('keeps a completion visible beside a new active job and shows its original start time', async () => {
+it('ignores an older completion during a new active job and shows its original start time', async () => {
   const desktop = await loadFakeDesktop()
   const wrapper = mount(QuietRunChip, {
     attachTo: document.body,
@@ -48,7 +48,7 @@ it('keeps a completion visible beside a new active job and shows its original st
       jobId: 'new',
       commandName: 'New run',
       state: 'running',
-      startedAt: Date.now() - 65_000,
+      startedAt: Date.now() - 3_665_000,
     })
     store.update({
       jobId: 'old',
@@ -57,11 +57,11 @@ it('keeps a completion visible beside a new active job and shows its original st
       startedAt: null,
     })
     await nextTick()
-    expect(wrapper.text()).toContain('Previous run')
+    expect(wrapper.text()).not.toContain('Previous run')
     const trigger = wrapper.get('button[aria-expanded]')
     ;(trigger.element as HTMLButtonElement).focus()
     await trigger.trigger('click')
-    expect(wrapper.get('time').text()).toBe('1:05')
+    expect(wrapper.get('time').text()).toBe('1:01:05')
     await trigger.trigger('keydown', { key: 'Escape' })
     expect(wrapper.find('time').exists()).toBe(false)
     await trigger.trigger('click')

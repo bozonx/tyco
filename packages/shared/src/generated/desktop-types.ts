@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: a454a43800ccd4f27ec6ac1b3b2476bc2f16ff8f06a625cc3e6d998d6bc6b65a
+// Source hash: 0ff174531ed5246c289b6d1dc7afb3dafa5a62f85ecce1f04a79ec7df6a47d1e
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -721,6 +721,7 @@ export type EditorHistoryOrigin =
   | 'listen'
   | 'commandRun'
   | 'externalRun'
+  | 'quietRun'
 
 /** A text handed over to the editor of the main window. */
 export type EditorTransfer = {
@@ -963,9 +964,14 @@ export type QuietRunEvent = {
   commandName: string
   state: ExternalJobState
   startedAt: number | null
+  error?: string
+  code?: string
+  historyId?: string
 }
 
 export type QuietRunLabels = {
+  accepted: string
+  stop: string
   running: string
   succeeded: string
   failed: string

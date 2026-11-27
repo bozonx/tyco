@@ -145,6 +145,7 @@ pub enum ErrorCode {
     /// The quick window has not reported its tools yet.
     NotReady,
     Busy,
+    JobLimitReached,
     SelectionFailed,
     OutputTooLarge,
     ExecutionFailed,
@@ -156,7 +157,7 @@ pub enum ErrorCode {
 }
 
 impl ErrorCode {
-    pub const ALL: [Self; 19] = [
+    pub const ALL: [Self; 20] = [
         Self::QuietRunUnsupported,
         Self::ConfirmationRequired,
         Self::InvalidInput,
@@ -169,6 +170,7 @@ impl ErrorCode {
         Self::Unavailable,
         Self::NotReady,
         Self::Busy,
+        Self::JobLimitReached,
         Self::SelectionFailed,
         Self::OutputTooLarge,
         Self::ExecutionFailed,
@@ -192,6 +194,7 @@ impl ErrorCode {
             Self::Unavailable => "Unavailable",
             Self::NotReady => "NotReady",
             Self::Busy => "Busy",
+            Self::JobLimitReached => "JobLimitReached",
             Self::SelectionFailed => "SelectionFailed",
             Self::OutputTooLarge => "OutputTooLarge",
             Self::ExecutionFailed => "ExecutionFailed",
@@ -217,10 +220,12 @@ impl ErrorCode {
             | Self::AmbiguousName => 2,
             Self::AccessDenied | Self::ConfirmationRequired => 3,
             Self::Busy => 8,
-            Self::NotFound | Self::Unavailable | Self::NotReady | Self::Disabled => 4,
+            Self::NotReady => 9,
+            Self::NotFound | Self::Unavailable | Self::Disabled => 4,
             Self::TimedOut => 6,
             Self::Cancelled => 7,
-            Self::SelectionFailed
+            Self::JobLimitReached
+            | Self::SelectionFailed
             | Self::OutputTooLarge
             | Self::ExecutionFailed
             | Self::ConfigurationChanged

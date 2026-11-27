@@ -20,6 +20,19 @@
     </div>
   </template>
   <ToastContainer />
+  <ConfirmModal
+    v-if="toolApproval"
+    :key="toolApproval.approvalId"
+    :open="true"
+    :title="t('chat.toolApprovalQuestion', { tool: toolApproval.toolName })"
+    :message="
+      toolApproval.leakTarget ?? (JSON.stringify(toolApproval.input) || '')
+    "
+    :confirm-text="t('chat.toolAllow')"
+    :cancel-text="t('chat.toolDeny')"
+    @confirm="answerTool('allow-once')"
+    @cancel="answerTool('deny')"
+  />
   <ImageViewerDialog
     :open="imageViewer.isOpen"
     :src="imageViewer.src"
@@ -34,6 +47,7 @@ import { computed } from 'vue'
 
 import NavPanel from './components/app/NavPanel.vue'
 import UserDataMissingScreen from './components/app/UserDataMissingScreen.vue'
+import ConfirmModal from './components/common/ConfirmModal.vue'
 import ImageViewerDialog from './components/common/ImageViewerDialog.vue'
 import ToastContainer from './components/common/ToastContainer.vue'
 import MenuModals from './components/menu/MenuModals.vue'
@@ -41,10 +55,17 @@ import QuickOverlay from './components/quick/QuickOverlay.vue'
 import { useAppRuntime } from './composables/use-app-runtime'
 import { useDesktopStore } from './stores/desktop'
 import { useImageViewerStore } from './stores/image-viewer'
+import { useOperationsStore } from './stores/operations'
 
 const { settingsShutdown, t, isQuickWindow, navPanelStore } = useAppRuntime()
 const desktop = useDesktopStore()
 const imageViewer = useImageViewerStore()
+const operations = useOperationsStore()
+const toolApproval = computed(() => operations.pendingToolApprovals[0])
+function answerTool(decision: 'allow-once' | 'deny') {
+  if (toolApproval.value)
+    operations.answerToolApproval(toolApproval.value.approvalId, decision)
+}
 /** The data folder is not there or not set up yet: nothing else can work */
 const isUserDataMissing = computed(
   () =>

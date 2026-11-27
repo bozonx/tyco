@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "回复块" }
   },
   "commandRun": {
+    "stop": "停止",
     "quietAccepted": "等待启动：{name}",
     "quietRunning": "正在运行：{name}",
     "quietSucceeded": "已完成：{name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "请输入 URL。",
     "errorUnknownType": "未知的命令类型。",
     "external": "允许外部调用",
+    "allowQuietRun": "允许后台运行",
+    "quietRunInfo": "本地程序可在后台运行此命令。",
+    "quietOperationUnsupported": "某项操作需要打开窗口才能运行。",
+    "quietToolUnsupported": "某个工具需要打开窗口才能运行。",
+    "quietConfirmationRequired": "某个工具需要确认。",
     "externalInfo": "本地应用和脚本可以通过 tyco-ctl run <ID> 或 tyco-ctl run --name <名称> 运行允许的命令。 此权限也允许运行命令时不打开窗口。",
     "externalSelection": "读取并替换选中文本",
     "externalSelectionInfo": "应用程序可以获取活动窗口中选中的文本，并将命令的结果放回原处 (tyco-ctl run <ID> --selection --replace)。关闭此项时，Tyco 会在每次此类调用时请求权限。",
@@ -512,6 +518,7 @@
     "filterAll": "全部",
     "filterLabel": "历史筛选",
     "filterQuickInput": "快速输入",
+    "filterQuietRun": "后台运行",
     "filterExternalRun": "外部运行",
     "filterCommandRun": "命令运行",
     "filterProblems": "有问题",

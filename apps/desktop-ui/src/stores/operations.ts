@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { onScopeDispose } from 'vue'
 
 import {
   APP_CONFIG,
@@ -19,6 +20,11 @@ import { createTauriFetch } from '../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../lib/net/tauri-net'
 import { createScriptAndWebhookOperations } from '../lib/operations/script-and-webhook-operations'
 import { createAiCommandOperation } from '../lib/ai-commands/ai-command-operation'
+import {
+  createDebugChatToolProvider,
+  isDebugChatToolsEnabled,
+} from '../lib/chat-tools/debug-chat-tools'
+import { createChatToolApprovals } from '../lib/chat-tools/chat-tool-approvals'
 import { createDesktopWebToolProvider } from '../lib/chat-tools/desktop-chat-tools'
 import { invokeDesktop } from '../lib/desktop/invoke'
 import { clientLogger } from '../lib/logger'
@@ -188,6 +194,11 @@ export const useOperationsStore = defineStore('tools', () => {
     operations: { get: (id) => registry.get(id), environment },
   })
   // the web of an AI command's whitelist, checked by Rust against it
+  const debugTools = isDebugChatToolsEnabled()
+    ? [createDebugChatToolProvider()]
+    : []
+  const toolApprovals = createChatToolApprovals()
+  onScopeDispose(toolApprovals.cancelAll)
   const webTools = createDesktopWebToolProvider({
     invoke: invokeDesktop,
     getFetchMaxCharacters: () =>
@@ -227,8 +238,9 @@ export const useOperationsStore = defineStore('tools', () => {
     getUnavailableReasonKey: () => getLlmUnavailableReasonKey('aiTask'),
     describeError: (error) => describeError(error, translate),
     variables: () => environment().variables,
-    toolProviders: () => [webTools, pluginTools],
+    toolProviders: () => [webTools, pluginTools, ...debugTools],
     toolCatalog: () => desktopStore.userConfig?.tools,
+    requestApproval: toolApprovals.request,
   })
 
   const registry = createOperationRegistry([
@@ -252,5 +264,11 @@ export const useOperationsStore = defineStore('tools', () => {
     ...coreOperations,
     aiCommandOperation,
   ])
-  return { ...registry, environment, provideAskInChat }
+  return {
+    ...registry,
+    environment,
+    provideAskInChat,
+    pendingToolApprovals: toolApprovals.pending,
+    answerToolApproval: toolApprovals.answer,
+  }
 })

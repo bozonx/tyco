@@ -46,6 +46,11 @@ export function getEditorHistoryMeta(
   item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result'> &
     Partial<Pick<EditorHistoryItem, 'origin' | 'instruction'>>
 ): EditorHistoryMeta {
+  if (item.origin === 'quietRun')
+    return {
+      icon: 'mdi:play-circle-outline',
+      labelKey: 'history.filterQuietRun',
+    }
   if (item.origin === 'externalRun' || item.origin === 'commandRun')
     return {
       icon: 'mdi:play-circle-outline',
@@ -154,7 +159,8 @@ export function getEditorHistoryNote(
   if (
     item.isResultApplied ||
     item.origin === 'commandRun' ||
-    item.origin === 'externalRun'
+    item.origin === 'externalRun' ||
+    item.origin === 'quietRun'
   )
     return undefined
 

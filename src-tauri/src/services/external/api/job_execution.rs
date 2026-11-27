@@ -105,11 +105,17 @@ pub(super) fn start(
         )));
     }
     let config = state.user_config();
+    let jobs = app.state::<ExternalJobs>();
     if request.quiet {
         ensure_quiet_run(app, &config, &command.id)?;
+        if !jobs.is_quiet_executor_ready() {
+            return Err(Box::new(Response::coded_error(
+                ErrorCode::NotReady,
+                "The background command executor is loading",
+            )));
+        }
     }
     let name = command_name(&config, &command.id);
-    let jobs = app.state::<ExternalJobs>();
     let job = reserve(
         app,
         NewJob {
@@ -120,9 +126,15 @@ pub(super) fn start(
             command_snapshot: raw_command(&config, &command.id).cloned(),
         },
     )
-    .map_err(|error| Box::new(Response::coded_error(ErrorCode::Busy, error.message())))?;
+    .map_err(|error| {
+        let code = match error {
+            CreateJobError::Busy { .. } => ErrorCode::Busy,
+            CreateJobError::Full => ErrorCode::JobLimitReached,
+        };
+        Box::new(Response::coded_error(code, error.message()))
+    })?;
     if request.quiet {
-        quiet_status(app, &job, name);
+        quiet_status(app, &job, name, None);
         return Ok(job);
     }
     visible_work::end(app);
@@ -270,20 +282,23 @@ pub fn deny_selection(app: &AppHandle, job_id: &str) {
     );
 }
 
-/// Ends the jobs of a quick webview that reloaded or went away.
-pub fn abandon_active(app: &AppHandle) {
+/// A webview reload invalidates only the job owned by that webview.
+pub fn abandon_active(app: &AppHandle, quiet: bool) {
     let jobs = app.state::<ExternalJobs>();
-    for id in [jobs.active_id(), jobs.active_id_for(true)]
-        .into_iter()
-        .flatten()
-    {
-        access::withdraw(app, &id);
-        fail(
-            app,
-            &id,
-            "The command window was reloaded".into(),
-            ErrorCode::Unavailable,
-        );
+    if quiet {
+        jobs.set_quiet_executor_ready(false);
+    }
+    if let Some(id) = jobs.active_id_for(quiet) {
+        let handle = app.clone();
+        tauri::async_runtime::spawn_blocking(move || {
+            access::withdraw(&handle, &id);
+            fail(
+                &handle,
+                &id,
+                "The command executor was reloaded".into(),
+                ErrorCode::Unavailable,
+            );
+        });
     }
 }
 
@@ -321,7 +336,11 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
     if completion.is_cancelled {
         let _ = events::emit_to::<events::ExternalJobCancel, _>(
             app,
-            runtime::QUICK_WINDOW_LABEL,
+            if jobs.is_quiet(id) {
+                runtime::QUIET_WINDOW_LABEL
+            } else {
+                runtime::QUICK_WINDOW_LABEL
+            },
             id.to_owned(),
         );
     }
@@ -358,9 +377,9 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
         finish_replacement(app, id, error);
     } else if let Some(history) = history {
         let quiet_name = history.quiet.then(|| history.command_name.clone());
-        record_history(app, &job, history);
+        let history_id = record_history(app, &job, history);
         if let Some(name) = quiet_name {
-            quiet_status(app, &job, name);
+            quiet_status(app, &job, name, history_id);
         }
     }
 }
@@ -472,7 +491,14 @@ pub fn claim(app: &AppHandle, id: &str) -> Option<CommandRunPayload> {
 
 fn ensure_quiet_run(app: &AppHandle, config: &Value, id: &str) -> ApiResult<()> {
     let catalog = app.state::<command_library::OperationCatalogState>().get();
-    validate_quiet_run(config, id, catalog.as_ref())
+    validate_quiet_run(config, id, catalog.as_ref())?;
+    if !raw_command(config, id).is_some_and(command_library::is_quiet_run_allowed) {
+        return Err(Box::new(Response::coded_error(
+            ErrorCode::AccessDenied,
+            "Quiet external runs are not enabled for this command",
+        )));
+    }
+    Ok(())
 }
 
 fn validate_quiet_run(
@@ -526,6 +552,8 @@ fn command_history_entry(
         operation: None,
         origin: Some(if history.is_internal {
             EditorHistoryOrigin::CommandRun
+        } else if history.quiet {
+            EditorHistoryOrigin::QuietRun
         } else {
             EditorHistoryOrigin::ExternalRun
         }),
@@ -535,19 +563,22 @@ fn command_history_entry(
     (entry, history.command_name, result)
 }
 
-fn record_history(app: &AppHandle, job: &Job, history: RunHistory) {
+fn record_history(app: &AppHandle, job: &Job, history: RunHistory) -> Option<String> {
     let (entry, command_name, result) = command_history_entry(job, history);
-    if let Err(error) =
-        crate::services::storage::add_command_run_history(app, entry, command_name, result)
-    {
-        log::warn!("Could not save command run history: {error}");
-    }
+    crate::services::storage::add_command_run_history(app, entry, command_name, result)
+        .unwrap_or_else(|error| {
+            log::warn!("Could not save command run history: {error}");
+            None
+        })
 }
 
-fn quiet_status(app: &AppHandle, job: &Job, command_name: String) {
+fn quiet_status(app: &AppHandle, job: &Job, command_name: String, history_id: Option<String>) {
     let event = events::QuietRunEvent {
         job_id: job.id.clone(),
         command_name,
+        history_id,
+        error: job.error.clone(),
+        code: job.code.clone(),
         started_at: app.state::<ExternalJobs>().started_at(&job.id),
         state: if job.code.as_deref() == Some(ErrorCode::TimedOut.as_str()) {
             JobState::Failed
@@ -570,7 +601,7 @@ fn publish_quiet_status(app: &AppHandle, event: events::QuietRunEvent) {
         {
             return;
         }
-        for label in [runtime::QUICK_WINDOW_LABEL, runtime::MAIN_WINDOW_LABEL] {
+        for label in [runtime::QUIET_WINDOW_LABEL, runtime::MAIN_WINDOW_LABEL] {
             let _ = events::emit_to::<events::QuietRunChanged, _>(&handle, label, event.clone());
         }
         if handle.state::<AppState>().is_quitting() {
@@ -584,32 +615,45 @@ fn publish_quiet_status(app: &AppHandle, event: events::QuietRunEvent) {
                 log::warn!("Could not update quiet run tray status: {error}");
             }
         }
-        #[cfg(target_os = "linux")]
-        {
-            use crate::services::status_overlay::{quiet, StatusOverlayKind};
-            let kind = match event.state {
-                JobState::Succeeded => StatusOverlayKind::Success,
-                JobState::Failed => StatusOverlayKind::Error,
-                JobState::Cancelled => StatusOverlayKind::Info,
-                _ => StatusOverlayKind::Pending,
-            };
-            quiet::show(&handle, kind, text, event.state == JobState::Running);
-            if !is_running && active.is_none() {
-                quiet::clear_pending(&handle);
-            }
-        }
-        #[cfg(target_os = "windows")]
-        if !is_running
-            && !handle
-                .get_webview_window(runtime::MAIN_WINDOW_LABEL)
-                .is_some_and(|window| window.is_focused().unwrap_or(false))
-        {
-            if let Err(error) = crate::services::platform::notifications::notify_quiet_run(
+        #[cfg(any(target_os = "linux", target_os = "windows"))]
+        if event.state != JobState::Accepted && (is_running || active.is_none()) {
+            let focused = [runtime::MAIN_WINDOW_LABEL, runtime::QUICK_WINDOW_LABEL]
+                .iter()
+                .any(|label| {
+                    handle
+                        .get_webview_window(label)
+                        .is_some_and(|window| window.is_focused().unwrap_or(false))
+                });
+            let notice = (!focused).then(|| {
+                let reason = event
+                    .error
+                    .as_deref()
+                    .and_then(|error| error.lines().next())
+                    .filter(|error| !error.is_empty())
+                    .or(event.code.as_deref());
+                if let (JobState::Failed, Some(reason)) = (&event.state, reason) {
+                    let excerpt: String = reason.chars().take(160).collect();
+                    format!("{text} — {excerpt}")
+                } else {
+                    text
+                }
+            });
+            #[cfg(target_os = "linux")]
+            crate::services::platform::notifications::notify_quiet_run(
                 &handle,
-                handle.package_info().name.as_str(),
-                &text,
-            ) {
-                log::warn!("Could not show quiet run notification: {error}");
+                event.job_id,
+                notice,
+                !is_running,
+            );
+            #[cfg(target_os = "windows")]
+            if let Some(notice) = notice {
+                if let Err(error) = crate::services::platform::notifications::notify_quiet_run(
+                    &handle,
+                    handle.package_info().name.as_str(),
+                    &notice,
+                ) {
+                    log::warn!("Could not show quiet run notification: {error}");
+                }
             }
         }
     });
@@ -716,7 +760,7 @@ mod tests {
             )
             .unwrap();
         let (entry, name, outcome) = command_history_entry(&job, history.unwrap());
-        assert_eq!(entry.origin, Some(EditorHistoryOrigin::ExternalRun));
+        assert_eq!(entry.origin, Some(EditorHistoryOrigin::QuietRun));
         assert_eq!(entry.text, "original");
         assert_eq!(name, "Fixture");
         assert_eq!(outcome.unwrap_err().kind, EditorHistoryFailureKind::Timeout);

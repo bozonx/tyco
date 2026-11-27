@@ -101,8 +101,8 @@ settings. On-disk history may sync through the data folder.
 
 Each library command is allowed on its own: the terminal icon in its row in
 Settings → Commands, or **Available from outside** in its settings. The command
-must also be enabled. This grant covers both overlay and quiet runs. A newly
-created command is not granted external access.
+must also be enabled. Quiet runs additionally require **Allow quiet runs**
+in that command’s settings. Both grants start off for new commands.
 
 The **External access** section below the list holds one capability that is
 independent of the command grants:
@@ -323,6 +323,11 @@ by `--selection` (`TYCO_SELECTION` in scripts); without one it is empty.
 
 ### Quiet runs and scheduling
 
+In the command’s settings, enable **Available from outside** and **Allow quiet
+runs**. Existing external commands also need the quiet grant. Any local
+process in the same desktop session can use that grant, including for AI
+requests that use provider tokens or web tools.
+
 `tyco-ctl run <id> --quiet --wait` runs without opening a Tyco window or
 changing focus. It has an independent slot, so it can run alongside dictation,
 dialog recording, or a command in the overlay. Opening Tyco or using a hotkey
@@ -331,31 +336,38 @@ status 8 and stays out of the UI. There is no queue.
 
 Pass required input explicitly. `--selection` and `--replace` are incompatible
 with `--quiet` (`InvalidInput`). Missing input gives `InputRequired`. An
-explicit `ask` policy in the command's tool whitelist gives
-`ConfirmationRequired` before execution. A confirmation requested during
-execution also fails the job with that code. Visible AI commands continue
-to grant access through their whitelist as before.
+AI command tool set to **Ask** in the command settings prompts for approval
+during a visible run. A quiet run returns `ConfirmationRequired` before
+execution if its tool whitelist contains **Ask**. A confirmation requested
+during quiet execution also fails the job with that code.
 
 Commands that insert text, write to the clipboard, or open a chat return
 `QuietRunUnsupported` (exit status 2). The same check covers nested commands.
 Plugin operations must opt in, and plugins with editor or browser access are
-excluded. Quiet AI commands can use library commands and built-in web tools.
-Scripts and webhooks still perform their configured actions, so use scripts
+excluded. Quiet AI commands can use compatible library commands, built-in
+web tools, and the date/time tool when that development tool is available.
+Profile memory and project file tools require a profile context. Command
+settings explain when a configured operation or tool prevents quiet runs.
+`tyco-ctl commands describe` reports eligibility in `canRunQuietly` and
+the reason code in `quietRunCode`. Scripts and webhooks still perform their configured actions, so use scripts
 that leave the desktop alone when scheduling unattended runs.
 
 The CLI reports when an older
 Tyco instance lacks API 5.
 
 While running, the tray shows an activity indicator and the command name.
-The main window shows a chip with elapsed time and **Stop**. On Linux, a
-short status bubble appears where the desktop can show it without taking
-focus. Windows uses a completion notification. You can also stop the job
-with `tyco-ctl jobs cancel <job-id>`.
+The tray menu and the main window chip offer **Stop**. Linux and Windows
+send start and completion notices through the desktop notification system.
+The desktop controls their visibility. Completion notices are suppressed
+when TyCo’s main window or quick overlay has focus. You can also stop the
+job with `tyco-ctl jobs cancel <job-id>`.
 
 The editor history records input, result or failure, and command name.
-Use **External runs** to find entries from the CLI or D-Bus and **Problems**
-to find failures, cancellations, and timeouts. Choose **While TyCo is
-running** in history settings to keep new history in memory for this session.
+Use **Quiet runs** to see background jobs, **External runs** to see all
+external jobs, and **Problems** to see failures, cancellations, and timeouts.
+Clicking the completion chip opens the saved entry for that run. Choose
+**While TyCo is running** in history settings to keep new history in memory
+for this session.
 
 For a Linux desktop session managed by systemd, put the following files in
 `~/.config/systemd/user/`. Replace the binary path and command ID as needed.
@@ -367,7 +379,7 @@ Description=Run the Tyco daily command
 
 [Service]
 Type=oneshot
-ExecStart=%h/.cargo/bin/tyco-ctl run daily --quiet --wait
+ExecStart=%h/.local/bin/tyco-daily
 ```
 
 ```ini
@@ -386,15 +398,20 @@ Enable it with `systemctl --user enable --now tyco-daily.timer`. The desktop
 instance must already be running. If it is absent, the client reports
 `Unavailable` with exit status 4 and leaves startup to the desktop session.
 
-When the caller should retry an occupied slot, test explicitly for status 8.
-This shell example retries twice and returns any other failure immediately.
+Save this script as `~/.local/bin/tyco-daily` and make it executable.
+It retries an occupied slot (8) or an executor or tool catalog still loading
+(9) twice. Other failures return immediately.
 
 ```sh
+#!/bin/sh
 attempt=1
 while :; do
-  tyco-ctl run daily --quiet --wait && exit 0
+  "$HOME/.cargo/bin/tyco-ctl" run daily --quiet --wait && exit 0
   status=$?
-  [ "$status" -eq 8 ] && [ "$attempt" -lt 3 ] || exit "$status"
+  case "$status" in
+    8|9) [ "$attempt" -lt 3 ] || exit "$status" ;;
+    *) exit "$status" ;;
+  esac
   attempt=$((attempt + 1))
   sleep 10
 done
@@ -405,6 +422,25 @@ may lack `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`. Set them to the
 logged-in user's runtime directory and session-bus address when the
 desktop setup requires them, for example `/run/user/1000` and
 `unix:path=/run/user/1000/bus` on a typical systemd session.
+
+#### Windows Task Scheduler
+
+Build or install the Windows client with the Cargo command above. It also
+produces `tyco-ctlw.exe`, a Windows-subsystem executable that runs without
+opening a console window. In Task Scheduler, create a task with these settings.
+
+- **General**. Select the user who runs TyCo and **Run only when user is
+  logged on**.
+- **Triggers**. Add the desired schedule.
+- **Actions**. Select **Start a program**. Set **Program/script** to the
+  absolute path of `tyco-ctlw.exe`, for example
+  `C:\Users\Alice\.cargo\bin\tyco-ctlw.exe`. Set **Add arguments** to
+  `run daily --quiet --wait`.
+
+TyCo must already be running in the same interactive logon session.
+**Run whether user is logged on or not** uses a separate logon session and
+cannot reach TyCo’s pipe. Check **Last Run Result** for the exit status
+or use `tyco-ctl.exe` from an interactive terminal to see the error text.
 
 ### Selection
 
@@ -532,8 +568,8 @@ terminal jobs first. If the command webview reloads, its active jobs fail
 with `Unavailable`. Two limits end a job with
 `TimedOut`:
 
-- **Start**: a job must start within 300 seconds of the call. This covers the
-  access prompt for the selection and typing the text in the overlay.
+- **Start**: a quiet job must be claimed within 10 seconds. An overlay job has
+  300 seconds to allow time for the selection permission and text prompts.
 - **Run**: a command is stopped once it runs longer than its limit,
   counted from its start. The limit is configured globally in the command
   settings ("Run time limit", `commandRunTimeoutSec`), 300 seconds (5 minutes)
@@ -555,16 +591,17 @@ do not block the listener; connections are bounded.
 
 ### Exit codes
 
-| Code | Meaning                                                 |
-| ---- | ------------------------------------------------------- |
-| 0    | Request accepted, or successful completion when waiting |
-| 2    | Invalid arguments/input, missing input, ambiguous name  |
-| 3    | Permission denied or confirmation required              |
-| 4    | Service/command unavailable, disabled, not found        |
-| 5    | Execution or other API failure                          |
-| 6    | Timeout                                                 |
-| 7    | Cancellation                                            |
-| 8    | Run slot occupied (`Busy`)                              |
+| Code | Meaning                                                      |
+| ---- | ------------------------------------------------------------ |
+| 0    | Request accepted, or successful completion when waiting      |
+| 2    | Invalid arguments/input, missing input, ambiguous name       |
+| 3    | Permission denied or confirmation required                   |
+| 4    | Service/command unavailable, disabled, not found             |
+| 5    | Execution or other API failure (including `JobLimitReached`) |
+| 6    | Timeout                                                      |
+| 7    | Cancellation                                                 |
+| 8    | Run slot occupied (`Busy`)                                   |
+| 9    | Command executor or catalog still loading (`NotReady`)       |
 
 Use `--wait` when the calling script needs the operation's success or failure.
 Machine error codes are stable identifiers separate from human-readable text.
@@ -572,9 +609,9 @@ Machine error codes are stable identifiers separate from human-readable text.
 ## D-Bus
 
 D-Bus is a shortcut-friendly launcher on Linux: it opens Tyco windows and
-starts library commands the way a user would. It has no discovery or job
-monitoring; use `tyco-ctl` for those. Both share the
-authorization dispatcher, so the same grants and capabilities apply.
+starts library commands. Use the job ID returned by `Run` to query or
+cancel that job. Use `tyco-ctl` for discovery and waiting. Both transports
+share the authorization dispatcher.
 
 | Method                    | Arguments           | What it does                                                     |
 | ------------------------- | ------------------- | ---------------------------------------------------------------- |
@@ -583,6 +620,8 @@ authorization dispatcher, so the same grants and capabilities apply.
 | `OpenWithSelection`       | `s` mode            | Opens it with the selection of the focused window                |
 | `OpenWithActivationToken` | `s` mode, `s` token | Opens it with an `xdg-activation-v1` token, so it gets the focus |
 | `Run`                     | `s` JSON request    | Returns the accepted job as JSON and accepts `quiet`             |
+| `JobStatus`               | `s` job ID          | Returns the job state and result as JSON                         |
+| `JobCancel`               | `s` job ID          | Cancels the job and returns its state as JSON                    |
 | `RunCommand`              | `s` command ID      | Runs the command in the command overlay                          |
 | `ReplaceSelection`        | `s` command ID      | Replaces the selection with the command's output                 |
 | `CorrectSelection`        |                     | Corrects the selection in place                                  |

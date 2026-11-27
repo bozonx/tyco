@@ -1,0 +1,11 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "quiet-capability",
+  "description": "Background command executor",
+  "windows": ["quiet"],
+  "permissions": [
+    "allow-claim-external-job",
+    "allow-finish-external-job",
+    "allow-get-quiet-run-status"
+  ]
+}

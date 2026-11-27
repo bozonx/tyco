@@ -119,6 +119,20 @@
             <CopyButton :value="cliCommand" :label="t('commands.copyCli')" />
           </span>
         </div>
+        <div v-if="command.isAvailableExternally" class="command-field-row">
+          <FieldSwitch
+            :model-value="command.isQuietRunAllowed === true"
+            :disabled="
+              Boolean(quietRunIssue) && command.isQuietRunAllowed !== true
+            "
+            :label="t('commands.allowQuietRun')"
+            @update:model-value="update({ isQuietRunAllowed: $event })"
+          />
+          <InfoTooltip :text="t(quietRunIssue ?? 'commands.quietRunInfo')" />
+          <span v-if="quietRunIssue" class="command-hint">{{
+            t(quietRunIssue)
+          }}</span>
+        </div>
         <p
           v-if="command.isAvailableExternally && nameConflicts.length"
           class="command-warning"
@@ -233,7 +247,10 @@ import { computed, ref, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
+import { aiCommandOperationConfigOf } from '../../lib/ai-commands/ai-command-config'
+import { isQuietTool } from '../../lib/chat-tools/tool-catalog'
 import {
+  normalizeCommands,
   outputActionOf,
   scriptOperationConfig,
 } from '../../lib/commands/command-config'
@@ -258,6 +275,7 @@ import {
   operationInputSchema,
   schemaShape,
 } from '../../lib/operations/operation-input'
+import { canOperationRunQuietly } from '../../lib/operations/quiet-operation'
 import { useIpcStore } from '../../stores/ipc'
 import { useOperationsStore } from '../../stores/operations'
 import Badge from '../common/Badge.vue'
@@ -308,6 +326,33 @@ const ipcStore = useIpcStore()
 
 const operationsStore = useOperationsStore()
 const tool = computed(() => commandOperation(props.command, operationsStore))
+const quietRunIssue = computed(() => {
+  const commands = normalizeCommands(props.userConfig?.commands)
+  const pending = [props.command]
+  const seen = new Set<string>()
+  while (pending.length) {
+    const command = pending.pop()!
+    if (seen.has(command.id) || command.isEnabled === false) continue
+    seen.add(command.id)
+    const operation = commandOperation(command, operationsStore)
+    if (!operation || !canOperationRunQuietly(operation))
+      return 'commands.quietOperationUnsupported'
+    if (command.operationId !== 'core.aiTask') continue
+    for (const ref of aiCommandOperationConfigOf(command.operationConfig)
+      .tools) {
+      if (ref.policy === 'ask') return 'commands.quietConfirmationRequired'
+      if (
+        !isQuietTool({ kind: ref.sourceKind, id: ref.sourceId }, ref.toolName)
+      )
+        return 'commands.quietToolUnsupported'
+      if (ref.sourceKind === 'commands' && ref.toolName) {
+        const nested = commands.find(({ id }) => id === ref.toolName)
+        if (nested) pending.push(nested)
+      }
+    }
+  }
+  return undefined
+})
 /** A script or a webhook: its settings have an editor of their own */
 const customActionOperation = computed(
   () =>

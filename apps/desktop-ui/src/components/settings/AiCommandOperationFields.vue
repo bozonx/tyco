@@ -61,6 +61,12 @@
               {{ t(TOOL_RISK_LABEL_KEYS[item.risk]) }}
             </Badge>
           </div>
+          <FieldSelect
+            :model-value="toolPolicy(item.ref)"
+            :title="item.label"
+            :options="toolPolicyOptions"
+            @update:model-value="setToolPolicy(item.ref, $event)"
+          />
           <IconButton
             size="sm"
             variant="ghost"
@@ -139,6 +145,10 @@ import {
   commandRiskLookup,
 } from '../../lib/ai-commands/ai-command-config'
 import {
+  CURRENT_TIME_TOOL,
+  isDebugChatToolsEnabled,
+} from '../../lib/chat-tools/debug-chat-tools'
+import {
   type CatalogTool,
   commandRisk,
   commandToolRef,
@@ -160,6 +170,7 @@ import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
+import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 import AiCommandAddToolModal, {
   type ToolCandidate,
@@ -235,6 +246,27 @@ const candidateGroups = computed<ToolCandidateGroup[]>(() => {
         })
       ),
     },
+    ...(isDebugChatToolsEnabled()
+      ? [
+          {
+            id: 'debug',
+            label: CURRENT_TIME_TOOL.label,
+            icon: CURRENT_TIME_TOOL.icon,
+            emptyMessage: '',
+            items: [
+              {
+                ref: {
+                  sourceKind: 'core' as const,
+                  sourceId: 'debug',
+                  toolName: CURRENT_TIME_TOOL.id,
+                },
+                label: CURRENT_TIME_TOOL.label,
+                risk: 'read' as const,
+              },
+            ],
+          },
+        ]
+      : []),
     ...pluginSources.value
       .filter((entry) =>
         isSourceAvailable(props.userConfig?.tools, entry.source)
@@ -289,6 +321,29 @@ const unavailable = computed(() =>
   )
 )
 
+const toolPolicyOptions = computed(() => [
+  { id: 'allow', name: t('settings.accessAllow') },
+  { id: 'ask', name: t('settings.accessAsk') },
+])
+
+const toolPolicy = (ref: ToolRef) =>
+  config.value.tools.some(
+    (item) =>
+      item.policy === 'ask' &&
+      whitelistHas(
+        [item],
+        { kind: ref.sourceKind, id: ref.sourceId },
+        ref.toolName ?? ''
+      )
+  )
+    ? 'ask'
+    : 'allow'
+
+function setToolPolicy(ref: ToolRef, value: string | number | undefined) {
+  if (value !== 'ask' && value !== 'allow') return
+  toggleTool({ ...ref, ...(value === 'ask' && { policy: 'ask' }) }, true)
+}
+
 function toggleTool(ref: ToolRef, isAllowed: boolean) {
   // a whole source on the list is split into its tools to take one off
   const expanded = config.value.tools.flatMap((item) =>
@@ -301,7 +356,10 @@ function toggleTool(ref: ToolRef, isAllowed: boolean) {
               candidate.ref.sourceKind === ref.sourceKind &&
               candidate.ref.sourceId === ref.sourceId
           )
-          .map((candidate) => candidate.ref)
+          .map((candidate) => ({
+            ...candidate.ref,
+            ...(item.policy && { policy: item.policy }),
+          }))
       : [item]
   )
   const others = expanded.filter((item) => !isSameToolRef(item, ref))

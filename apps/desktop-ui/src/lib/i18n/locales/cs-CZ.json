@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Varianty odpovědí" }
   },
   "commandRun": {
+    "stop": "Zastavit",
     "quietAccepted": "Čeká na spuštění: {name}",
     "quietRunning": "Probíhá: {name}",
     "quietSucceeded": "Hotovo: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "Zadejte URL.",
     "errorUnknownType": "Neznámý typ příkazu.",
     "external": "Dostupné zvenku",
+    "allowQuietRun": "Povolit tichý běh",
+    "quietRunInfo": "Místní programy mohou spustit tento příkaz na pozadí.",
+    "quietOperationUnsupported": "Operace vyžaduje viditelné spuštění.",
+    "quietToolUnsupported": "Některý nástroj vyžaduje viditelné spuštění.",
+    "quietConfirmationRequired": "Některý nástroj vyžaduje potvrzení.",
     "externalInfo": "Místní aplikace a skripty mohou spustit povolený příkaz pomocí tyco-ctl run <ID> nebo tyco-ctl run --name <název>. Toto oprávnění umožňuje také spuštění bez otevření okna.",
     "externalSelection": "Číst a nahrazovat vybraný text",
     "externalSelectionInfo": "Aplikace může získat text vybraný v aktivním okně a nahradit ho výsledkem příkazu (tyco-ctl run <ID> --selection --replace). Když je tato volba vypnutá, Tyco žádá o svolení při každém takovém volání.",
@@ -512,6 +518,7 @@
     "filterAll": "Vše",
     "filterLabel": "Filtr historie",
     "filterQuickInput": "Rychlé zadávání",
+    "filterQuietRun": "Tiché běhy",
     "filterExternalRun": "Externí spuštění",
     "filterCommandRun": "Spuštění příkazů",
     "filterProblems": "Problémové",

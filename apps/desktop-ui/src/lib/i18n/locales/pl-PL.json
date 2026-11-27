@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Warianty odpowiedzi" }
   },
   "commandRun": {
+    "stop": "Zatrzymaj",
     "quietAccepted": "Oczekuje na uruchomienie: {name}",
     "quietRunning": "W toku: {name}",
     "quietSucceeded": "Gotowe: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "Wpisz adres URL.",
     "errorUnknownType": "Nieznany typ polecenia.",
     "external": "Dostępne z zewnątrz",
+    "allowQuietRun": "Zezwól na uruchamianie w tle",
+    "quietRunInfo": "Programy lokalne mogą uruchamiać to polecenie w tle.",
+    "quietOperationUnsupported": "Operacja wymaga widocznego uruchomienia.",
+    "quietToolUnsupported": "Narzędzie wymaga widocznego uruchomienia.",
+    "quietConfirmationRequired": "Narzędzie wymaga potwierdzenia.",
     "externalInfo": "Lokalne aplikacje i skrypty mogą uruchomić dozwolone polecenie przez tyco-ctl run <ID> lub tyco-ctl run --name <nazwa>. To uprawnienie pozwala również uruchomić polecenie bez otwierania okna.",
     "externalSelection": "Odczyt i zastępowanie zaznaczonego tekstu",
     "externalSelectionInfo": "Aplikacja może pobrać tekst zaznaczony w aktywnym oknie i zastąpić go wynikiem polecenia (tyco-ctl run <ID> --selection --replace). Gdy to jest wyłączone, Tyco pyta o zgodę przy każdym takim wywołaniu.",
@@ -512,6 +518,7 @@
     "filterAll": "Wszystkie",
     "filterLabel": "Filtr historii",
     "filterQuickInput": "Szybkie wprowadzanie",
+    "filterQuietRun": "Uruchomienia w tle",
     "filterExternalRun": "Uruchomienia zewnętrzne",
     "filterCommandRun": "Uruchomienia poleceń",
     "filterProblems": "Problemy",

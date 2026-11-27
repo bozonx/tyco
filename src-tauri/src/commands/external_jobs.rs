@@ -47,11 +47,15 @@ pub fn supply_command_run_input(
     api::supply_input_for_window(&state, window.label(), &id, text)
 }
 
-/// Restores the indicator after the main webview reloads.
+/// Restores the indicator and registers a background executor that is listening.
 #[tauri::command]
 pub fn get_quiet_run_status(
     state: State<'_, ExternalJobs>,
+    window: tauri::WebviewWindow,
 ) -> Option<crate::events::QuietRunEvent> {
+    if window.label() == crate::services::runtime::QUIET_WINDOW_LABEL {
+        state.set_quiet_executor_ready(true);
+    }
     state.active_quiet_status()
 }
 

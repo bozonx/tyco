@@ -94,7 +94,7 @@ impl<C> StoppableService for PersistentSender<C> {
 pub struct NotificationService {
     #[cfg(target_os = "linux")]
     sender: PersistentSender<zbus::blocking::Connection>,
-    #[cfg(target_os = "windows")]
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
     identifier: String,
 }
 
@@ -103,13 +103,23 @@ impl NotificationService {
         Self {
             #[cfg(target_os = "linux")]
             sender: PersistentSender::default(),
-            #[cfg(target_os = "windows")]
+            #[cfg(any(target_os = "windows", target_os = "linux"))]
             identifier: _identifier.to_owned(),
         }
     }
 
     #[cfg(target_os = "linux")]
     pub fn notify(&self, summary: &str, body: &str) -> Result<(), AppError> {
+        self.send_linux(Some((summary, body)), &mut 0, -1)
+    }
+
+    #[cfg(target_os = "linux")]
+    fn send_linux(
+        &self,
+        message: Option<(&str, &str)>,
+        id: &mut u32,
+        timeout_ms: i32,
+    ) -> Result<(), AppError> {
         use std::collections::HashMap;
         use std::time::Duration;
         use zbus::zvariant::Value;
@@ -123,28 +133,46 @@ impl NotificationService {
                     })
             },
             |connection| {
-                let hints = HashMap::from([("desktop-entry", Value::from("com.tyco.app"))]);
-                connection
-                    .call_method(
-                        Some("org.freedesktop.Notifications"),
-                        "/org/freedesktop/Notifications",
-                        Some("org.freedesktop.Notifications"),
-                        "Notify",
-                        &(
-                            "Tyco",
-                            0u32,
-                            "com.tyco.app",
-                            summary,
-                            body,
-                            Vec::<&str>::new(),
-                            hints,
-                            -1i32,
-                        ),
-                    )
-                    .map_err(|error| {
-                        AppError::Failed(format!("Could not show a notification: {error}"))
-                    })?;
-                Ok(())
+                let result = if let Some((summary, body)) = message {
+                    let hints =
+                        HashMap::from([("desktop-entry", Value::from(self.identifier.as_str()))]);
+                    connection
+                        .call_method(
+                            Some("org.freedesktop.Notifications"),
+                            "/org/freedesktop/Notifications",
+                            Some("org.freedesktop.Notifications"),
+                            "Notify",
+                            &(
+                                "TyCo",
+                                *id,
+                                self.identifier.as_str(),
+                                summary,
+                                body,
+                                Vec::<&str>::new(),
+                                hints,
+                                timeout_ms,
+                            ),
+                        )
+                        .and_then(|response| {
+                            *id = response.body().deserialize()?;
+                            Ok(())
+                        })
+                } else if *id != 0 {
+                    connection
+                        .call_method(
+                            Some("org.freedesktop.Notifications"),
+                            "/org/freedesktop/Notifications",
+                            Some("org.freedesktop.Notifications"),
+                            "CloseNotification",
+                            &(*id,),
+                        )
+                        .map(|_| ())
+                } else {
+                    Ok(())
+                };
+                result.map_err(|error| {
+                    AppError::Failed(format!("Could not update a notification: {error}"))
+                })
             },
         )
     }
@@ -185,54 +213,91 @@ impl NotificationService {
     }
 }
 
-/// The shell balloon also works for unpackaged development binaries without
-/// an AUMID registered by an installer.
+#[cfg(target_os = "linux")]
+struct QuietNotices(std::sync::mpsc::Sender<QuietNotice>);
+
+#[cfg(target_os = "linux")]
+struct QuietNotice {
+    job_id: String,
+    text: Option<String>,
+    finished: bool,
+    created_at: Instant,
+}
+
+#[cfg(target_os = "linux")]
+pub(crate) fn setup_quiet_notices(app: &tauri::AppHandle) -> Result<(), AppError> {
+    use tauri::Manager;
+    let (sender, receiver) = std::sync::mpsc::channel::<QuietNotice>();
+    let service = app
+        .state::<std::sync::Arc<NotificationService>>()
+        .inner()
+        .clone();
+    app.state::<crate::services::background::BackgroundServices>()
+        .spawn_thread("quiet-run-notices", move |stop| {
+            let mut pending = None::<(String, u32)>;
+            while !stop.is_stopped() {
+                let notice = match receiver.recv_timeout(std::time::Duration::from_millis(200)) {
+                    Ok(notice) => notice,
+                    Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
+                    Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                };
+                let mut id = pending.take().map_or(0, |(job_id, mut id)| {
+                    if job_id == notice.job_id {
+                        id
+                    } else {
+                        let _ = service.send_linux(None, &mut id, -1);
+                        0
+                    }
+                });
+                let message = (notice.created_at.elapsed() < std::time::Duration::from_secs(5))
+                    .then_some(notice.text.as_deref())
+                    .flatten()
+                    .map(|text| (text, ""));
+                let timeout = if notice.finished { -1 } else { 0 };
+                if let Err(error) = service.send_linux(message, &mut id, timeout) {
+                    log::warn!("Could not update quiet run notification: {error}");
+                } else if !notice.finished && id != 0 {
+                    pending = Some((notice.job_id, id));
+                }
+            }
+            if let Some((_, mut id)) = pending {
+                let _ = service.send_linux(None, &mut id, -1);
+            }
+        })?;
+    app.manage(QuietNotices(sender));
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+pub(crate) fn notify_quiet_run(
+    app: &tauri::AppHandle,
+    job_id: String,
+    text: Option<String>,
+    finished: bool,
+) {
+    use tauri::Manager;
+    if let Some(notices) = app.try_state::<QuietNotices>() {
+        let _ = notices.0.send(QuietNotice {
+            job_id,
+            text,
+            finished,
+            created_at: Instant::now(),
+        });
+    }
+}
+
+/// Uses the application's existing shell icon, including in portable builds.
 #[cfg(target_os = "windows")]
 pub(crate) fn notify_quiet_run(
     app: &tauri::AppHandle,
     title: &str,
     text: &str,
 ) -> Result<(), AppError> {
-    use std::sync::atomic::{AtomicU32, Ordering};
-    use tauri::Manager;
     use windows_sys::Win32::UI::Shell::{
-        Shell_NotifyIconW, NIF_ICON, NIF_INFO, NIIF_INFO, NIIF_RESPECT_QUIET_TIME, NIM_ADD,
-        NIM_DELETE, NIM_MODIFY, NOTIFYICONDATAW,
+        Shell_NotifyIconW, NIF_INFO, NIIF_INFO, NIIF_RESPECT_QUIET_TIME, NIM_MODIFY,
+        NOTIFYICONDATAW,
     };
-    use windows_sys::Win32::UI::WindowsAndMessaging::{LoadIconW, IDI_APPLICATION};
 
-    if !cfg!(debug_assertions) {
-        match app
-            .state::<std::sync::Arc<NotificationService>>()
-            .notify(title, text)
-        {
-            Ok(()) => return Ok(()),
-            Err(error) => {
-                log::debug!("Windows toast unavailable, using the shell notification area: {error}")
-            }
-        }
-    }
-
-    static NEXT_ICON: AtomicU32 = AtomicU32::new(1);
-    let id = NEXT_ICON.fetch_add(1, Ordering::Relaxed);
-    let window = app
-        .get_webview_window(crate::services::runtime::MAIN_WINDOW_LABEL)
-        .ok_or_else(|| AppError::ServiceUnavailable("Main window is unavailable".into()))?;
-    let hwnd = window.hwnd()?.0;
-    let mut icon = NOTIFYICONDATAW {
-        cbSize: std::mem::size_of::<NOTIFYICONDATAW>() as u32,
-        hWnd: hwnd,
-        uID: id,
-        uFlags: NIF_ICON,
-        // A shared system icon is owned by Windows.
-        hIcon: unsafe { LoadIconW(std::ptr::null_mut(), IDI_APPLICATION) },
-        ..Default::default()
-    };
-    if unsafe { Shell_NotifyIconW(NIM_ADD, &icon) } == 0 {
-        return Err(AppError::Failed(
-            "Could not register the shell notification".into(),
-        ));
-    }
     fn notification_text<const N: usize>(value: &str) -> [u16; N] {
         let mut buffer = [0; N];
         let limit = N - 1;
@@ -244,36 +309,33 @@ pub(crate) fn notify_quiet_run(
         }
         buffer
     }
-    icon.szInfoTitle = notification_text(title);
-    icon.szInfo = notification_text(text);
-    icon.uFlags = NIF_INFO;
-    icon.dwInfoFlags = NIIF_INFO | NIIF_RESPECT_QUIET_TIME;
-    if unsafe { Shell_NotifyIconW(NIM_MODIFY, &icon) } == 0 {
-        unsafe { Shell_NotifyIconW(NIM_DELETE, &icon) };
+
+    let tray = app
+        .tray_by_id("main-tray")
+        .ok_or_else(|| AppError::ServiceUnavailable("Tray icon is unavailable".into()))?;
+    let title = notification_text(title);
+    let text = notification_text(text);
+    // Tauri's builder spends the first tray-icon 0.25 counter value on a
+    // generated ID before applying "main-tray". Building the icon spends
+    // the next value on the Windows shell ID.
+    let shown = tray.with_inner_tray_icon(move |tray| {
+        let icon = NOTIFYICONDATAW {
+            cbSize: std::mem::size_of::<NOTIFYICONDATAW>() as u32,
+            hWnd: tray.window_handle(),
+            uID: 2,
+            uFlags: NIF_INFO,
+            szInfoTitle: title,
+            szInfo: text,
+            dwInfoFlags: NIIF_INFO | NIIF_RESPECT_QUIET_TIME,
+            ..Default::default()
+        };
+        unsafe { Shell_NotifyIconW(NIM_MODIFY, &icon) != 0 }
+    })?;
+    if !shown {
         return Err(AppError::Failed(
             "Could not show the shell notification".into(),
         ));
     }
-
-    let app = app.clone();
-    tauri::async_runtime::spawn(async move {
-        tokio::time::sleep(std::time::Duration::from_secs(12)).await;
-        let handle = app.clone();
-        let _ = app.run_on_main_thread(move || {
-            if let Some(hwnd) = handle
-                .get_webview_window(crate::services::runtime::MAIN_WINDOW_LABEL)
-                .and_then(|window| window.hwnd().ok())
-            {
-                let icon = NOTIFYICONDATAW {
-                    cbSize: std::mem::size_of::<NOTIFYICONDATAW>() as u32,
-                    hWnd: hwnd.0,
-                    uID: id,
-                    ..Default::default()
-                };
-                unsafe { Shell_NotifyIconW(NIM_DELETE, &icon) };
-            }
-        });
-    });
     Ok(())
 }
 

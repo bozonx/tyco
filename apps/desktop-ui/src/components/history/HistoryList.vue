@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useNow } from '../../composables/use-now'
@@ -73,6 +73,7 @@ const emit = defineEmits<{
 const props = withDefaults(
   defineProps<{
     items: HistoryListItem[]
+    selectedId?: string
     searchQuery?: string
     openTitle?: string
     actions?: HistoryListAction[]
@@ -107,6 +108,29 @@ function pauseOtherPlayers(event: Event) {
 }
 const scroller = ref<HTMLElement | null>(null)
 const expandedIds = ref(new Set<string>())
+watch(
+  () => props.selectedId,
+  (id) => {
+    if (id) expandedIds.value.add(id)
+  },
+  { immediate: true }
+)
+watch(
+  () =>
+    [
+      scroller.value,
+      props.items.some((item) => item.id === props.selectedId) &&
+        props.selectedId,
+    ] as const,
+  ([container, id]) => {
+    if (!container || !id) return
+    const row = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-history-id]')
+    ).find((element) => element.dataset.historyId === id)
+    row?.scrollIntoView?.({ block: 'nearest' })
+  },
+  { flush: 'post' }
+)
 const originalShownIds = ref(new Set<string>())
 function toggleItem(items: Set<string>, id: string) {
   if (items.has(id)) items.delete(id)

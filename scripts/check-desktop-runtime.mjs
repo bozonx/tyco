@@ -226,6 +226,33 @@ try {
   )
   assert.equal(second.settings.userConfig.language.ui, 'en-US')
 
+  const quietCommand = {
+    id: 'quiet-smoke',
+    name: 'Quiet smoke',
+    description: '',
+    phrases: [],
+    isLlmArgumentParsingEnabled: false,
+    isLlmPreTransformEnabled: false,
+    llmPreTransformPrompt: '',
+    outputAction: 'none',
+    isEnabled: true,
+    isOutputLogged: false,
+    isVoiceEnabled: false,
+    operationId: 'script',
+    operationConfig: {
+      command: isWindows
+        ? 'echo quiet-smoke-output'
+        : 'sleep 4; echo quiet-smoke-output',
+    },
+    isAvailableExternally: true,
+    isQuietRunAllowed: true,
+  }
+  const config = second.settings.userConfig
+  await invoke('save_user_config', {
+    baseConfig: config,
+    userConfig: { ...config, commands: [...config.commands, quietCommand] },
+  })
+
   const historyId = await invoke('add_editor_history_item', {
     entry: {
       text: 'Desktop smoke source',
@@ -300,6 +327,25 @@ try {
   const ctl = resolve(binary, '..', `tyco-ctl${isWindows ? '.exe' : ''}`)
   const status = await runFile(ctl, ['status'], { env: appEnv, timeout: 20000 })
   assert.equal(JSON.parse(status.stdout).running, true)
+  const cliOptions = { env: appEnv, timeout: 20000 }
+  const runQuietSmoke = async () => {
+    await waitFor(async () => {
+      const result = await runFile(
+        ctl,
+        ['run', quietCommand.id, '--quiet', '--wait', '--json'],
+        cliOptions
+      ).catch((error) => {
+        if (error.code === 9) return undefined
+        throw error
+      })
+      if (!result) return false
+      const job = JSON.parse(result.stdout)
+      assert.equal(job.state, 'succeeded')
+      assert.equal(job.output.trim(), 'quiet-smoke-output')
+      return true
+    }, 'quiet command execution')
+  }
+  await runQuietSmoke()
   await runFile(ctl, ['open', 'editor', '--text', 'CLI smoke input'], {
     env: appEnv,
     timeout: 20000,
@@ -380,11 +426,7 @@ try {
   } })`
   // Installation goes through the file dialog; the store of installed
   // packages is filled the way an installation leaves it instead.
-  /** @type {{ locations: { kinds: string[]; path: string }[] }} */
-  const storage = await invoke('get_storage_info')
-  const dataDir = storage.locations.find(({ kinds }) =>
-    kinds.includes('data')
-  )?.path
+  const dataDir = (await invoke('get_desktop_state')).settings.userData.path
   assert.ok(dataDir, 'The app has no data directory')
   const pluginsDir = resolve(dataDir, 'plugins')
   await mkdir(pluginsDir, { recursive: true })
@@ -525,6 +567,17 @@ try {
           'True',
         'focused foreign editor'
       )
+      await runQuietSmoke()
+      const { stdout: focusedWindow } = await runFile(
+        'xdotool',
+        ['getactivewindow'],
+        { env: appEnv, timeout: 10000 }
+      )
+      assert.equal(
+        focusedWindow.trim(),
+        target.trim(),
+        'Quiet run must preserve focus'
+      )
       await runFile(ctl, ['open', 'quick-input'], {
         env: appEnv,
         timeout: 20000,
@@ -574,6 +627,34 @@ try {
           'Native quick insertion',
         'text received by foreign editor'
       )
+      const beforeReload = await execute('return performance.timeOrigin')
+      const { stdout: accepted } = await runFile(
+        ctl,
+        ['run', quietCommand.id, '--quiet', '--json'],
+        cliOptions
+      )
+      const { id } = JSON.parse(accepted)
+      await waitFor(async () => {
+        const { stdout } = await runFile(
+          ctl,
+          ['jobs', 'status', id, '--json'],
+          cliOptions
+        )
+        return JSON.parse(stdout).state === 'running'
+      }, 'quiet job claimed before quick reload')
+      await execute('setTimeout(() => location.reload(), 0)')
+      await waitFor(async () => {
+        const timeOrigin = await execute('return performance.timeOrigin').catch(
+          () => null
+        )
+        return typeof timeOrigin === 'number' && timeOrigin !== beforeReload
+      }, 'quick webview reload')
+      const { stdout: completed } = await runFile(
+        ctl,
+        ['jobs', 'wait', id, '--json'],
+        cliOptions
+      )
+      assert.equal(JSON.parse(completed).state, 'succeeded')
     } finally {
       foreign.kill('SIGTERM')
       await Promise.race([
@@ -585,7 +666,7 @@ try {
     }
   }
   console.log(
-    'Desktop smoke passed: embedded startup, IPC permissions, config updates, history lifecycle, production CSP, Rust HTTP proxy, CLI, D-Bus (Linux), plugin sandbox, lazy routes, native restart persistence and X11 quick insertion (Linux)'
+    'Desktop smoke passed: embedded startup, IPC permissions, config updates, history lifecycle, production CSP, Rust HTTP proxy, CLI, quiet runs, D-Bus (Linux), plugin sandbox, lazy routes, native restart persistence and X11 focus, quick insertion and reload isolation (Linux)'
   )
 } catch (error) {
   let failureLog = `${String(error)}\n${driverOutput}\n`

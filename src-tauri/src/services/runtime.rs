@@ -39,6 +39,7 @@ use crate::errors::AppError;
 use crate::state::AppState;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
+pub const QUIET_WINDOW_LABEL: &str = "quiet";
 pub const QUICK_WINDOW_LABEL: &str = "quick";
 pub const FOCUS_RELEASE_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(300);
 
@@ -378,6 +379,7 @@ mod tests {
         let labels = include_str!("../../../packages/shared/src/desktop/windows.ts");
         assert!(labels.contains(&format!("MAIN: '{MAIN_WINDOW_LABEL}'")));
         assert!(labels.contains(&format!("QUICK: '{QUICK_WINDOW_LABEL}'")));
+        assert!(labels.contains(&format!("QUIET: '{QUIET_WINDOW_LABEL}'")));
     }
 
     #[test]

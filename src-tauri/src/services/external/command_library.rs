@@ -454,6 +454,10 @@ pub fn list(user_config: &Value, catalog: Option<&OperationCatalog>) -> Value {
     serde_json::to_value(listed).unwrap_or_else(|_| Value::Array(Vec::new()))
 }
 
+pub fn is_quiet_run_allowed(command: &Value) -> bool {
+    command.get("isQuietRunAllowed").and_then(Value::as_bool) == Some(true)
+}
+
 /// AI command whitelists normally grant tools directly. An explicit ask
 /// anywhere in the reachable command chain requires a visible run.
 pub fn quiet_run_error(
@@ -507,6 +511,8 @@ pub fn quiet_run_error(
                     }
                 }
                 Some("core") if tool["sourceId"] == "web" => {}
+                Some("core")
+                    if tool["sourceId"] == "debug" && tool["toolName"] == "get_current_time" => {}
                 _ => return Some(ErrorCode::QuietRunUnsupported),
             }
         }
@@ -534,12 +540,17 @@ pub fn describe(
             .or_else(|| tool.input_schema.clone()),
         _ => None,
     };
+    let quiet_code = quiet_run_error(user_config, &command.id, catalog).or_else(|| {
+        (!raw.is_some_and(is_quiet_run_allowed))
+            .then_some(tyco_activation_protocol::ErrorCode::AccessDenied)
+    });
     Ok(serde_json::json!({
         "id": command.id,
         "name": raw.map_or(command.id.as_str(), display_name),
         "input": if command.has_structured_input { "structured" } else if command.can_take_text { "text" } else { "none" },
         "textAccepted": command.can_take_text,
-        "canRunQuietly": quiet_run_error(user_config, &command.id, catalog).is_none(),
+        "canRunQuietly": quiet_code.is_none(),
+        "quietRunCode": quiet_code.map(tyco_activation_protocol::ErrorCode::as_str),
         "canReplaceSelection": command.accepts_selection(),
         "output": "return",
         "inputSchema": schema,

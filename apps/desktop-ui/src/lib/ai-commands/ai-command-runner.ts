@@ -7,6 +7,7 @@ import type {
 import {
   runChatToolLoop,
   type ChatToolLoopState,
+  type ChatToolLoopDependencies,
 } from '../chat-tools/chat-tool-loop'
 import { createChatToolPolicy } from '../chat-tools/chat-tool-policy'
 import {
@@ -53,6 +54,7 @@ export interface AiCommandRunnerDependencies {
   instructions: () => string
   /** The call limit of a command without its own, see `llm.maxToolSteps` */
   defaultMaxSteps: () => number
+  requestApproval?: ChatToolLoopDependencies['requestApproval']
 }
 
 export interface AiCommandRunOptions {
@@ -211,7 +213,9 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
 
     // Whitelisted tools usually run directly. Quiet jobs surface any request
     // for confirmation as a terminal error.
-    const policy = createChatToolPolicy({ canAsk: options.isQuiet === true })
+    const policy = createChatToolPolicy({
+      canAsk: options.isQuiet === true || Boolean(deps.requestApproval),
+    })
     const scope: ToolScope = {
       kind: 'aiCommand',
       isQuiet: options.isQuiet,
@@ -247,13 +251,13 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
       {
         stream: (prompt, streamOptions) =>
           deps.stream('aiTask', prompt, streamOptions),
-        requestApproval: async () => {
+        requestApproval: async (approval, signal) => {
           if (options.isQuiet)
             throw failQuietRun(
               'ConfirmationRequired',
               'A tool in this command requires confirmation'
             )
-          return 'deny'
+          return (await deps.requestApproval?.(approval, signal)) ?? 'deny'
         },
         policy,
       },

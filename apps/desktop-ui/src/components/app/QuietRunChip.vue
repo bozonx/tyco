@@ -1,4 +1,5 @@
 <template>
+  <span class="sr-only" role="status">{{ announcement }}</span>
   <div v-if="status" ref="containerRef" class="relative" @focusout="onFocusout">
     <button
       ref="triggerRef"
@@ -30,7 +31,7 @@
         :loading="cancellingJobId === status.jobId"
         @click="cancel(status.jobId)"
       >
-        {{ t('chat.stop') }}
+        {{ t('commandRun.stop') }}
       </Button>
     </div>
   </div>
@@ -39,10 +40,15 @@
     size="sm"
     variant="ghost"
     :icon="icon"
-    :title="t(label, { name: completion.commandName })"
-    :aria-label="t('commandRun.openHistory')"
+    :title="completion.error || completion.code || announcement"
+    :aria-label="
+      completion.historyId
+        ? `${announcement}. ${t('commandRun.openHistory')}`
+        : announcement
+    "
+    :disabled="!completion.historyId"
     class="max-w-48"
-    @click="$emit('openHistory')"
+    @click="completion.historyId && $emit('openHistory', completion.historyId)"
   >
     <span class="truncate">{{
       t(label, { name: completion.commandName })
@@ -60,7 +66,7 @@ import { useQuietRunStore } from '../../stores/quiet-run'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 
-defineEmits<{ openHistory: [] }>()
+defineEmits<{ openHistory: [id: string] }>()
 const { t } = useI18n()
 const store = useQuietRunStore()
 const { status, completion, cancellingJobId } = storeToRefs(store)
@@ -95,7 +101,12 @@ const elapsed = computed(() => {
     0,
     Math.floor((now.value - (status.value?.startedAt ?? now.value)) / 1000)
   )
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor(seconds / 60) % 60
+  const remainder = String(seconds % 60).padStart(2, '0')
+  return hours
+    ? `${hours}:${String(minutes).padStart(2, '0')}:${remainder}`
+    : `${minutes}:${remainder}`
 })
 const icon = computed(() => {
   if (completion.value?.state === 'succeeded') return 'mdi:check'
@@ -108,6 +119,19 @@ const label = computed(() => {
   if (completion.value?.state === 'cancelled')
     return 'commandRun.quietCancelled'
   return 'commandRun.quietFailed'
+})
+const announcement = computed(() => {
+  if (status.value)
+    return t(
+      status.value.state === 'accepted'
+        ? 'commandRun.quietAccepted'
+        : 'commandRun.quietRunning',
+      { name: status.value.commandName }
+    )
+  if (!completion.value) return ''
+  const message = t(label.value, { name: completion.value.commandName })
+  const reason = completion.value.error || completion.value.code
+  return reason ? `${message}. ${reason}` : message
 })
 </script>
 

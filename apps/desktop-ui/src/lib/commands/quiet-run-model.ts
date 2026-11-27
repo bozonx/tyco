@@ -1,5 +1,5 @@
 import { errorMessage } from '@tyco/shared/value-guards'
-import type { CommandConfig, QuietRunEvent } from '@tyco/shared'
+import type { CommandConfig, QuietRunEvent, UserConfig } from '@tyco/shared'
 
 import { type CommandRunSessionDependencies } from './command-run-session'
 import { normalizeCommands } from './command-config'
@@ -11,13 +11,9 @@ import type {
 
 type QuietRunDependencies = Pick<
   CommandRunSessionDependencies,
-  | 'claim'
-  | 'finish'
-  | 'takesText'
-  | 'logRun'
-  | 'reportError'
-  | 'applyUserConfig'
+  'claim' | 'finish' | 'takesText' | 'logRun' | 'reportError'
 > & {
+  applyUserConfig?: (config: UserConfig) => void | Promise<void>
   run: (
     command: CommandConfig,
     text: string,
@@ -36,7 +32,8 @@ export function createQuietRunModel(deps: QuietRunDependencies) {
     try {
       const payload = await deps.claim(jobId)
       if (!payload || controller.signal.aborted) return
-      deps.applyUserConfig?.(payload.userConfig)
+      await deps.applyUserConfig?.(payload.userConfig)
+      if (controller.signal.aborted) return
       const command = normalizeCommands(payload.userConfig.commands).find(
         (item) => item.id === payload.commandId
       )

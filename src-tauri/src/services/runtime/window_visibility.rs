@@ -296,17 +296,11 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
                 }
             }
             WindowEvent::Focused(true) => {
-                #[cfg(target_os = "linux")]
-                crate::services::status_overlay::quiet::refresh(app);
                 crate::services::storage::watcher::check_now(app);
                 crate::services::activation::metrics::mark_os_focus(app);
                 if window_label == QUICK_WINDOW_LABEL {
                     settle_quick_keyboard(app);
                 }
-            }
-            WindowEvent::Focused(false) => {
-                #[cfg(target_os = "linux")]
-                crate::services::status_overlay::quiet::refresh(app);
             }
             WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) => {
                 app.state::<crate::services::dropped_files::DroppedFiles>()

@@ -337,6 +337,12 @@ async fn connect() -> io::Result<tokio::net::windows::named_pipe::NamedPipeClien
             Err(error) if error.raw_os_error() == Some(231) => {
                 tokio::time::sleep(Duration::from_millis(20)).await
             }
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {
+                return Err(io::Error::new(
+                    error.kind(),
+                    "TyCo is not running in this Windows logon session. Scheduled tasks must run only when the desktop user is logged on.",
+                ));
+            }
             Err(error) => return Err(error),
         }
     }

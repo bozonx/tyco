@@ -180,6 +180,8 @@ export function useAppRuntime() {
             quitLabel: t('tray.quit'),
             tooltipLabel: t('tray.tooltip'),
             quietRunLabels: {
+              accepted: t('commandRun.quietAccepted', { name: '{name}' }),
+              stop: t('commandRun.stop'),
               running: t('commandRun.quietRunning', { name: '{name}' }),
               succeeded: t('commandRun.quietSucceeded', { name: '{name}' }),
               failed: t('commandRun.quietFailed', { name: '{name}' }),
@@ -221,10 +223,9 @@ export function useAppRuntime() {
   onScopeDispose(stateSync.stop)
 
   const quietRun = useQuietRunStore()
-  if (isQuickWindow) quietRun.startExecutor()
   const controller = createAppWindowController({
     quietRunChanged: quietRun.update,
-    refreshQuietRun: quietRun.refresh,
+    refreshQuietRun: isQuickWindow ? undefined : quietRun.refresh,
     isQuickWindow,
     listen: desktopClient.listen,
     reportError: (error) =>

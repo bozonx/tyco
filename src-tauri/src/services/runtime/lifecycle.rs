@@ -32,6 +32,13 @@ pub(super) fn window_builder<'a>(
 ) -> Result<tauri::WebviewWindowBuilder<'a, tauri::Wry, AppHandle>, AppError> {
     let paths = crate::services::storage::app_paths::AppPaths::resolve(app)?;
     let mut builder = tauri::WebviewWindowBuilder::from_config(app, config)?;
+    #[cfg(target_os = "windows")]
+    if config.label == super::QUIET_WINDOW_LABEL {
+        builder = builder.additional_browser_args(
+            "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows",
+        );
+        return Ok(builder.data_directory(paths.state_dir.join("quiet-webview")));
+    }
     if let Some(dir) = paths.webview_dir() {
         builder = builder.data_directory(dir);
     }
@@ -90,7 +97,7 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     #[cfg(not(target_os = "linux"))]
     setup_tray(app)?;
     #[cfg(target_os = "linux")]
-    crate::services::status_overlay::quiet::probe_tray_host(app.handle());
+    crate::services::platform::notifications::setup_quiet_notices(app.handle())?;
     spawn_quick_warmup(app.handle().clone())?;
     Ok(())
 }

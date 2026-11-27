@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Válaszblokkok" }
   },
   "commandRun": {
+    "stop": "Leállítás",
     "quietAccepted": "Indításra vár: {name}",
     "quietRunning": "Fut: {name}",
     "quietSucceeded": "Kész: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "Adja meg az URL-t.",
     "errorUnknownType": "Ismeretlen parancstípus.",
     "external": "Kívülről elérhető",
+    "allowQuietRun": "Háttérfuttatás engedélyezése",
+    "quietRunInfo": "A helyi programok a háttérben futtathatják ezt a parancsot.",
+    "quietOperationUnsupported": "Egy művelet látható futtatást igényel.",
+    "quietToolUnsupported": "Egy eszköz látható futtatást igényel.",
+    "quietConfirmationRequired": "Egy eszköz megerősítést igényel.",
     "externalInfo": "A helyi alkalmazások és szkriptek engedélyezett parancsot futtathatnak a tyco-ctl run <ID> vagy a tyco-ctl run --name <név> paranccsal. Ez az engedély ablak megnyitása nélkül is lehetővé teszi a futtatást.",
     "externalSelection": "Kijelölt szöveg olvasása és cseréje",
     "externalSelectionInfo": "Egy alkalmazás lekérheti az aktív ablakban kijelölt szöveget, és lecserélheti egy parancs eredményére (tyco-ctl run <ID> --selection --replace). Ha ez ki van kapcsolva, a Tyco minden ilyen hívásnál engedélyt kér.",
@@ -512,6 +518,7 @@
     "filterAll": "Összes",
     "filterLabel": "Előzményszűrő",
     "filterQuickInput": "Gyors bevitel",
+    "filterQuietRun": "Háttérfuttatások",
     "filterExternalRun": "Külső futtatások",
     "filterCommandRun": "Parancsfuttatások",
     "filterProblems": "Problémás",

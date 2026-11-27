@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "返答ブロック" }
   },
   "commandRun": {
+    "stop": "停止",
     "quietAccepted": "開始待ち：{name}",
     "quietRunning": "実行中：{name}",
     "quietSucceeded": "完了：{name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "URLを入力してください。",
     "errorUnknownType": "不明なコマンドの種類です。",
     "external": "外部からの呼び出しを許可",
+    "allowQuietRun": "バックグラウンド実行を許可",
+    "quietRunInfo": "ローカルプログラムはこのコマンドをバックグラウンドで実行できます。",
+    "quietOperationUnsupported": "操作には画面を表示して実行する必要があります。",
+    "quietToolUnsupported": "ツールには画面を表示して実行する必要があります。",
+    "quietConfirmationRequired": "ツールの実行には確認が必要です。",
     "externalInfo": "ローカルアプリケーションやスクリプトは、tyco-ctl run <ID> または tyco-ctl run --name <name> で許可されたコマンドを実行できます。 この許可により、ウィンドウを開かずにコマンドを実行することもできます。",
     "externalSelection": "選択テキストの読み取りと置換",
     "externalSelectionInfo": "アプリケーションはアクティブウィンドウで選択されたテキストを取得し、コマンドの結果で置き換えることができます（tyco-ctl run <ID> --selection --replace）。これがオフの場合、Tycoはそのような呼び出しごとに許可を求めます。",
@@ -512,6 +518,7 @@
     "filterAll": "すべて",
     "filterLabel": "履歴フィルター",
     "filterQuickInput": "クイック入力",
+    "filterQuietRun": "バックグラウンド実行",
     "filterExternalRun": "外部実行",
     "filterCommandRun": "コマンド実行",
     "filterProblems": "問題あり",

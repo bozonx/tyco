@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Варианты ответа" }
   },
   "commandRun": {
+    "stop": "Остановить",
     "quietAccepted": "Ожидает запуска: {name}",
     "quietRunning": "Выполняется: {name}",
     "quietSucceeded": "Готово: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "Укажите URL.",
     "errorUnknownType": "Неизвестный тип команды.",
     "external": "Доступна извне",
+    "allowQuietRun": "Разрешить тихий запуск",
+    "quietRunInfo": "Локальные программы смогут запускать эту команду в фоне.",
+    "quietOperationUnsupported": "Операция требует запуска с открытым окном.",
+    "quietToolUnsupported": "Один из инструментов требует запуска с открытым окном.",
+    "quietConfirmationRequired": "Один из инструментов требует подтверждения.",
     "externalInfo": "Разрешённую команду могут запускать локальные приложения и скрипты: tyco-ctl run <ID> или tyco-ctl run --name <название>. Это разрешение также позволяет запускать команду без открытия окна.",
     "externalSelection": "Чтение и замена выделенного текста",
     "externalSelectionInfo": "Приложение может получить текст, выделенный в активном окне, и вставить вместо него результат команды (tyco-ctl run <ID> --selection --replace). Если выключено, Tyco спрашивает разрешение при каждом таком вызове.",
@@ -512,6 +518,7 @@
     "filterAll": "Все",
     "filterLabel": "Фильтр истории",
     "filterQuickInput": "Быстрый ввод",
+    "filterQuietRun": "Тихие запуски",
     "filterExternalRun": "Внешние запуски",
     "filterCommandRun": "Запуски команд",
     "filterProblems": "Проблемные",

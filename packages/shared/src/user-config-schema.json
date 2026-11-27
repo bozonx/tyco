@@ -683,6 +683,7 @@
             "default": "none"
           },
           "isAvailableExternally": { "type": "boolean", "default": false },
+          "isQuietRunAllowed": { "type": "boolean", "default": false },
           "isVoiceEnabled": { "type": "boolean", "default": false },
           "isOutputLogged": { "type": "boolean", "default": false },
           "isEnabled": { "type": "boolean", "default": true },

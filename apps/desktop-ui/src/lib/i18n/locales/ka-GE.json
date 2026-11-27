@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "პასუხის ბლოკები" }
   },
   "commandRun": {
+    "stop": "შეჩერება",
     "quietAccepted": "ელოდება გაშვებას: {name}",
     "quietRunning": "სრულდება: {name}",
     "quietSucceeded": "დასრულდა: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "შეიყვანეთ URL.",
     "errorUnknownType": "ბრძანების უცნობი ტიპი.",
     "external": "ხელმისაწვდომია გარედან",
+    "allowQuietRun": "ფონური გაშვების დაშვება",
+    "quietRunInfo": "ადგილობრივ პროგრამებს შეუძლიათ ამ ბრძანების ფონურად გაშვება.",
+    "quietOperationUnsupported": "ოპერაცია საჭიროებს ხილულ გაშვებას.",
+    "quietToolUnsupported": "ხელსაწყო საჭიროებს ხილულ გაშვებას.",
+    "quietConfirmationRequired": "ხელსაწყო საჭიროებს დადასტურებას.",
     "externalInfo": "ლოკალურ აპლიკაციებსა და სკრიპტებს შეუძლიათ ნებადართული ბრძანების გაშვება tyco-ctl run <ID> ან tyco-ctl run --name <სახელი>-ით. ეს ნებართვა ბრძანების ფანჯრის გახსნის გარეშეც გაშვების საშუალებას იძლევა.",
     "externalSelection": "მონიშნული ტექსტის წაკითხვა და ჩანაცვლება",
     "externalSelectionInfo": "აპს შეუძლია აქტიურ ფანჯარაში მონიშნული ტექსტის მიღება და მისი ჩანაცვლება ბრძანების შედეგით (tyco-ctl run <ID> --selection --replace). როცა ეს გამორთულია, Tyco ყოველ ასეთ გამოძახებაზე ნებართვას ითხოვს.",
@@ -512,6 +518,7 @@
     "filterAll": "ყველა",
     "filterLabel": "ისტორიის ფილტრი",
     "filterQuickInput": "სწრაფი შეყვანა",
+    "filterQuietRun": "ფონური გაშვებები",
     "filterExternalRun": "გარე გაშვებები",
     "filterCommandRun": "ბრძანებების გაშვებები",
     "filterProblems": "პრობლემური",

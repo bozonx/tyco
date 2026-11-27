@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "common-capability",
   "description": "Shared application commands for trusted desktop windows",
-  "windows": ["main", "quick"],
+  "windows": ["main", "quick", "quiet"],
   "permissions": [
     "allow-get-text-insertion-status",
     "core:event:allow-listen",

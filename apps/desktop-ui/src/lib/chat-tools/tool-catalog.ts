@@ -445,6 +445,15 @@ export type ToolScope =
       catalog: ToolCatalogSettings | undefined
     }
 
+export function isQuietTool(source: ToolSourceRef, name?: string): boolean {
+  return (
+    source.kind === 'commands' ||
+    (source.kind === 'core' &&
+      (source.id === CORE_SOURCE_IDS.web ||
+        (source.id === CORE_SOURCE_IDS.debug && name === 'get_current_time')))
+  )
+}
+
 /**
  * The state of a tool where it is offered. Each caller decides how it handles a
  * tool that requests confirmation.
@@ -463,14 +472,8 @@ export function toolStateIn(scope: ToolScope, tool: CatalogTool): ToolState {
       return effectiveToolState(scope.catalog, scope.settings, tool)
     case 'aiCommand':
       if (!isToolAvailable(scope.catalog, tool)) return 'off'
+      if (scope.isQuiet && !isQuietTool(tool.source, tool.name)) return 'off'
       if (
-        scope.isQuiet &&
-        tool.source.kind !== 'commands' &&
-        !(tool.source.kind === 'core' && tool.source.id === CORE_SOURCE_IDS.web)
-      )
-        return 'off'
-      if (
-        scope.isQuiet &&
         scope.tools.some(
           (ref) =>
             ref.policy === 'ask' && whitelistHas([ref], tool.source, tool.name)

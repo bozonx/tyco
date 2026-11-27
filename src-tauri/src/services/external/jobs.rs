@@ -1,7 +1,7 @@
 //! Bounded, in-memory lifecycle of visible and quiet command runs.
 use crate::locks::MutexExt;
 use std::collections::BTreeMap;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
@@ -11,6 +11,7 @@ const MAX_JOBS: usize = 128;
 /// How long a job may wait before it starts: for the user to answer the
 /// access prompt or to type the text in the command overlay.
 const START_TIMEOUT: Duration = Duration::from_secs(300);
+const QUIET_START_TIMEOUT: Duration = Duration::from_secs(10);
 const MAX_OUTPUT_BYTES: usize = 512 * 1024;
 /// How long a finished job may wait for its selection to be replaced
 const REPLACEMENT_TIMEOUT: Duration = Duration::from_secs(60);
@@ -77,6 +78,7 @@ pub struct RunHistory {
 #[derive(Default)]
 pub struct ExternalJobs {
     next_job_sequence: AtomicU64,
+    quiet_executor_ready: AtomicBool,
     entries: Mutex<BTreeMap<String, ExternalJobEntry>>,
 }
 
@@ -156,8 +158,12 @@ impl ExternalJobs {
     }
 
     /// The job that holds the visible run slot, if any.
-    pub fn active_id(&self) -> Option<String> {
-        self.active_id_for(false)
+    pub fn set_quiet_executor_ready(&self, ready: bool) {
+        self.quiet_executor_ready.store(ready, Ordering::Release);
+    }
+
+    pub fn is_quiet_executor_ready(&self) -> bool {
+        self.quiet_executor_ready.load(Ordering::Acquire)
     }
 
     pub fn active_id_for(&self, quiet: bool) -> Option<String> {
@@ -176,6 +182,9 @@ impl ExternalJobs {
                 command_name: entry.command_name.clone(),
                 state: entry.job.state.clone(),
                 started_at: entry.started_at,
+                error: None,
+                code: None,
+                history_id: None,
             })
     }
 
@@ -446,7 +455,12 @@ impl ExternalJobs {
             .iter()
             .filter(|(_, entry)| match (&entry.job.state, entry.claimed_at) {
                 (JobState::Accepted, _) => {
-                    now.saturating_duration_since(entry.created_at) >= START_TIMEOUT
+                    let timeout = if entry.request.quiet {
+                        QUIET_START_TIMEOUT
+                    } else {
+                        START_TIMEOUT
+                    };
+                    now.saturating_duration_since(entry.created_at) >= timeout
                 }
                 (state, Some(claimed_at))
                     if !state.is_terminal() && entry.pending_completion.is_none() =>
@@ -498,7 +512,10 @@ mod tests {
     fn one_job_runs_at_a_time() {
         let jobs = ExternalJobs::default();
         let first = jobs.create(new_job("Lamp")).unwrap();
-        assert_eq!(jobs.active_id().as_deref(), Some(first.id.as_str()));
+        assert_eq!(
+            jobs.active_id_for(false).as_deref(),
+            Some(first.id.as_str())
+        );
         assert_eq!(
             jobs.create(new_job("Fan")).unwrap_err(),
             CreateJobError::Busy {
@@ -508,7 +525,7 @@ mod tests {
         jobs.claim(&first.id, None).unwrap();
         assert!(jobs.create(new_job("Fan")).is_err());
         succeed(&jobs, &first.id);
-        assert!(jobs.active_id().is_none());
+        assert!(jobs.active_id_for(false).is_none());
         assert!(jobs.create(new_job("Fan")).is_ok());
     }
 
@@ -519,7 +536,10 @@ mod tests {
         let mut quiet = new_job("quiet");
         quiet.request.quiet = true;
         let quiet = jobs.create(quiet).unwrap();
-        assert_eq!(jobs.active_id().as_deref(), Some(visible.id.as_str()));
+        assert_eq!(
+            jobs.active_id_for(false).as_deref(),
+            Some(visible.id.as_str())
+        );
         assert_eq!(jobs.active_quiet_status().unwrap().job_id, quiet.id);
         let mut another = new_job("another");
         another.request.quiet = true;
@@ -605,6 +625,20 @@ mod tests {
         assert_eq!(jobs.get(&job.id).unwrap().state, JobState::Failed);
         assert_eq!(jobs.get(&job.id).unwrap().output.as_deref(), Some("result"));
         assert!(jobs.create(new_job("next")).is_ok());
+    }
+
+    #[test]
+    fn unclaimed_quiet_run_expires_without_expiring_the_overlay_job() {
+        let jobs = ExternalJobs::default();
+        let now = Instant::now();
+        jobs.create_at(new_job("visible"), now).unwrap();
+        let mut quiet = new_job("quiet");
+        quiet.request.quiet = true;
+        let quiet = jobs.create_at(quiet, now).unwrap();
+        assert_eq!(
+            jobs.expired_job_ids_at(now + QUIET_START_TIMEOUT),
+            vec![quiet.id]
+        );
     }
 
     #[test]

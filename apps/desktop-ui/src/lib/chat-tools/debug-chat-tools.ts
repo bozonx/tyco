@@ -11,7 +11,7 @@ export function isDebugChatToolsEnabled(
 }
 
 /** Tells the current time; it asks first, to try the approval on a real model */
-export const CURRENT_TIME_TOOL: RegisteredOperation = {
+export const CURRENT_TIME_TOOL = {
   id: 'get_current_time',
   label: 'Current time',
   icon: 'mdi:clock-outline',
@@ -46,7 +46,7 @@ export const CURRENT_TIME_TOOL: RegisteredOperation = {
       return { ok: false, message: `Unknown time zone: ${timeZone}` }
     }
   },
-}
+} satisfies RegisteredOperation
 
 export function createDebugChatToolProvider(): ChatToolProvider {
   return {

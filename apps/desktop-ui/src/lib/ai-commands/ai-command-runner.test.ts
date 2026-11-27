@@ -147,50 +147,75 @@ it('does not answer with the status of a command that returned no text', async (
     )
   ).toBe('')
 })
-it('fails a quiet run if the provider requests approval during execution', async () => {
-  const stream = vi.fn(async function* (): AsyncGenerator<LlmStreamEvent> {
-    yield { type: 'tool-call', toolName: 'now', toolCallId: 'call', input: {} }
-    yield {
-      type: 'approval-request',
-      approvalId: 'approval',
-      toolName: 'now',
-      toolCallId: 'call',
-      input: {},
-    }
-    yield {
-      type: 'finish',
-      finishReason: 'tool-calls',
-      text: '',
-      responseMessages: [
-        {
-          role: 'assistant',
-          content: [
-            {
-              type: 'tool-call',
-              toolCallId: 'call',
-              toolName: 'now',
-              input: {},
-            },
-            {
-              type: 'tool-approval-request',
-              approvalId: 'approval',
-              toolCallId: 'call',
-            },
-          ],
-        },
-      ],
-    }
-  })
-  const run = createAiCommandRunner({
-    stream,
-    instructions: () => '',
-    defaultMaxSteps: () => 2,
-  })
-  await expect(
-    run({ prompt: 'Look up the time', tools: [] }, '', [], {
-      signal: new AbortController().signal,
-      isQuiet: true,
+it.each([true, false])(
+  'handles a tool approval request (quiet: %s)',
+  async (isQuiet) => {
+    let didRequest = false
+    const stream = vi.fn(async function* (): AsyncGenerator<LlmStreamEvent> {
+      if (didRequest) {
+        yield { type: 'text', text: 'Finished' }
+        return
+      }
+      didRequest = true
+      yield {
+        type: 'tool-call',
+        toolName: 'now',
+        toolCallId: 'call',
+        input: {},
+      }
+      yield {
+        type: 'approval-request',
+        approvalId: 'approval',
+        toolName: 'now',
+        toolCallId: 'call',
+        input: {},
+      }
+      yield {
+        type: 'finish',
+        finishReason: 'tool-calls',
+        text: '',
+        responseMessages: [
+          {
+            role: 'assistant',
+            content: [
+              {
+                type: 'tool-call',
+                toolCallId: 'call',
+                toolName: 'now',
+                input: {},
+              },
+              {
+                type: 'tool-approval-request',
+                approvalId: 'approval',
+                toolCallId: 'call',
+              },
+            ],
+          },
+        ],
+      }
     })
-  ).rejects.toMatchObject({ code: 'ConfirmationRequired' })
-  expect(stream).toHaveBeenCalledTimes(1)
-})
+    const requestApproval = vi.fn(async () => 'allow-once' as const)
+    const run = createAiCommandRunner({
+      stream,
+      instructions: () => '',
+      defaultMaxSteps: () => 2,
+      requestApproval,
+    })
+    const result = run({ prompt: 'Look up the time', tools: [] }, '', [], {
+      signal: new AbortController().signal,
+      isQuiet,
+    })
+    if (isQuiet) {
+      await expect(result).rejects.toMatchObject({
+        code: 'ConfirmationRequired',
+      })
+      expect(requestApproval).not.toHaveBeenCalled()
+    } else {
+      await expect(result).resolves.toBe('Finished')
+      expect(requestApproval).toHaveBeenCalledWith(
+        expect.objectContaining({ approvalId: 'approval' }),
+        expect.any(AbortSignal)
+      )
+    }
+  }
+)

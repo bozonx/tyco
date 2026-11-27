@@ -45,6 +45,7 @@ pub enum EditorHistoryOrigin {
     Listen,
     CommandRun,
     ExternalRun,
+    QuietRun,
 }
 
 /// The input modality of an AI prompt.

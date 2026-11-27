@@ -170,4 +170,13 @@ pub struct QuietRunEvent {
     pub state: tyco_activation_protocol::JobState,
     #[ts(type = "number | null")]
     pub started_at: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub code: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub history_id: Option<String>,
 }

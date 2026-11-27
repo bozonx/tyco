@@ -216,6 +216,7 @@
     "replyBlocks": { "toolLabel": "Жауап нұсқалары" }
   },
   "commandRun": {
+    "stop": "Тоқтату",
     "quietAccepted": "Іске қосылуды күтуде: {name}",
     "quietRunning": "Орындалуда: {name}",
     "quietSucceeded": "Аяқталды: {name}",
@@ -280,6 +281,11 @@
     "errorNoUrl": "URL енгізіңіз.",
     "errorUnknownType": "Команданың белгісіз түрі.",
     "external": "Сырттан қолжетімді",
+    "allowQuietRun": "Фондық іске қосуға рұқсат беру",
+    "quietRunInfo": "Жергілікті бағдарламалар бұл пәрменді фондық режимде орындай алады.",
+    "quietOperationUnsupported": "Операцияны терезеде орындау қажет.",
+    "quietToolUnsupported": "Құралды терезеде іске қосу қажет.",
+    "quietConfirmationRequired": "Құрал растауды талап етеді.",
     "externalInfo": "Жергілікті қолданбалар мен скрипттер рұқсат етілген команданы tyco-ctl run <ID> немесе tyco-ctl run --name <атауы> арқылы іске қоса алады. Бұл рұқсат пәрменді терезе ашпай да іске қосуға мүмкіндік береді.",
     "externalSelection": "Белгіленген мәтінді оқу және ауыстыру",
     "externalSelectionInfo": "Қолданба белсенді терезеде белгіленген мәтінді алып, оны команда нәтижесімен ауыстыра алады (tyco-ctl run <ID> --selection --replace). Бұл өшірулі болса, Tyco әр осындай шақыруда рұқсат сұрайды.",
@@ -512,6 +518,7 @@
     "filterAll": "Барлығы",
     "filterLabel": "Тарих сүзгісі",
     "filterQuickInput": "Жылдам енгізу",
+    "filterQuietRun": "Фондық іске қосулар",
     "filterExternalRun": "Сыртқы іске қосулар",
     "filterCommandRun": "Пәрмендерді іске қосу",
     "filterProblems": "Ақаулы",

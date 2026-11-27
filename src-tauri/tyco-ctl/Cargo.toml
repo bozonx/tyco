@@ -2,7 +2,13 @@
 name = "tyco-ctl"
 version = "0.1.0"
 edition = "2021"
+default-run = "tyco-ctl"
 rust-version = "1.98"
+
+[[bin]]
+name = "tyco-ctlw"
+test = false
+bench = false
 
 [dependencies]
 tyco-activation-protocol = { path = "../crates/activation-protocol" }
