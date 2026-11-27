@@ -316,6 +316,7 @@ const primaryAction = computed<ActionItem | undefined>(() => {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   flex: 1 1 0%;
   min-height: 0;
 }

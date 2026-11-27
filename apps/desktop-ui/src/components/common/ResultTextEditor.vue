@@ -18,6 +18,7 @@
       appearance="plain"
       :model-value="modelValue"
       :aria-label="label"
+      :placeholder="placeholder"
       spellcheck="false"
       @update:model-value="emit('update:modelValue', $event)"
       @scroll="syncScroll"
@@ -33,7 +34,12 @@ import type { DiffPart } from '../../lib/diff/diff-model'
 import { isCtrlEnter } from '../../lib/input-keys/input-keys'
 import FieldTextArea from './FieldTextArea.vue'
 
-defineProps<{ modelValue: string; label: string; parts?: DiffPart[] }>()
+defineProps<{
+  modelValue: string
+  label: string
+  placeholder?: string
+  parts?: DiffPart[]
+}>()
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 const highlight = ref<HTMLElement | null>(null)
 function onKeyDown(event: KeyboardEvent) {

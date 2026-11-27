@@ -1,9 +1,13 @@
 <template>
-  <div v-if="props.disabled" class="context-disabled-banner">
+  <div
+    v-if="props.disabled"
+    class="context-disabled-banner"
+    :class="{ 'is-plain': resolvedAppearance === 'plain' }"
+  >
     <div class="context-disabled-info">
       <AppIcon
         icon="mdi:text-box-remove-outline"
-        size="sm"
+        :size="resolvedAppearance === 'plain' ? 'lg' : 'sm'"
         class="context-disabled-icon"
       />
       <span class="context-disabled-text">{{ t('menu.contextRemoved') }}</span>
@@ -11,8 +15,8 @@
     <Button
       tabindex="-1"
       class="context-restore-btn"
-      size="xs"
-      variant="ghost"
+      :size="resolvedAppearance === 'plain' ? 'sm' : 'xs'"
+      :variant="resolvedAppearance === 'plain' ? 'neutral' : 'ghost'"
       icon="mdi:undo"
       @click="handleRestore"
     >
@@ -33,6 +37,7 @@
       v-else-if="editable"
       :model-value="props.text"
       :label="t('menu.editText')"
+      :placeholder="t('menu.typeText')"
       @update:model-value="emit('update:text', $event)"
     />
     <TextPreview v-else :text="props.text" />
@@ -73,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, inject, onUnmounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
@@ -82,6 +87,10 @@ import {
   addFavorite,
   isDuplicateFavorite,
 } from '../../lib/favorites/favorites-model'
+import {
+  type PreviewAppearance,
+  previewAppearanceKey,
+} from '../../lib/ui/preview-context'
 import { useDesktopStore } from '../../stores/desktop'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -101,6 +110,7 @@ const props = withDefaults(
     allowFavorite?: boolean
     allowCopy?: boolean
     allowDisable?: boolean
+    appearance?: PreviewAppearance
   }>(),
   {
     editable: false,
@@ -111,6 +121,7 @@ const props = withDefaults(
     allowFavorite: true,
     allowCopy: true,
     allowDisable: true,
+    appearance: undefined,
   }
 )
 
@@ -120,6 +131,11 @@ const emit = defineEmits<{
   (e: 'remove'): void
   (e: 'restore'): void
 }>()
+
+const inheritedAppearance = inject(previewAppearanceKey, 'framed')
+const resolvedAppearance = computed(
+  () => props.appearance ?? inheritedAppearance
+)
 
 const { t } = useI18n()
 const { toastKey, toastError } = useToast()
@@ -193,6 +209,44 @@ onUnmounted(() => {
   border-radius: var(--radius-md);
   color: var(--app-text-muted);
   font-size: var(--text-caption);
+  box-sizing: border-box;
+}
+
+.context-disabled-banner.is-plain {
+  border: none;
+  background-color: transparent;
+  height: 100%;
+  flex: 1 1 0%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  text-align: center;
+}
+
+.context-disabled-banner.is-plain .context-disabled-info {
+  flex-direction: column;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.context-disabled-banner.is-plain .context-disabled-icon {
+  color: var(--app-text-faint);
+  font-size: 2.25rem;
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.context-disabled-banner.is-plain .context-disabled-text {
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: var(--app-text-muted);
+  white-space: normal;
+}
+
+.context-disabled-banner.is-plain .context-restore-btn {
+  margin-top: var(--space-2xs);
 }
 
 .context-disabled-info {

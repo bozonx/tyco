@@ -46,6 +46,32 @@ describe('ContextPreview', () => {
     expect(wrapper.emitted('restore')).toHaveLength(1)
   })
 
+  it('applies is-plain class and centered button variant when appearance is plain', () => {
+    const wrapper = mount(ContextPreview, {
+      props: {
+        text: 'Sample context text',
+        disabled: true,
+        appearance: 'plain',
+      },
+    })
+
+    const banner = wrapper.find('.context-disabled-banner')
+    expect(banner.classes()).toContain('is-plain')
+    const restoreBtn = wrapper.findComponent({ name: 'Button' })
+    expect(restoreBtn.props('variant')).toBe('neutral')
+    expect(restoreBtn.props('size')).toBe('sm')
+  })
+
+  it('passes typeText placeholder to ResultTextEditor in editable mode', () => {
+    const wrapper = mount(ContextPreview, {
+      props: { text: '', editable: true },
+    })
+
+    const editor = wrapper.findComponent({ name: 'ResultTextEditor' })
+    expect(editor.exists()).toBe(true)
+    expect(editor.props('placeholder')).toBe('menu.typeText')
+  })
+
   it('handles diff mode when oldText is provided', () => {
     const wrapper = mount(ContextPreview, {
       props: {
