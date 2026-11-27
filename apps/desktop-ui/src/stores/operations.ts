@@ -215,8 +215,13 @@ export const useOperationsStore = defineStore('tools', () => {
   const aiCommandOperation = createAiCommandOperation({
     stream: (task, prompt, options) =>
       llmStore.client.stream(task, prompt, options),
-    instructions: () =>
-      [APP_CONFIG.aiInstructions.aiTask, systemContext.text()].join('\n\n'),
+    // the first command of the window waits for the system to be known
+    instructions: async () => {
+      await systemContext.load()
+      return [APP_CONFIG.aiInstructions.aiTask, systemContext.text()].join(
+        '\n\n'
+      )
+    },
     defaultMaxSteps: () => commandAiMaxStepsOf(desktopStore.userConfig),
     commands: () => desktopStore.userConfig?.commands ?? [],
     commandInputSchema: (command, source) => {

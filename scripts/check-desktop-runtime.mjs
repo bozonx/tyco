@@ -51,6 +51,8 @@ const endpoint = 'http://127.0.0.1:4444'
 const appEnv = {
   ...process.env,
   TYCO_DEV_HOME: home,
+  // Startup warmup briefly focuses the quick window independently of a run.
+  TYCO_QUICK_WARMUP: '0',
   ...(!isWindows
     ? {
         XDG_RUNTIME_DIR: runtimeDir,
@@ -607,10 +609,10 @@ try {
       await request('POST', `/session/${session}/element/${inputId}/value`, {
         text: 'Native quick insertion',
       })
-      // Tab opens the actions for the original text; this path needs no provider.
-      await request('POST', `/session/${session}/element/${inputId}/value`, {
-        text: '\uE004',
-      })
+      // Open the actions for the original text without invoking a provider.
+      await execute(
+        "document.querySelector('.write-hint-actions button').click()"
+      )
       await waitFor(
         () =>
           execute(

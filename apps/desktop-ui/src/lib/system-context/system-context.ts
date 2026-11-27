@@ -17,6 +17,20 @@ export interface SystemContextDependencies {
 
 const localTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone
 
+/**
+ * `zone` when `Intl` takes it, `UTC` otherwise: a webview without a configured
+ * zone may give none, and a zone `Intl` rejects would break the whole prompt
+ */
+export function usableTimeZone(zone: string | undefined): string {
+  if (!zone) return 'UTC'
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: zone })
+    return zone
+  } catch {
+    return 'UTC'
+  }
+}
+
 /** `2026-11-27 (Friday)`: the date in `timeZone` with its weekday */
 export function dateWithWeekday(now: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -73,7 +87,14 @@ export function localIsoTime(now: Date, timeZone: string): string {
  */
 export function createSystemContext(deps: SystemContextDependencies) {
   const now = deps.now ?? (() => new Date())
-  const timeZone = deps.timeZone ?? localTimeZone
+  const readTimeZone = deps.timeZone ?? localTimeZone
+  const timeZone = () => {
+    try {
+      return usableTimeZone(readTimeZone())
+    } catch {
+      return 'UTC'
+    }
+  }
   let info: SystemInfo | null = null
   let pending: Promise<SystemInfo | null> | null = null
 

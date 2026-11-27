@@ -88,6 +88,33 @@ pub fn current() -> Session {
     })
 }
 
+/// The desktop as `XDG_CURRENT_DESKTOP` names it, e.g. `XFCE` or
+/// `ubuntu:GNOME`, for telling an assistant; `None` outside Linux or when it
+/// is not set. Unlike [`Desktop`] it keeps desktops Tyco has no special
+/// support for and tells i3 from Sway.
+pub fn desktop_name() -> Option<String> {
+    if !cfg!(target_os = "linux") {
+        return None;
+    }
+    desktop_name_of(std::env::var("XDG_CURRENT_DESKTOP").ok().as_deref())
+}
+
+/// Keeps the names that look like names, at most four of them.
+fn desktop_name_of(current_desktop: Option<&str>) -> Option<String> {
+    let names = current_desktop?
+        .split(':')
+        .map(str::trim)
+        .filter(|name| {
+            (1..=32).contains(&name.len())
+                && name
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
+        })
+        .take(4)
+        .collect::<Vec<_>>();
+    (!names.is_empty()).then(|| names.join(":"))
+}
+
 /// `XDG_SESSION_TYPE` wins when it names a graphical session. Otherwise the
 /// display variables decide, Wayland first: XWayland sets `DISPLAY` too.
 fn display_server(session_type: Option<&str>, wayland: bool, x11: bool) -> DisplayServer {
@@ -164,5 +191,21 @@ mod tests {
         });
         assert!(session.is_kde_wayland());
         assert!(!session.is_x11());
+    }
+
+    #[test]
+    fn names_the_desktop_as_the_session_does() {
+        assert_eq!(desktop_name_of(Some("i3")).as_deref(), Some("i3"));
+        assert_eq!(desktop_name_of(Some("XFCE")).as_deref(), Some("XFCE"));
+        assert_eq!(
+            desktop_name_of(Some("ubuntu:GNOME")).as_deref(),
+            Some("ubuntu:GNOME")
+        );
+        assert_eq!(
+            desktop_name_of(Some("X-Cinnamon:bad name:")).as_deref(),
+            Some("X-Cinnamon")
+        );
+        assert_eq!(desktop_name_of(Some("")), None);
+        assert_eq!(desktop_name_of(None), None);
     }
 }

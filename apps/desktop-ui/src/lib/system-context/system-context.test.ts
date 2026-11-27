@@ -5,6 +5,7 @@ import {
   dateWithWeekday,
   localIsoTime,
   systemContextText,
+  usableTimeZone,
 } from './system-context'
 
 const INFO = {
@@ -72,5 +73,29 @@ describe('system context', () => {
       timeZone: 'UTC',
       ...INFO,
     })
+  })
+
+  it('falls back to UTC for a time zone Intl does not take', () => {
+    expect(usableTimeZone('Europe/Moscow')).toBe('Europe/Moscow')
+    expect(usableTimeZone('Etc/Unknown-Zone')).toBe('UTC')
+    expect(usableTimeZone('')).toBe('UTC')
+    expect(usableTimeZone(undefined)).toBe('UTC')
+    const context = createSystemContext({
+      loadSystemInfo: async () => INFO,
+      now: () => NOW,
+      timeZone: () => 'Not/AZone',
+    })
+    expect(context.text()).toContain('Time zone: UTC.')
+  })
+
+  it('tells UTC when the time zone cannot be read', async () => {
+    const context = createSystemContext({
+      loadSystemInfo: async () => INFO,
+      now: () => NOW,
+      timeZone: () => {
+        throw new RangeError('no zone')
+      },
+    })
+    expect((await context.details()).timeZone).toBe('UTC')
   })
 })

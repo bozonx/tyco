@@ -51,7 +51,7 @@ export interface AiCommandRunnerDependencies {
     options?: LlmStreamOptions
   ) => AsyncIterable<LlmStreamEvent>
   /** The app's instructions for every AI command */
-  instructions: () => string
+  instructions: () => string | Promise<string>
   /** The call limit of a command without its own, see `llm.maxToolSteps` */
   defaultMaxSteps: () => number
   requestApproval?: ChatToolLoopDependencies['requestApproval']
@@ -242,7 +242,7 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
         : null
 
     const system = [
-      deps.instructions().trim(),
+      (await deps.instructions()).trim(),
       `Command instructions:\n\n${config.prompt.trim()}`,
     ].join('\n\n')
 

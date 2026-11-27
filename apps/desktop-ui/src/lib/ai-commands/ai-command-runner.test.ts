@@ -219,3 +219,23 @@ it.each([true, false])(
     }
   }
 )
+
+it('waits for instructions that are still being put together', async () => {
+  let system: string | undefined
+  async function* stream(
+    _task: string,
+    prompt: LlmPrompt
+  ): AsyncGenerator<LlmStreamEvent> {
+    system = prompt.system
+    yield { type: 'text', text: 'Done' }
+  }
+  const run = createAiCommandRunner({
+    stream,
+    instructions: async () => 'Operating system: Linux.',
+    defaultMaxSteps: () => 1,
+  })
+  await run({ prompt: 'Do it', tools: [] }, '', [], {
+    signal: new AbortController().signal,
+  })
+  expect(system).toMatch(/^Operating system: Linux\.\n\nCommand instructions:/)
+})
