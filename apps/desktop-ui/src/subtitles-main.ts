@@ -8,9 +8,11 @@ import './assets/main.css'
 import SubtitlesOverlay from './components/dialog/SubtitlesOverlay.vue'
 import { registerOfflineIcons } from './lib/icons'
 import { clientLogger } from './lib/logger'
+import { installButtonMouseFocusPolicy } from './lib/ui/focus'
 
 registerOfflineIcons()
 
 const app = createApp(SubtitlesOverlay)
 clientLogger.setupGlobalHandlers(app)
+installButtonMouseFocusPolicy()
 app.mount('#app')

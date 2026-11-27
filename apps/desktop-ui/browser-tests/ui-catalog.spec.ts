@@ -7,6 +7,29 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible()
 })
 
+test('mouse clicks preserve text focus and buttons stay in the Tab order', async ({
+  page,
+}) => {
+  const input = page.getByRole('textbox', { name: 'Small input', exact: true })
+  const primary = page.getByRole('button', { name: 'primary', exact: true })
+  const neutral = page.getByRole('button', { name: 'neutral', exact: true })
+  const icon = page.getByRole('button', { name: 'Close', exact: true })
+  const dragHandle = page.locator('button.drag-handle')
+
+  await input.focus()
+  for (const button of [primary, icon, dragHandle]) {
+    await button.click()
+    await expect(button).not.toBeFocused()
+    await expect(input).toBeFocused()
+  }
+
+  await primary.focus()
+  await page.keyboard.press('Tab')
+  await expect(neutral).toBeFocused()
+  await page.keyboard.press('Shift+Tab')
+  await expect(primary).toBeFocused()
+})
+
 test('menus preserve keyboard focus and nested navigation', async ({
   page,
 }) => {
@@ -52,7 +75,7 @@ test('native dialogs contain focus and close one layer at a time', async ({
     name: 'Open dialog',
     exact: true,
   })
-  await dialogTrigger.click()
+  await dialogTrigger.press('Enter')
   const dialog = page.getByRole('dialog', { name: 'Delete item?' })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused()
@@ -69,7 +92,7 @@ test('native dialogs contain focus and close one layer at a time', async ({
   const nestedTrigger = page.getByRole('button', {
     name: 'Open nested dialogs',
   })
-  await nestedTrigger.click()
+  await nestedTrigger.press('Enter')
   const innerTrigger = page.getByRole('button', { name: 'Open confirmation' })
   await innerTrigger.click()
   await page.keyboard.press('Escape')

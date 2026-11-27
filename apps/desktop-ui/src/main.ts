@@ -11,6 +11,7 @@ import { registerOfflineIcons } from './lib/icons'
 import { clientLogger } from './lib/logger'
 import router from './router'
 import pinia from './stores'
+import { installButtonMouseFocusPolicy } from './lib/ui/focus'
 
 registerOfflineIcons()
 
@@ -23,4 +24,5 @@ app.use(pinia)
 app.use(i18n)
 
 app.onUnmount(() => disposePinia(pinia))
+installButtonMouseFocusPolicy()
 app.mount('#app')

@@ -48,6 +48,10 @@ remain bundled and work offline.
 - `SegmentedControl` selects a value through native radios.
 - `AppIcon` sizes come from `lib/ui/icon-size.ts` in rem, so icons follow the
   interface scale. Do not size icons in pixels.
+- Ordinary buttons keep the current focus on mouse press across all window
+  entry points, including teleported content. Tab and Shift+Tab still reach
+  buttons. Controls that start a keyboard interaction, such as hotkey recording,
+  can move focus explicitly.
 - `BaseDialog` uses native `showModal()` for focus containment and inert background.
   Supply `labelledby` (visible title) or a localized `label`. The parent owns
   `open` and handles `close`; `ConfirmModal` supplies confirmation actions and

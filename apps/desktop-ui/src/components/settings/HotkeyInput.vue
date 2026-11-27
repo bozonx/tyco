@@ -121,6 +121,8 @@ const displayGroups = computed(() =>
 
 function start() {
   if (isRecording.value || props.readonly) return
+  // Recording routes keyboard events through this control.
+  buttonRef.value?.focus()
   isRecording.value = true
   heldKeys.value = []
   isInvalid.value = false
