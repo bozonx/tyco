@@ -549,7 +549,7 @@
     "recordings": "Snimke",
     "stopRecording": "Zaustavi reprodukciju",
     "playbackSpeed": "Brzina reprodukcije",
-    "sessionOnly": "Novo se čuva samo do izlaska iz TyCo."
+    "sessionOnly": "Novo se čuva samo do izlaska iz TyCo. Njegove datoteke i snimke poziva nalaze se u privremenoj mapi (na Linuxu u memoriji) koja se briše pri izlasku."
   },
   "input": {
     "historySearchPlaceholder": "Pretraži povijest...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Povijest dijaloga",
     "dialogHistoryHint": "Spremljeni transkripti poziva i njihove audio snimke.",
     "dialogHistoryRetentionDays": "Čuvaj dijaloge",
-    "dialogHistoryRetentionDaysHint": "Dijalozi i njihove snimke stariji od odabranog razdoblja brišu se automatski. Dok Tyco radi — novi dijalozi su samo u memoriji i nestaju pri izlasku, a pozivi se ne snimaju; spremljeni dijalozi ostaju.",
+    "dialogHistoryRetentionDaysHint": "Dijalozi i njihove snimke stariji od odabranog razdoblja brišu se automatski. Dok Tyco radi — novi dijalozi čuvaju se do izlaska: tekst u memoriji, snimke poziva u privremenoj mapi (na Linuxu u memoriji, na Windowsu na disku) koja se briše pri izlasku. Spremljeni dijalozi ostaju. Snimanje koje traje pri promjeni postavke zaustavlja se.",
     "clearDialogsConfirmDialog": "Svi spremljeni dijalozi i njihove audio snimke bit će trajno izbrisani.",
     "dialogHistoryLink": "Postavke povijesti i čuvanja dijaloga nalaze se u",
     "chatHistoryKeeping": "Čuvaj chatove",
-    "chatHistoryKeepingHint": "Chatovi se spremaju lokalno bez šifriranja; lozinke i ključevi u njima nisu skriveni. Chat se briše kad u njemu dulje od odabranog razdoblja nije bilo novih poruka. Dok Tyco radi — novi chatovi su samo u memoriji i nestaju pri izlasku; spremljeni ostaju.",
+    "chatHistoryKeepingHint": "Chatovi se spremaju lokalno bez šifriranja; lozinke i ključevi u njima nisu skriveni. Chat se briše kad u njemu dulje od odabranog razdoblja nije bilo novih poruka. Dok Tyco radi — novi chatovi čuvaju se do izlaska: tekst u memoriji, slike i datoteke u privremenoj mapi (na Linuxu u memoriji, na Windowsu na disku) koja se briše pri izlasku. Spremljeni chatovi ostaju.",
     "deleteAllEntries": {
       "one": "Izbriši {count} zapis",
       "few": "Izbriši sva {count} zapisa",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "Zaustavi i proširi",
     "retryTranslation": "Pokušaj ponovno",
     "channelFailed": "zaustavljeno",
-    "startRecording": "Pokreni sa snimanjem",
-    "startRecordingNeedsHistory": "Snimanje zahtijeva povijest spremljenu na disk",
     "recording": "Snimanje u tijeku",
     "recordingFailed": "Snimanje je zaustavljeno: datoteka se ne može zapisati. Transkripcija se nastavlja.",
     "recordingNotInHistory": "Snimka nije u povijesti: bez unosa datoteka se briše za 7 dana. Premjestite je iz mape snimki da biste je zadržali.",
@@ -1812,7 +1810,8 @@
     "selectRangeUpTo": "Odaberi sve do ove poruke",
     "copyTurn": "Kopiraj poruku",
     "copyTurnTranslation": "Kopiraj prijevod",
-    "searchInDialog": "Pretraži u dijalogu"
+    "searchInDialog": "Pretraži u dijalogu",
+    "recordingStoppedBySettings": "Snimanje je zaustavljeno: promijenile su se postavke povijesti dijaloga."
   },
   "toolPermissions": {
     "riskRead": "Čitanje",

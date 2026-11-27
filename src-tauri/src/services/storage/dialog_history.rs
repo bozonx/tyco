@@ -409,6 +409,31 @@ impl From<DialogHistoryConfig> for DialogHistoryPolicy {
     }
 }
 
+/// Stores a session dialog in the data folder with its recordings. One still
+/// being recorded waits: its file is not finished yet.
+pub(super) fn store_session_dialog(
+    dirs: &DialogDirs,
+    session_recordings: &RecordingDirs,
+    policy: DialogHistoryPolicy,
+    dialog: &Dialog,
+) -> Result<(), AppError> {
+    if recordings::is_dialog_writing(&dialog.id) {
+        return Err(AppError::Failed(format!(
+            "The dialog {} is still being recorded",
+            dialog.id
+        )));
+    }
+    let id = recordings::validate_dialog_id(&dialog.id)?;
+    for name in &dialog.recording_files {
+        let from = session_recordings.shared.join(id).join(name);
+        if from.is_file() {
+            recordings::publish(&from, &dirs.recordings.shared.join(id).join(name))?;
+        }
+    }
+    let _ = std::fs::remove_dir(session_recordings.shared.join(id));
+    save_dialog(dirs, policy, dialog.clone()).map(|_| ())
+}
+
 /// Enforces retention and collects orphaned recording folders.
 pub(super) fn enforce_dialog_history_policy(
     dirs: &DialogDirs,
@@ -619,6 +644,30 @@ mod tests {
             recordings: RecordingDirs::at(root),
             index: root.join("state").join("index").join(DIALOG_INDEX_FILE),
         }
+    }
+
+    #[test]
+    fn a_session_dialog_goes_to_the_data_folder_with_its_recordings() {
+        let root = TestDir::new("session-dialog-to-disk");
+        let dirs = test_dirs(&root);
+        let session =
+            RecordingDirs::in_folders(root.join("session/recordings"), &root.join("session/state"));
+        let id = "2026-11-25_14-03-05_a1b2c3";
+        let name = "2026-11-25 14-03-05 a1b2c3.opus";
+        let mut dialog = sample_dialog(id, now_ms(), "Hello");
+        dialog.recording_files = vec![name.into()];
+        fs::create_dir_all(session.shared.join(id)).unwrap();
+        fs::write(session.shared.join(id).join(name), b"opus").unwrap();
+        let policy = DialogHistoryPolicy {
+            is_session: false,
+            retention_days: 0,
+        };
+
+        store_session_dialog(&dirs, &session, policy, &dialog).unwrap();
+
+        assert!(dirs.recordings.shared.join(id).join(name).is_file());
+        assert!(!session.shared.join(id).exists());
+        assert!(read_dialog(&dirs.dialogs, id).unwrap().is_some());
     }
 
     fn sample_dialog(id: &str, updated_at_ms: u64, text: &str) -> Dialog {

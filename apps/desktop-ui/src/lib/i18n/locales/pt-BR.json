@@ -549,7 +549,7 @@
     "recordings": "Gravações",
     "stopRecording": "Parar a reprodução",
     "playbackSpeed": "Velocidade de reprodução",
-    "sessionOnly": "O que é novo fica guardado só até o TyCo ser fechado."
+    "sessionOnly": "O que é novo fica guardado só até o TyCo ser fechado. Seus arquivos e gravações de chamadas ficam em uma pasta temporária (na memória no Linux) removida ao sair."
   },
   "input": {
     "historySearchPlaceholder": "Pesquisar no histórico...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Histórico de diálogos",
     "dialogHistoryHint": "Transcrições de chamadas salvas e suas gravações de áudio.",
     "dialogHistoryRetentionDays": "Manter diálogos",
-    "dialogHistoryRetentionDaysHint": "Diálogos e suas gravações mais antigos que o período escolhido são excluídos automaticamente. Enquanto o Tyco estiver aberto — novos diálogos ficam só na memória e somem ao sair, e as chamadas não são gravadas; os diálogos salvos permanecem.",
+    "dialogHistoryRetentionDaysHint": "Diálogos e suas gravações mais antigos que o período escolhido são excluídos automaticamente. Enquanto o Tyco estiver aberto — novos diálogos ficam até sair: o texto na memória, as gravações de chamadas em uma pasta temporária (na memória no Linux, no disco no Windows) removida ao sair. Os diálogos salvos permanecem. Uma gravação em andamento quando a configuração muda é interrompida.",
     "clearDialogsConfirmDialog": "Todos os diálogos salvos e suas gravações de áudio serão excluídos permanentemente.",
     "dialogHistoryLink": "As configurações de histórico e retenção de diálogos estão em",
     "chatHistoryKeeping": "Manter chats",
-    "chatHistoryKeepingHint": "Os chats ficam armazenados localmente sem criptografia; senhas e chaves neles não são ocultadas. Um chat é excluído quando fica sem mensagens novas por mais tempo que o período escolhido. Enquanto o Tyco estiver aberto — novos chats ficam só na memória e somem ao sair; os salvos permanecem.",
+    "chatHistoryKeepingHint": "Os chats ficam armazenados localmente sem criptografia; senhas e chaves neles não são ocultadas. Um chat é excluído quando fica sem mensagens novas por mais tempo que o período escolhido. Enquanto o Tyco estiver aberto — novos chats ficam até sair: o texto na memória, imagens e arquivos em uma pasta temporária (na memória no Linux, no disco no Windows) removida ao sair. Os chats salvos permanecem.",
     "deleteAllEntries": {
       "one": "Excluir {count} entrada",
       "few": "Excluir todas as {count} entradas",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "Parar e expandir",
     "retryTranslation": "Tentar novamente",
     "channelFailed": "parado",
-    "startRecording": "Iniciar com gravação",
-    "startRecordingNeedsHistory": "A gravação exige o histórico salvo no disco",
     "recording": "Gravando",
     "recordingFailed": "A gravação parou: não foi possível gravar o arquivo. A transcrição continua.",
     "recordingNotInHistory": "A gravação não está no histórico: sem uma entrada, o arquivo é excluído em 7 dias. Mova-o para fora da pasta de gravações para mantê-lo.",
@@ -1812,7 +1810,8 @@
     "selectRangeUpTo": "Selecionar tudo até esta mensagem",
     "copyTurn": "Copiar mensagem",
     "copyTurnTranslation": "Copiar tradução",
-    "searchInDialog": "Pesquisar no diálogo"
+    "searchInDialog": "Pesquisar no diálogo",
+    "recordingStoppedBySettings": "A gravação foi interrompida: as configurações do histórico de diálogos mudaram."
   },
   "toolPermissions": {
     "riskRead": "Leitura",

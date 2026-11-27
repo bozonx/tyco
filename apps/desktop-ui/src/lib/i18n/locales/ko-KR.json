@@ -549,7 +549,7 @@
     "recordings": "녹음",
     "stopRecording": "재생 중지",
     "playbackSpeed": "재생 속도",
-    "sessionOnly": "새 항목은 TyCo를 종료할 때까지만 보관됩니다."
+    "sessionOnly": "새 항목은 TyCo를 종료할 때까지만 보관됩니다. 파일과 통화 녹음은 종료 시 삭제되는 임시 폴더(Linux에서는 메모리)에 있습니다."
   },
   "input": {
     "historySearchPlaceholder": "기록 검색...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "대화 기록",
     "dialogHistoryHint": "저장된 통화 전사와 오디오 녹음 파일입니다.",
     "dialogHistoryRetentionDays": "대화 보관",
-    "dialogHistoryRetentionDaysHint": "선택한 기간보다 오래된 대화와 녹음은 자동으로 삭제됩니다. Tyco 실행 중에만 — 새 대화는 메모리에만 있고 종료하면 사라지며 통화는 녹음되지 않습니다. 저장된 대화는 남습니다.",
+    "dialogHistoryRetentionDaysHint": "선택한 기간보다 오래된 대화와 녹음은 자동으로 삭제됩니다. Tyco 실행 중에만 — 새 대화는 종료할 때까지 보관됩니다. 텍스트는 메모리에, 통화 녹음은 종료 시 삭제되는 임시 폴더(Linux에서는 메모리, Windows에서는 디스크)에 있습니다. 저장된 대화는 남습니다. 설정을 바꿀 때 진행 중인 녹음은 중지됩니다.",
     "clearDialogsConfirmDialog": "저장된 모든 대화와 오디오 녹음이 영구적으로 삭제됩니다.",
     "dialogHistoryLink": "대화 기록 및 보관 설정은 다음 위치에 있습니다:",
     "chatHistoryKeeping": "채팅 보관",
-    "chatHistoryKeepingHint": "채팅은 암호화 없이 로컬에 저장되며, 그 안의 비밀번호와 키는 숨겨지지 않습니다. 선택한 기간보다 오래 새 메시지가 없는 채팅은 삭제됩니다. Tyco 실행 중에만 — 새 채팅은 메모리에만 있고 종료하면 사라지며, 저장된 채팅은 남습니다.",
+    "chatHistoryKeepingHint": "채팅은 암호화 없이 로컬에 저장되며, 그 안의 비밀번호와 키는 숨겨지지 않습니다. 선택한 기간보다 오래 새 메시지가 없는 채팅은 삭제됩니다. Tyco 실행 중에만 — 새 채팅은 종료할 때까지 보관됩니다. 텍스트는 메모리에, 이미지와 파일은 종료 시 삭제되는 임시 폴더(Linux에서는 메모리, Windows에서는 디스크)에 있습니다. 저장된 채팅은 남습니다.",
     "deleteAllEntries": {
       "one": "항목 {count}개 삭제",
       "few": "항목 {count}개 모두 삭제",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "중지하고 펼치기",
     "retryTranslation": "다시 시도",
     "channelFailed": "중지됨",
-    "startRecording": "녹음하며 시작",
-    "startRecordingNeedsHistory": "녹음하려면 기록을 디스크에 저장해야 합니다",
     "recording": "녹음 중",
     "recordingFailed": "녹음이 중지되었습니다: 파일을 쓸 수 없습니다. 기록은 계속됩니다.",
     "recordingNotInHistory": "녹음이 기록에 없습니다. 기록 항목이 없으면 파일은 7일 후 삭제됩니다. 보관하려면 녹음 폴더 밖으로 옮기세요.",
@@ -1812,7 +1810,8 @@
     "selectRangeUpTo": "이 메시지까지 모두 선택",
     "copyTurn": "메시지 복사",
     "copyTurnTranslation": "번역 복사",
-    "searchInDialog": "대화에서 검색"
+    "searchInDialog": "대화에서 검색",
+    "recordingStoppedBySettings": "녹음이 중지되었습니다: 대화 기록 설정이 바뀌었습니다."
   },
   "toolPermissions": {
     "riskRead": "읽기",

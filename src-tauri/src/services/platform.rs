@@ -21,6 +21,7 @@ pub(crate) mod process;
 pub(crate) mod screenshot;
 pub(crate) mod selection;
 pub mod session;
+pub mod session_files;
 pub mod shell;
 mod shortcut_settings;
 pub(crate) mod terminals;

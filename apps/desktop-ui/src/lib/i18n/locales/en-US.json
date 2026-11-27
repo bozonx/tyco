@@ -549,7 +549,7 @@
     "recordings": "Recordings",
     "stopRecording": "Stop playback",
     "playbackSpeed": "Playback speed",
-    "sessionOnly": "New entries are kept only until TyCo quits."
+    "sessionOnly": "New items are kept only until TyCo quits. Their files and call recordings wait in a temporary folder (in memory on Linux) that is removed when TyCo quits."
   },
   "input": {
     "historySearchPlaceholder": "Search history...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Dialog history",
     "dialogHistoryHint": "Saved call transcripts and their audio recordings.",
     "dialogHistoryRetentionDays": "Keep dialogs",
-    "dialogHistoryRetentionDaysHint": "Dialogs and their recordings older than the chosen period are deleted automatically. While Tyco is running — new dialogs live in memory only and are gone when the app quits, and calls are not recorded; saved dialogs stay.",
+    "dialogHistoryRetentionDaysHint": "Dialogs and their recordings older than the chosen period are deleted automatically. While Tyco is running — new dialogs are kept until the app quits: their text in memory, their recordings in a temporary folder (in memory on Linux, on the disk on Windows) removed at quit. Saved dialogs stay. A recording that runs when this changes is stopped.",
     "clearDialogsConfirmDialog": "All saved dialogs and their audio recordings will be permanently deleted.",
     "dialogHistoryLink": "Dialog history and retention settings are in",
     "chatHistoryKeeping": "Keep chats",
-    "chatHistoryKeepingHint": "Chats are stored locally without encryption; passwords and keys in them are not hidden. A chat is deleted when it has had no new messages for longer than the chosen period. While Tyco is running — new chats live in memory only and are gone when the app quits; saved chats stay.",
+    "chatHistoryKeepingHint": "Chats are stored locally without encryption; passwords and keys in them are not hidden. A chat is deleted when it has had no new messages for longer than the chosen period. While Tyco is running — new chats are kept until the app quits: their text in memory, their images and files in a temporary folder (in memory on Linux, on the disk on Windows) removed at quit. Saved chats stay.",
     "deleteAllEntries": {
       "one": "Delete {count} entry",
       "few": "Delete all {count} entries",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "Stop and expand",
     "retryTranslation": "Try again",
     "channelFailed": "stopped",
-    "startRecording": "Start recording",
-    "startRecordingNeedsHistory": "Recording needs the history saved to disk",
     "recording": "Recording",
     "recordingFailed": "The recording stopped: the file could not be written. The transcript goes on.",
     "recordingNotInHistory": "The recording is not in the history: without an entry, the file is deleted in 7 days. Move it out of the recordings folder to keep it.",
@@ -1812,7 +1810,8 @@
     "deselectTurn": "Deselect message",
     "selectRangeUpTo": "Select all up to this message",
     "copyTurn": "Copy message",
-    "copyTurnTranslation": "Copy translation"
+    "copyTurnTranslation": "Copy translation",
+    "recordingStoppedBySettings": "The recording was stopped: the dialog history settings changed."
   },
   "toolPermissions": {
     "riskRead": "Reads",

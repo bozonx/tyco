@@ -549,7 +549,7 @@
     "recordings": "録音",
     "stopRecording": "再生を停止",
     "playbackSpeed": "再生速度",
-    "sessionOnly": "新しい内容は TyCo を終了するまでだけ保持されます。"
+    "sessionOnly": "新しい内容は TyCo を終了するまでだけ保持されます。そのファイルと通話の録音は一時フォルダー（Linux ではメモリ上）にあり、終了時に削除されます。"
   },
   "input": {
     "historySearchPlaceholder": "履歴を検索...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "ダイアログ履歴",
     "dialogHistoryHint": "保存された通話の文字起こしと音声録音です。",
     "dialogHistoryRetentionDays": "ダイアログを保存",
-    "dialogHistoryRetentionDaysHint": "選択した期間より古いダイアログとその録音は自動的に削除されます。Tyco の実行中のみ — 新しいダイアログはメモリにのみ保持され、終了すると消え、通話は録音されません。保存済みのダイアログは残ります。",
+    "dialogHistoryRetentionDaysHint": "選択した期間より古いダイアログとその録音は自動的に削除されます。Tyco の実行中のみ — 新しいダイアログは終了まで保持されます。テキストはメモリに、通話の録音は終了時に削除される一時フォルダー（Linux ではメモリ上、Windows ではディスク上）にあります。保存済みのダイアログは残ります。設定を変更した時点で進行中の録音は停止します。",
     "clearDialogsConfirmDialog": "保存されているすべてのダイアログと音声録音が完全に削除されます。",
     "dialogHistoryLink": "ダイアログの履歴と保存期間の設定は次にあります:",
     "chatHistoryKeeping": "チャットを保存",
-    "chatHistoryKeepingHint": "チャットは暗号化されずにローカルに保存され、含まれるパスワードやキーは隠されません。選択した期間より長く新しいメッセージがないチャットは削除されます。Tyco の実行中のみ — 新しいチャットはメモリにのみ保持され、終了すると消えます。保存済みのチャットは残ります。",
+    "chatHistoryKeepingHint": "チャットは暗号化されずにローカルに保存され、含まれるパスワードやキーは隠されません。選択した期間より長く新しいメッセージがないチャットは削除されます。Tyco の実行中のみ — 新しいチャットは終了まで保持されます。テキストはメモリに、画像とファイルは終了時に削除される一時フォルダー（Linux ではメモリ上、Windows ではディスク上）にあります。保存済みのチャットは残ります。",
     "deleteAllEntries": {
       "one": "{count} 件の項目を削除",
       "few": "{count} 件の項目をすべて削除",
@@ -1745,8 +1745,6 @@
     "stopAndExpand": "停止して元に戻す",
     "retryTranslation": "再試行",
     "channelFailed": "停止",
-    "startRecording": "録音して開始",
-    "startRecordingNeedsHistory": "録音するには履歴をディスクに保存する設定が必要です",
     "recording": "録音中",
     "recordingFailed": "録音が停止しました: ファイルに書き込めませんでした。文字起こしは続行します。",
     "recordingNotInHistory": "録音は履歴にありません。履歴の項目がないため、ファイルは 7 日後に削除されます。残すには録音フォルダーの外へ移動してください。",
@@ -1808,7 +1806,8 @@
     "selectRangeUpTo": "このメッセージまでをすべて選択",
     "copyTurn": "メッセージをコピー",
     "copyTurnTranslation": "翻訳をコピー",
-    "searchInDialog": "対話内を検索"
+    "searchInDialog": "対話内を検索",
+    "recordingStoppedBySettings": "録音を停止しました: ダイアログ履歴の設定が変更されました。"
   },
   "toolPermissions": {
     "riskRead": "読み取り",

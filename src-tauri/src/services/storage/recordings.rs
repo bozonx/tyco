@@ -13,6 +13,9 @@
 //! Recordings go with their dialog: when the undo of a deletion expires
 //! (`remove_dialog`), with the whole dialog history (`clear`), and when the
 //! retention limits drop the dialog (`collect_orphans` / `remove_dialog`).
+//! The recordings of a session dialog live in the folder of this run
+//! instead (`session_files`), see `RecordingDirs::of_dialog`.
+//!
 //! A dialog folder no saved dialog names waits `orphan_files::ORPHAN_GRACE_MS`
 //! first: a sync tool may bring recordings before `<dialog id>.json`. A
 //! recording still being written when its dialog goes is removed as soon as it
@@ -73,7 +76,7 @@ pub fn end_writing(dialog_id: &str, name: &str) -> bool {
         .unwrap_or(false)
 }
 
-fn is_dialog_writing(dialog_id: &str) -> bool {
+pub(super) fn is_dialog_writing(dialog_id: &str) -> bool {
     WRITING
         .locked()
         .keys()
@@ -115,6 +118,18 @@ impl RecordingDirs {
         let shared = user_dir_for(app, UserDirAccess::Read)?.join(RECORDINGS_DIR);
         let state = super::paths::state_dir(app)?;
         Ok(Self::in_folders(shared, &state))
+    }
+
+    /// Where the recordings of `dialog_id` are: those of a session dialog in
+    /// the folder of this run, see `session_files`, the others in the data
+    /// folder.
+    pub fn of_dialog(app: &AppHandle, dialog_id: &str) -> Result<Self, AppError> {
+        let session = super::session_files::SessionFiles::of_app(app).recordings();
+        let id = validate_dialog_id(dialog_id)?;
+        if session.shared.join(id).is_dir() || session.active.join(id).is_dir() {
+            return Ok(session);
+        }
+        Self::of_app(app)
     }
 
     pub fn in_folders(shared: PathBuf, state: &Path) -> Self {
@@ -353,24 +368,36 @@ pub fn shared_folder(dirs: &RecordingDirs, dialog_id: Option<&str>) -> Result<Pa
 /// Opens the recordings folder (or a specific dialog's recordings folder) in
 /// the file manager.
 pub fn open_folder(app: &AppHandle, dialog_id: Option<&str>) -> Result<(), AppError> {
-    crate::services::platform::open_dir(&shared_folder(&RecordingDirs::of_app(app)?, dialog_id)?)
+    let dirs = match dialog_id {
+        Some(id) => RecordingDirs::of_dialog(app, id)?,
+        None => RecordingDirs::of_app(app)?,
+    };
+    crate::services::platform::open_dir(&shared_folder(&dirs, dialog_id)?)
 }
 
 /// Which of the recordings `names` of `dialog_id` are there, see `exist`.
 pub fn check(app: &AppHandle, dialog_id: &str, names: &[String]) -> Result<Vec<bool>, AppError> {
-    Ok(exist(&RecordingDirs::of_app(app)?, dialog_id, names))
+    Ok(exist(
+        &RecordingDirs::of_dialog(app, dialog_id)?,
+        dialog_id,
+        names,
+    ))
 }
 
 /// Opens the folder that holds the recording `(dialog_id, name)` in the file
 /// manager.
 pub fn show(app: &AppHandle, dialog_id: &str, name: &str) -> Result<(), AppError> {
-    crate::services::platform::open_dir(&folder_of(&RecordingDirs::of_app(app)?, dialog_id, name)?)
+    crate::services::platform::open_dir(&folder_of(
+        &RecordingDirs::of_dialog(app, dialog_id)?,
+        dialog_id,
+        name,
+    )?)
 }
 
 /// The bytes of a finished recording `(dialog_id, name)`.
 pub fn read_file(app: &AppHandle, dialog_id: &str, name: &str) -> Result<Vec<u8>, AppError> {
     Ok(fs::read(playable_file(
-        &RecordingDirs::of_app(app)?,
+        &RecordingDirs::of_dialog(app, dialog_id)?,
         dialog_id,
         name,
     )?)?)

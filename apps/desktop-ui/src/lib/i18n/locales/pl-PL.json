@@ -549,7 +549,7 @@
     "recordings": "Nagrania",
     "stopRecording": "Zatrzymaj odtwarzanie",
     "playbackSpeed": "Szybkość odtwarzania",
-    "sessionOnly": "Nowe rzeczy są przechowywane tylko do zamknięcia TyCo."
+    "sessionOnly": "Nowe rzeczy są przechowywane tylko do zamknięcia TyCo. Ich pliki i nagrania rozmów leżą w folderze tymczasowym (w Linuksie w pamięci), usuwanym przy zamknięciu."
   },
   "input": {
     "historySearchPlaceholder": "Szukaj w historii...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Historia dialogów",
     "dialogHistoryHint": "Zapisane transkrypcje rozmów i ich nagrania audio.",
     "dialogHistoryRetentionDays": "Przechowuj dialogi",
-    "dialogHistoryRetentionDaysHint": "Dialogi i ich nagrania starsze niż wybrany okres są usuwane automatycznie. Dopóki Tyco działa — nowe dialogi są tylko w pamięci i znikają po zamknięciu, a rozmowy nie są nagrywane; zapisane dialogi zostają.",
+    "dialogHistoryRetentionDaysHint": "Dialogi i ich nagrania starsze niż wybrany okres są usuwane automatycznie. Dopóki Tyco działa — nowe dialogi są przechowywane do zamknięcia: tekst w pamięci, nagrania rozmów w folderze tymczasowym (w Linuksie w pamięci, w Windows na dysku), usuwanym przy zamknięciu. Zapisane dialogi zostają. Nagranie trwające podczas zmiany ustawienia zostaje zatrzymane.",
     "clearDialogsConfirmDialog": "Wszystkie zapisane dialogi i ich nagrania audio zostaną trwale usunięte.",
     "dialogHistoryLink": "Ustawienia historii i przechowywania dialogów znajdują się w",
     "chatHistoryKeeping": "Przechowuj czaty",
-    "chatHistoryKeepingHint": "Czaty są przechowywane lokalnie bez szyfrowania; hasła i klucze w nich nie są ukrywane. Czat jest usuwany, gdy nie było w nim nowych wiadomości dłużej niż wybrany okres. Dopóki Tyco działa — nowe czaty są tylko w pamięci i znikają po zamknięciu; zapisane zostają.",
+    "chatHistoryKeepingHint": "Czaty są przechowywane lokalnie bez szyfrowania; hasła i klucze w nich nie są ukrywane. Czat jest usuwany, gdy nie było w nim nowych wiadomości dłużej niż wybrany okres. Dopóki Tyco działa — nowe czaty są przechowywane do zamknięcia: tekst w pamięci, obrazy i pliki w folderze tymczasowym (w Linuksie w pamięci, w Windows na dysku), usuwanym przy zamknięciu. Zapisane czaty zostają.",
     "deleteAllEntries": {
       "one": "Usuń {count} wpis",
       "few": "Usuń wszystkie {count} wpisy",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "Zatrzymaj i rozwiń",
     "retryTranslation": "Spróbuj ponownie",
     "channelFailed": "zatrzymano",
-    "startRecording": "Rozpocznij z nagrywaniem",
-    "startRecordingNeedsHistory": "Nagrywanie wymaga historii zapisywanej na dysku",
     "recording": "Nagrywanie",
     "recordingFailed": "Nagrywanie zostało przerwane: nie udało się zapisać pliku. Transkrypcja trwa dalej.",
     "recordingNotInHistory": "Nagrania nie ma w historii: bez wpisu plik zostanie usunięty po 7 dniach. Przenieś go z folderu nagrań, aby go zachować.",
@@ -1812,7 +1810,8 @@
     "selectRangeUpTo": "Zaznacz wszystko do tej wiadomości",
     "copyTurn": "Kopiuj wiadomość",
     "copyTurnTranslation": "Kopiuj tłumaczenie",
-    "searchInDialog": "Szukaj w dialogu"
+    "searchInDialog": "Szukaj w dialogu",
+    "recordingStoppedBySettings": "Nagranie zatrzymano: zmieniły się ustawienia historii dialogów."
   },
   "toolPermissions": {
     "riskRead": "Odczyt",

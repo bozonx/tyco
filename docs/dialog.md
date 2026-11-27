@@ -114,9 +114,9 @@ the start, so the recording can always be found. Dialogs are kept according to
 the dialog retention period in **Settings → History** and are deleted together
 with their recordings.
 
-With **While TyCo is running**, new conversations are kept in memory only: they
-are in the history until you quit TyCo, however it quits, and calls are not
-recorded. Conversations saved before stay on disk and are listed as well.
+With **While TyCo is running**, new conversations are kept until you quit TyCo,
+however it quits: their text in memory, their recordings in a temporary folder
+that is removed at quit (in memory on Linux, on the disk on Windows). Conversations saved before stay on disk and are listed as well.
 Changing the setting never deletes a saved dialog; **Delete all** in the
 settings does, after a confirmation.
 
@@ -128,8 +128,9 @@ the conversation is transcribed as usual and its sound is also saved to an audio
 toggle is enabled. While a session is paused, the toggle remains in the state it was in, so
 **Resume** continues with that setting (and you can toggle recording before resuming).
 The first time you turn on recording, TyCo shows a prompt reminding you to tell the other person
-before you record a conversation with them; **Got it** dismisses the reminder. Recording is available only while dialog history is
-saved to disk (**Settings → History**): a recording belongs to its dialog.
+before you record a conversation with them; **Got it** dismisses the reminder. Recording follows the dialog history
+on (**Settings → History**): a recording belongs to its dialog and is kept as long
+as it is. Changing that setting stops a recording that runs.
 
 While recording, the toolbar and the subtitles show a red dot with the time
 recorded, and the system tray icon displays a recording indicator badge. The file is an Opus audio file (`.opus`) that any modern player

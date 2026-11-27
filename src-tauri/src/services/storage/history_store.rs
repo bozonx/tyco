@@ -1,12 +1,13 @@
 //! Storage owns synchronization; IPC callers never take history locks.
 use crate::locks::MutexExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
 use tauri::{AppHandle, Manager};
 
+use super::session_files::SessionFiles;
 use super::session_history::{self as session, SessionChats, SessionDialogs};
 use super::{chat_history as chats, dialog_history as dialogs, editor_history as editor};
 use crate::errors::AppError;
@@ -267,6 +268,8 @@ pub fn apply_editor_history_settings_on_startup(
     app: &AppHandle,
     user_config: &serde_json::Value,
 ) -> Result<(), AppError> {
+    // what the session of a run that crashed left goes
+    clear_session_files(app);
     // no recording runs yet: what a previous run left joins the history first
     if let Err(error) = super::recordings::RecordingDirs::of_app(app)
         .and_then(|dirs| super::recordings::settle_leftovers(&dirs))
@@ -308,7 +311,7 @@ pub fn move_session_chats(app: &AppHandle, from: &str, to: Option<&str>) {
     let state = app.state::<AppState>();
     let mut session = state.history.session_chats.locked();
     session.rekey(from, to);
-    hold_session_files(app, &session);
+    prune_session_files(app, &session);
 }
 
 /// Stores on disk the session chats of the scopes that keep their chats there
@@ -329,7 +332,9 @@ fn store_session_chats(app: &AppHandle) -> Result<(), AppError> {
                 return Ok(false);
             }
             let dirs = scope_chat_dirs(app, &scope, ChatAccess::Write)?;
+            let folders = [session_chat_folders(app)];
             for chat in session.take(&key) {
+                load_chat_files(&app.state::<ChatImages>(), &chat, &folders);
                 let saved = chats::save_chat(
                     &dirs,
                     policy,
@@ -349,7 +354,7 @@ fn store_session_chats(app: &AppHandle) -> Result<(), AppError> {
             Err(error) => result = result.and(Err(error)),
         }
     }
-    hold_session_files(app, &session);
+    prune_session_files(app, &session);
     result
 }
 
@@ -422,8 +427,10 @@ fn enforce_dialog_history_policy(
         // kept on disk from now on: the dialogs of this run go there too
         let state = app.state::<AppState>();
         let mut session = state.history.session_dialogs.locked();
+        let session_recordings = SessionFiles::of_app(app).recordings();
         for dialog in session.take() {
-            if let Err(error) = dialogs::save_dialog(&dirs, policy, dialog.clone()) {
+            let stored = dialogs::store_session_dialog(&dirs, &session_recordings, policy, &dialog);
+            if let Err(error) = stored {
                 session.save(dialog);
                 return Err(error);
             }
@@ -510,17 +517,68 @@ impl ChatScope {
     }
 }
 
-/// Lets the image store keep what the session chats refer to: no file holds
-/// it.
-const SESSION_CHATS_OWNER: &str = "session-history";
+/// Removes the files of the session no session chat refers to any more.
+fn prune_session_files(app: &AppHandle, session: &SessionChats) {
+    let kept = session.file_ids().into_iter().collect();
+    if let Err(error) = SessionFiles::of_app(app).prune_chat_files(&kept) {
+        log::warn!("Could not remove the unused files of the session chats: {error}");
+    }
+}
 
-fn hold_session_files(app: &AppHandle, session: &SessionChats) {
-    if let Err(error) = app
-        .state::<ChatImages>()
-        .lock()
-        .sync(SESSION_CHATS_OWNER, &session.file_ids())
-    {
-        log::warn!("Could not keep the files of the session chats: {error}");
+/// Reads into the image store the images and attachments of `chat` that are
+/// in `sources`, (images, attachments) folders, so that a save to another
+/// folder carries them along. One that is nowhere is left out by the save.
+fn load_chat_files(images: &ChatImages, chat: &Chat, sources: &[(PathBuf, PathBuf)]) {
+    let mut images = images.lock();
+    let ids = crate::services::chat_images::ChatFileIds::of(chat);
+    for id in &ids.images {
+        for (dir, _) in sources {
+            if images.get(dir, id).is_ok() {
+                break;
+            }
+        }
+    }
+    for id in &ids.files {
+        for (_, dir) in sources {
+            if images.get_file(dir, id).is_ok() {
+                break;
+            }
+        }
+    }
+}
+
+/// The (images, attachments) folders of the session chats.
+fn session_chat_folders(app: &AppHandle) -> (PathBuf, PathBuf) {
+    let files = SessionFiles::of_app(app);
+    (files.chat_images(), files.chat_attachments())
+}
+
+/// Where a new recording of a dialog goes: the folder of this run while new
+/// dialogs are kept until the app quits, the data folder otherwise.
+pub fn recording_dirs_for_new(
+    app: &AppHandle,
+    is_session: bool,
+) -> Result<super::recordings::RecordingDirs, AppError> {
+    if is_session {
+        Ok(SessionFiles::of_app(app).recordings())
+    } else {
+        super::recordings::RecordingDirs::of_app(app)
+    }
+}
+
+/// Removes the files of the memory-only histories, at the start (what a run
+/// that crashed left) and at quit.
+pub fn clear_session_files(app: &AppHandle) {
+    if let Err(error) = SessionFiles::of_app(app).clear() {
+        log::warn!("Could not remove the files of the session: {error}");
+    }
+}
+
+/// The dialog folders with the recordings of the session dialogs.
+fn session_dialog_dirs(app: &AppHandle, dirs: &dialogs::DialogDirs) -> dialogs::DialogDirs {
+    dialogs::DialogDirs {
+        recordings: SessionFiles::of_app(app).recordings(),
+        ..dirs.clone()
     }
 }
 
@@ -681,7 +739,25 @@ pub fn discard_dialog_recording(
     dialog_id: String,
     file: String,
 ) -> Result<(), AppError> {
-    with_dialogs(app, ChatAccess::Write, |_, dirs| {
+    with_dialogs(app, ChatAccess::Write, |state, dirs| {
+        let session_dirs = session_dialog_dirs(app, dirs);
+        if super::recordings::exist(
+            &session_dirs.recordings,
+            &dialog_id,
+            std::slice::from_ref(&file),
+        ) == [true]
+        {
+            let is_named = state
+                .history
+                .session_dialogs
+                .locked()
+                .get(&dialog_id)
+                .is_some_and(|dialog| dialog.recording_files.contains(&file));
+            if is_named {
+                return Ok(());
+            }
+            return super::recordings::discard(&session_dirs.recordings, &dialog_id, &file);
+        }
         dialogs::discard_recording(dirs, &dialog_id, &file)
     })
 }
@@ -722,15 +798,33 @@ pub fn save_dialog(app: &AppHandle, dialog: Dialog) -> Result<(), AppError> {
         let config = state.user_config();
         let policy = dialogs::DialogHistoryPolicy::from_config(&config);
         let mut session = state.history.session_dialogs.locked();
-        if policy.is_session {
+        // a dialog goes where its recordings are: one recorded into the data
+        // folder stays there, one recorded in this run stays in it
+        let names = &dialog.recording_files;
+        let has_stored_recordings = super::recordings::exist(&dirs.recordings, &dialog.id, names)
+            .into_iter()
+            .any(|exists| exists);
+        let has_session_recordings =
+            super::recordings::exist(&SessionFiles::of_app(app).recordings(), &dialog.id, names)
+                .into_iter()
+                .any(|exists| exists);
+        if (policy.is_session && !has_stored_recordings) || has_session_recordings {
             session.save(dialog);
             return Ok(Vec::new());
         }
         session.remove(&dialog.id);
-        dialogs::save_dialog(dirs, policy, dialog)
+        dialogs::save_dialog(dirs, policy_on_disk(policy), dialog)
     })?;
     notify_dialogs_changed(app, removed, false);
     Ok(())
+}
+
+/// `policy` as a dialog kept on disk follows it.
+fn policy_on_disk(policy: dialogs::DialogHistoryPolicy) -> dialogs::DialogHistoryPolicy {
+    dialogs::DialogHistoryPolicy {
+        is_session: false,
+        ..policy
+    }
 }
 
 pub fn rename_dialog(app: &AppHandle, id: String, title: String) -> Result<(), AppError> {
@@ -781,6 +875,9 @@ pub fn delete_dialog(app: &AppHandle, id: String) -> Result<Option<Dialog>, AppE
     let id_for_event = id.clone();
     with_dialogs(app, ChatAccess::Write, |state, dirs| {
         let in_session = state.history.session_dialogs.locked().remove(&id);
+        if in_session.is_some() {
+            dialogs::delete_dialog(&session_dialog_dirs(app, dirs), &id)?;
+        }
         // a stored copy the session one hid goes too
         let stored = dialogs::delete_dialog(dirs, &id)?;
         Ok(in_session.or(stored))
@@ -789,7 +886,10 @@ pub fn delete_dialog(app: &AppHandle, id: String) -> Result<Option<Dialog>, AppE
 }
 
 pub fn release_dialog_recordings(app: &AppHandle, id: String) -> Result<(), AppError> {
-    with_dialogs(app, ChatAccess::Write, |_, dirs| {
+    with_dialogs(app, ChatAccess::Write, |state, dirs| {
+        if state.history.session_dialogs.locked().get(&id).is_none() {
+            dialogs::release_dialog_recordings(&session_dialog_dirs(app, dirs), &id)?;
+        }
         dialogs::release_dialog_recordings(dirs, &id)
     })
 }
@@ -797,6 +897,7 @@ pub fn release_dialog_recordings(app: &AppHandle, id: String) -> Result<(), AppE
 pub fn clear_dialogs(app: &AppHandle) -> Result<(), AppError> {
     with_dialogs(app, ChatAccess::Write, |state, dirs| {
         state.history.session_dialogs.locked().take();
+        super::recordings::clear(&SessionFiles::of_app(app).recordings())?;
         dialogs::clear_dialogs(dirs)
     })?;
     notify_dialogs_changed(app, Vec::new(), true);
@@ -869,6 +970,11 @@ pub fn read_chat(
         // without an import lease nothing holds the images: they are read
         // when shown, e.g. not at all for a Markdown copy
         if let (Some(chat), Some(_)) = (&chat, &owner) {
+            load_chat_files(
+                &app.state::<ChatImages>(),
+                chat,
+                &[session_chat_folders(app)],
+            );
             load_chat_images(
                 &app.state::<ChatImages>(),
                 &dirs.chats,
@@ -885,13 +991,23 @@ pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), A
         let config = state.user_config();
         let policy = scope_policy(app, scope, &config)?;
         let mut session = state.history.session_chats.locked();
+        let images = app.state::<ChatImages>();
+        let (session_images, session_attachments) = session_chat_folders(app);
         if policy.is_session {
             if policy.saves(&item) {
+                // a stored chat continued now carries its files along
+                load_chat_files(&images, &item, &[(dirs.images(), dirs.attachments())]);
+                {
+                    let mut store = images.lock();
+                    store.persist(&session_images, &item)?;
+                    store.persist_files(&session_attachments, &item)?;
+                }
                 session.save(scope.key(), item);
-                hold_session_files(app, &session);
+                prune_session_files(app, &session);
             }
             return Ok(Vec::new());
         }
+        load_chat_files(&images, &item, &[(session_images, session_attachments)]);
         let removed = chats::save_chat(
             dirs,
             policy,
@@ -899,7 +1015,7 @@ pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), A
             item.clone(),
         )?;
         if session.remove(scope.key(), &item.id).is_some() {
-            hold_session_files(app, &session);
+            prune_session_files(app, &session);
         }
         Ok(removed)
     })?;
@@ -985,6 +1101,11 @@ pub fn delete_chat(
         };
         let removed = in_session.or(stored);
         if let Some(chat) = &removed {
+            load_chat_files(
+                &app.state::<ChatImages>(),
+                chat,
+                &[session_chat_folders(app)],
+            );
             load_chat_images(
                 &app.state::<ChatImages>(),
                 &dirs.chats,
@@ -992,7 +1113,7 @@ pub fn delete_chat(
                 ImageRetention::Undo(&owner),
             )?;
         }
-        hold_session_files(app, &state.history.session_chats.locked());
+        prune_session_files(app, &state.history.session_chats.locked());
         // a stored copy the session one hid goes too
         chats::delete_chat(dirs, id.clone())?;
         Ok(removed)
@@ -1004,7 +1125,7 @@ pub fn clear_chats(app: &AppHandle, scope: &ChatScope) -> Result<(), AppError> {
     with_chats(app, scope, ChatAccess::Write, |state, dirs| {
         let mut session = state.history.session_chats.locked();
         session.take(scope.key());
-        hold_session_files(app, &session);
+        prune_session_files(app, &session);
         drop(session);
         chats::clear_chats(dirs)
     })?;
@@ -1071,23 +1192,30 @@ fn load_chat_images(
 
 pub fn read_chat_image(app: &AppHandle, scope: &ChatScope, id: &str) -> Result<Vec<u8>, AppError> {
     with_chats(app, scope, ChatAccess::Read, |_, dirs| {
-        app.state::<ChatImages>().lock().get(&dirs.images(), id)
+        let store = app.state::<ChatImages>();
+        let mut images = store.lock();
+        images
+            .get(&dirs.images(), id)
+            .or_else(|_| images.get(&session_chat_folders(app).0, id))
     })
 }
 
-/// The folder of the attachment originals of the conversations of `scope`.
-pub fn chat_files_dir(app: &AppHandle, scope: &ChatScope) -> Result<std::path::PathBuf, AppError> {
+/// The folders of the attachment originals of the conversations of `scope`:
+/// the stored ones and those of the session chats.
+pub fn chat_files_dirs(app: &AppHandle, scope: &ChatScope) -> Result<[PathBuf; 2], AppError> {
     with_chats(app, scope, ChatAccess::Read, |_, dirs| {
-        Ok(dirs.attachments())
+        Ok([dirs.attachments(), session_chat_folders(app).1])
     })
 }
 
 /// The original of an attached file of a conversation of `scope`.
 pub fn read_chat_file(app: &AppHandle, scope: &ChatScope, id: &str) -> Result<Vec<u8>, AppError> {
     with_chats(app, scope, ChatAccess::Read, |_, dirs| {
-        app.state::<ChatImages>()
-            .lock()
+        let store = app.state::<ChatImages>();
+        let mut images = store.lock();
+        images
             .get_file(&dirs.attachments(), id)
+            .or_else(|_| images.get_file(&session_chat_folders(app).1, id))
     })
 }
 

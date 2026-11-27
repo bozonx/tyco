@@ -549,7 +549,7 @@
     "recordings": "录音",
     "stopRecording": "停止播放",
     "playbackSpeed": "播放速度",
-    "sessionOnly": "新内容只保留到 TyCo 退出为止。"
+    "sessionOnly": "新内容只保留到 TyCo 退出为止。其文件和通话录音位于退出时删除的临时文件夹中（Linux 上在内存中）。"
   },
   "input": {
     "historySearchPlaceholder": "搜索历史记录…",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "对话历史记录",
     "dialogHistoryHint": "已保存的通话转写记录及其音频录音。",
     "dialogHistoryRetentionDays": "保存对话",
-    "dialogHistoryRetentionDaysHint": "早于所选期限的对话及其录音会自动删除。Tyco 运行期间 — 新对话只保存在内存中，退出后消失，且不录制通话；已保存的对话会保留。",
+    "dialogHistoryRetentionDaysHint": "早于所选期限的对话及其录音会自动删除。Tyco 运行期间 — 新对话保留到退出为止：文本在内存中，通话录音在退出时删除的临时文件夹中（Linux 上在内存中，Windows 上在磁盘上）。已保存的对话会保留。更改此设置时正在进行的录音会停止。",
     "clearDialogsConfirmDialog": "所有已保存的对话及其音频录音将被永久删除。",
     "dialogHistoryLink": "对话历史记录和保留期限设置位于",
     "chatHistoryKeeping": "保存聊天",
-    "chatHistoryKeepingHint": "聊天以未加密方式保存在本地，其中的密码和密钥不会被隐藏。超过所选期限没有新消息的聊天会被删除。Tyco 运行期间 — 新聊天只保存在内存中，退出后消失；已保存的聊天会保留。",
+    "chatHistoryKeepingHint": "聊天以未加密方式保存在本地，其中的密码和密钥不会被隐藏。超过所选期限没有新消息的聊天会被删除。Tyco 运行期间 — 新聊天保留到退出为止：文本在内存中，图片和文件在退出时删除的临时文件夹中（Linux 上在内存中，Windows 上在磁盘上）。已保存的聊天会保留。",
     "deleteAllEntries": {
       "one": "删除 {count} 条记录",
       "few": "删除全部 {count} 条记录",
@@ -1745,8 +1745,6 @@
     "stopAndExpand": "停止并展开",
     "retryTranslation": "重试",
     "channelFailed": "已停止",
-    "startRecording": "开始并录音",
-    "startRecordingNeedsHistory": "录音需要将历史记录保存到磁盘",
     "recording": "正在录音",
     "recordingFailed": "录音已停止：无法写入文件。转录继续进行。",
     "recordingNotInHistory": "录音不在历史记录中：没有对应条目，文件将在 7 天后删除。如需保留，请将其移出录音文件夹。",
@@ -1808,7 +1806,8 @@
     "selectRangeUpTo": "选择到此消息的所有内容",
     "copyTurn": "复制消息",
     "copyTurnTranslation": "复制翻译",
-    "searchInDialog": "在对话中搜索"
+    "searchInDialog": "在对话中搜索",
+    "recordingStoppedBySettings": "录音已停止：对话历史设置已更改。"
   },
   "toolPermissions": {
     "riskRead": "读取",

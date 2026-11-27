@@ -549,7 +549,7 @@
     "recordings": "Registrazioni",
     "stopRecording": "Interrompi la riproduzione",
     "playbackSpeed": "Velocità di riproduzione",
-    "sessionOnly": "Le novità restano solo fino alla chiusura di TyCo."
+    "sessionOnly": "Le novità restano solo fino alla chiusura di TyCo. I loro file e le registrazioni delle chiamate stanno in una cartella temporanea (in memoria su Linux) eliminata alla chiusura."
   },
   "input": {
     "historySearchPlaceholder": "Cerca nella cronologia...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Cronologia dialoghi",
     "dialogHistoryHint": "Trascrizioni delle chiamate salvate e relative registrazioni audio.",
     "dialogHistoryRetentionDays": "Conserva i dialoghi",
-    "dialogHistoryRetentionDaysHint": "I dialoghi e le loro registrazioni più vecchi del periodo scelto vengono eliminati automaticamente. Finché Tyco è in esecuzione — i nuovi dialoghi restano solo in memoria e spariscono alla chiusura, e le chiamate non vengono registrate; i dialoghi salvati restano.",
+    "dialogHistoryRetentionDaysHint": "I dialoghi e le loro registrazioni più vecchi del periodo scelto vengono eliminati automaticamente. Finché Tyco è in esecuzione — i nuovi dialoghi restano fino alla chiusura: il testo in memoria, le registrazioni delle chiamate in una cartella temporanea (in memoria su Linux, su disco su Windows) eliminata alla chiusura. I dialoghi salvati restano. Una registrazione in corso al cambio dell’impostazione viene fermata.",
     "clearDialogsConfirmDialog": "Tutti i dialoghi salvati e le relative registrazioni audio verranno eliminati definitivamente.",
     "dialogHistoryLink": "Le impostazioni di cronologia e conservazione dei dialoghi sono in",
     "chatHistoryKeeping": "Conserva le chat",
-    "chatHistoryKeepingHint": "Le chat sono salvate in locale senza cifratura; password e chiavi al loro interno non vengono nascoste. Una chat viene eliminata se non riceve nuovi messaggi per più del periodo scelto. Finché Tyco è in esecuzione — le nuove chat restano solo in memoria e spariscono alla chiusura; quelle salvate restano.",
+    "chatHistoryKeepingHint": "Le chat sono salvate in locale senza cifratura; password e chiavi al loro interno non vengono nascoste. Una chat viene eliminata se non riceve nuovi messaggi per più del periodo scelto. Finché Tyco è in esecuzione — le nuove chat restano fino alla chiusura: il testo in memoria, immagini e file in una cartella temporanea (in memoria su Linux, su disco su Windows) eliminata alla chiusura. Le chat salvate restano.",
     "deleteAllEntries": {
       "one": "Elimina {count} voce",
       "few": "Elimina tutte le {count} voci",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "Ferma ed espandi",
     "retryTranslation": "Riprova",
     "channelFailed": "fermato",
-    "startRecording": "Avvia con registrazione",
-    "startRecordingNeedsHistory": "La registrazione richiede la cronologia salvata su disco",
     "recording": "Registrazione in corso",
     "recordingFailed": "La registrazione si è interrotta: impossibile scrivere il file. La trascrizione continua.",
     "recordingNotInHistory": "La registrazione non è nella cronologia: senza una voce, il file viene eliminato dopo 7 giorni. Spostalo fuori dalla cartella delle registrazioni per conservarlo.",
@@ -1812,7 +1810,8 @@
     "selectRangeUpTo": "Seleziona tutto fino a questo messaggio",
     "copyTurn": "Copia messaggio",
     "copyTurnTranslation": "Copia traduzione",
-    "searchInDialog": "Cerca nel dialogo"
+    "searchInDialog": "Cerca nel dialogo",
+    "recordingStoppedBySettings": "La registrazione è stata fermata: le impostazioni della cronologia dei dialoghi sono cambiate."
   },
   "toolPermissions": {
     "riskRead": "Lettura",

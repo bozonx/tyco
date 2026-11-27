@@ -104,7 +104,8 @@ export const useDialogStore = defineStore('dialog', () => {
     },
   }))
   const isEnabled = computed(() => config.value.isEnabled)
-  const isHistoryEnabled = computed(() =>
+  /** New dialogs are kept on disk, not only until the app quits */
+  const isHistoryOnDisk = computed(() =>
     isDialogHistoryEnabled(desktopStore.userConfig)
   )
   /** The model that translates the other side; none: nothing is translated */
@@ -899,11 +900,12 @@ export const useDialogStore = defineStore('dialog', () => {
     },
   })
 
-  // turning dialog history off disables recording and warns if one is running
-  watch(isHistoryEnabled, (isOnDisk) => {
-    if (!isOnDisk) isRecordEnabled.value = false
-    if (isOnDisk || !recording.value) return
-    errorText.value = translate('dialog.recordingNotInHistory')
+  // a recording goes where the history keeps the dialog: one running when
+  // that changes is stopped, so that it is finished where it began
+  watch(isHistoryOnDisk, () => {
+    if (!recording.value) return
+    void stopAndSave()
+    errorText.value = translate('dialog.recordingStoppedBySettings')
     canFixInSettings.value = false
   })
 
@@ -1031,7 +1033,7 @@ export const useDialogStore = defineStore('dialog', () => {
 
   return {
     isEnabled,
-    isHistoryEnabled,
+    isHistoryOnDisk,
     config,
     translationModel,
     status,

@@ -549,7 +549,7 @@
     "recordings": "Enregistrements",
     "stopRecording": "Arrêter la lecture",
     "playbackSpeed": "Vitesse de lecture",
-    "sessionOnly": "Les nouveautés sont conservées seulement jusqu’à la fermeture de TyCo."
+    "sessionOnly": "Les nouveautés sont conservées seulement jusqu’à la fermeture de TyCo. Leurs fichiers et enregistrements d’appels sont dans un dossier temporaire (en mémoire sous Linux) supprimé à la fermeture."
   },
   "input": {
     "historySearchPlaceholder": "Rechercher dans l’historique...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Historique des dialogues",
     "dialogHistoryHint": "Transcriptions d’appels enregistrées et leurs fichiers audio.",
     "dialogHistoryRetentionDays": "Conserver les dialogues",
-    "dialogHistoryRetentionDaysHint": "Les dialogues et leurs enregistrements plus anciens que la durée choisie sont supprimés automatiquement. Tant que Tyco est lancé — les nouveaux dialogues restent en mémoire uniquement et disparaissent à la fermeture, et les appels ne sont pas enregistrés ; les dialogues enregistrés restent.",
+    "dialogHistoryRetentionDaysHint": "Les dialogues et leurs enregistrements plus anciens que la durée choisie sont supprimés automatiquement. Tant que Tyco est lancé — les nouveaux dialogues sont gardés jusqu’à la fermeture : le texte en mémoire, les enregistrements d’appels dans un dossier temporaire (en mémoire sous Linux, sur le disque sous Windows) supprimé à la fermeture. Les dialogues enregistrés restent. Un enregistrement en cours lors du changement est arrêté.",
     "clearDialogsConfirmDialog": "Tous les dialogues enregistrés et leurs enregistrements audio seront définitivement supprimés.",
     "dialogHistoryLink": "Les paramètres d’historique et de conservation des dialogues se trouvent dans",
     "chatHistoryKeeping": "Conserver les chats",
-    "chatHistoryKeepingHint": "Les chats sont stockés localement sans chiffrement ; les mots de passe et les clés qu’ils contiennent ne sont pas masqués. Un chat est supprimé s’il n’a reçu aucun nouveau message pendant plus longtemps que la durée choisie. Tant que Tyco est lancé — les nouveaux chats restent en mémoire uniquement et disparaissent à la fermeture ; les chats enregistrés restent.",
+    "chatHistoryKeepingHint": "Les chats sont stockés localement sans chiffrement ; les mots de passe et les clés qu’ils contiennent ne sont pas masqués. Un chat est supprimé s’il n’a reçu aucun nouveau message pendant plus longtemps que la durée choisie. Tant que Tyco est lancé — les nouveaux chats sont gardés jusqu’à la fermeture : le texte en mémoire, les images et fichiers dans un dossier temporaire (en mémoire sous Linux, sur le disque sous Windows) supprimé à la fermeture. Les chats enregistrés restent.",
     "deleteAllEntries": {
       "one": "Supprimer {count} entrée",
       "few": "Supprimer les {count} entrées",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "Arrêter et agrandir",
     "retryTranslation": "Réessayer",
     "channelFailed": "arrêté",
-    "startRecording": "Démarrer avec enregistrement",
-    "startRecordingNeedsHistory": "L’enregistrement nécessite un historique enregistré sur le disque",
     "recording": "Enregistrement en cours",
     "recordingFailed": "L’enregistrement s’est arrêté : le fichier n’a pas pu être écrit. La transcription continue.",
     "recordingNotInHistory": "L'enregistrement n'est pas dans l'historique : sans entrée, le fichier est supprimé au bout de 7 jours. Déplacez-le hors du dossier des enregistrements pour le garder.",
@@ -1812,7 +1810,8 @@
     "selectRangeUpTo": "Tout sélectionner jusqu’à ce message",
     "copyTurn": "Copier le message",
     "copyTurnTranslation": "Copier la traduction",
-    "searchInDialog": "Rechercher dans le dialogue"
+    "searchInDialog": "Rechercher dans le dialogue",
+    "recordingStoppedBySettings": "L’enregistrement a été arrêté : les réglages de l’historique des dialogues ont changé."
   },
   "toolPermissions": {
     "riskRead": "Lecture",

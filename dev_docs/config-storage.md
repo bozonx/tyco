@@ -440,10 +440,15 @@ the process and the stored history is shown along with it, untouched; no
 retention applies then. Chats and dialogs of a `session` history live in
 `storage::session_history`: listing, reading, searching and renaming see
 both, a session copy hides a stored one of the same id, a removal or clearing
-takes both. The images of session chats are held in the image store by the
-`session-history` owner. When a scope goes back to `disk`, its session chats
-and dialogs are written there. A session dialog is never recorded
-(`voice::new_recording` refuses). The memory-only editor history shows the entries
+takes both. Their files live in a folder of the run (`storage::session_files`, root from
+`platform::session_files`: `$XDG_RUNTIME_DIR` on Linux, in memory; the
+temporary folder elsewhere), removed at quit (`runtime::shutdown`) and at
+start: images and attachments by hash, unreferenced ones pruned after each
+change, and the recordings of session dialogs (`RecordingDirs::of_dialog`).
+When a scope goes back to `disk`, its session chats and dialogs are written
+there with their files; a dialog still being recorded waits for the retry.
+A dialog goes where its recordings are, and the dialog view stops a
+recording when the dialog history setting changes. The memory-only editor history shows the entries
 of the journals along with the new ones it keeps in memory. A change to a
 stored entry goes to the own journal as a record without text (`delete`,
 `result`); a stored entry rewritten in memory is hidden by the memory copy.

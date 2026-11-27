@@ -37,11 +37,16 @@ fn with_conversation_files<T>(
     let attachments = if attached.is_empty() {
         Attachments::none()
     } else {
-        let files_dir = storage::chat_files_dir(app, &scope)?;
+        let [files_dir, session_dir] = storage::chat_files_dirs(app, &scope)?;
         let images = app.state::<ChatImages>();
         Attachments::new(
             attached,
-            Box::new(move |id| images.lock().get_file(&files_dir, id)),
+            Box::new(move |id| {
+                let mut images = images.lock();
+                images
+                    .get_file(&files_dir, id)
+                    .or_else(|_| images.get_file(&session_dir, id))
+            }),
         )?
     };
     match profile_id {

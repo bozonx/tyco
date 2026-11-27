@@ -549,7 +549,7 @@
     "recordings": "Nahrávky",
     "stopRecording": "Zastavit přehrávání",
     "playbackSpeed": "Rychlost přehrávání",
-    "sessionOnly": "Nové se uchovává jen do ukončení TyCo."
+    "sessionOnly": "Nové se uchovává jen do ukončení TyCo. Jeho soubory a nahrávky hovorů jsou v dočasné složce (v Linuxu v paměti), která se při ukončení smaže."
   },
   "input": {
     "historySearchPlaceholder": "Hledat v historii...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Historie dialogů",
     "dialogHistoryHint": "Uložené přepisy hovorů a jejich zvukové nahrávky.",
     "dialogHistoryRetentionDays": "Uchovávat dialogy",
-    "dialogHistoryRetentionDaysHint": "Dialogy a jejich nahrávky starší než zvolené období se mažou automaticky. Dokud běží Tyco — nové dialogy jsou jen v paměti a po ukončení zmizí a hovory se nenahrávají; uložené dialogy zůstanou.",
+    "dialogHistoryRetentionDaysHint": "Dialogy a jejich nahrávky starší než zvolené období se mažou automaticky. Dokud běží Tyco — nové dialogy zůstanou do ukončení: text v paměti, nahrávky hovorů v dočasné složce (v Linuxu v paměti, ve Windows na disku), která se při ukončení smaže. Uložené dialogy zůstanou. Nahrávání běžící při změně nastavení se zastaví.",
     "clearDialogsConfirmDialog": "Všechny uložené dialogy a jejich zvukové nahrávky budou trvale smazány.",
     "dialogHistoryLink": "Nastavení historie a uchovávání dialogů najdete v",
     "chatHistoryKeeping": "Uchovávat chaty",
-    "chatHistoryKeepingHint": "Chaty se ukládají místně bez šifrování; hesla a klíče v nich se neskrývají. Chat se smaže, když v něm déle než zvolené období nebyla nová zpráva. Dokud běží Tyco — nové chaty jsou jen v paměti a po ukončení zmizí; uložené zůstanou.",
+    "chatHistoryKeepingHint": "Chaty se ukládají místně bez šifrování; hesla a klíče v nich se neskrývají. Chat se smaže, když v něm déle než zvolené období nebyla nová zpráva. Dokud běží Tyco — nové chaty zůstanou do ukončení: text v paměti, obrázky a soubory v dočasné složce (v Linuxu v paměti, ve Windows na disku), která se při ukončení smaže. Uložené chaty zůstanou.",
     "deleteAllEntries": {
       "one": "Smazat {count} záznam",
       "few": "Smazat všechny {count} záznamy",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "Zastavit a rozbalit",
     "retryTranslation": "Zkusit znovu",
     "channelFailed": "zastaveno",
-    "startRecording": "Spustit s nahráváním",
-    "startRecordingNeedsHistory": "Nahrávání vyžaduje historii ukládanou na disk",
     "recording": "Nahrává se",
     "recordingFailed": "Nahrávání se zastavilo: soubor nelze zapsat. Přepis pokračuje.",
     "recordingNotInHistory": "Nahrávka není v historii: bez záznamu bude soubor za 7 dní smazán. Chcete-li ho zachovat, přesuňte ho ze složky nahrávek.",
@@ -1812,7 +1810,8 @@
     "selectRangeUpTo": "Vybrat vše až k této zprávě",
     "copyTurn": "Kopírovat zprávu",
     "copyTurnTranslation": "Kopírovat překlad",
-    "searchInDialog": "Hledat v dialogu"
+    "searchInDialog": "Hledat v dialogu",
+    "recordingStoppedBySettings": "Nahrávání bylo zastaveno: změnilo se nastavení historie dialogů."
   },
   "toolPermissions": {
     "riskRead": "Čtení",

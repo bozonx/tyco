@@ -549,7 +549,7 @@
     "recordings": "Înregistrări",
     "stopRecording": "Oprește redarea",
     "playbackSpeed": "Viteza de redare",
-    "sessionOnly": "Ce e nou se păstrează doar până la închiderea TyCo."
+    "sessionOnly": "Ce e nou se păstrează doar până la închiderea TyCo. Fișierele și înregistrările apelurilor stau într-un dosar temporar (în memorie pe Linux), șters la ieșire."
   },
   "input": {
     "historySearchPlaceholder": "Caută în istoric...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Istoricul dialogurilor",
     "dialogHistoryHint": "Transcrierile salvate ale apelurilor și înregistrările audio.",
     "dialogHistoryRetentionDays": "Păstrează dialogurile",
-    "dialogHistoryRetentionDaysHint": "Dialogurile și înregistrările lor mai vechi decât perioada aleasă sunt șterse automat. Cât timp rulează Tyco — dialogurile noi sunt doar în memorie și dispar la ieșire, iar apelurile nu sunt înregistrate; dialogurile salvate rămân.",
+    "dialogHistoryRetentionDaysHint": "Dialogurile și înregistrările lor mai vechi decât perioada aleasă sunt șterse automat. Cât timp rulează Tyco — dialogurile noi se păstrează până la ieșire: textul în memorie, înregistrările apelurilor într-un dosar temporar (în memorie pe Linux, pe disc pe Windows), șters la ieșire. Dialogurile salvate rămân. O înregistrare în curs la schimbarea setării se oprește.",
     "clearDialogsConfirmDialog": "Toate dialogurile salvate și înregistrările lor audio vor fi șterse definitiv.",
     "dialogHistoryLink": "Setările de istoric și păstrare a dialogurilor se află în",
     "chatHistoryKeeping": "Păstrează chaturile",
-    "chatHistoryKeepingHint": "Chaturile sunt stocate local fără criptare; parolele și cheile din ele nu sunt ascunse. Un chat este șters dacă nu a avut mesaje noi mai mult decât perioada aleasă. Cât timp rulează Tyco — chaturile noi sunt doar în memorie și dispar la ieșire; cele salvate rămân.",
+    "chatHistoryKeepingHint": "Chaturile sunt stocate local fără criptare; parolele și cheile din ele nu sunt ascunse. Un chat este șters dacă nu a avut mesaje noi mai mult decât perioada aleasă. Cât timp rulează Tyco — chaturile noi se păstrează până la ieșire: textul în memorie, imaginile și fișierele într-un dosar temporar (în memorie pe Linux, pe disc pe Windows), șters la ieșire. Chaturile salvate rămân.",
     "deleteAllEntries": {
       "one": "Șterge {count} intrare",
       "few": "Șterge toate cele {count} intrări",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "Oprește și extinde",
     "retryTranslation": "Reîncearcă",
     "channelFailed": "oprit",
-    "startRecording": "Pornește cu înregistrare",
-    "startRecordingNeedsHistory": "Înregistrarea necesită istoricul salvat pe disc",
     "recording": "Se înregistrează",
     "recordingFailed": "Înregistrarea s-a oprit: fișierul nu a putut fi scris. Transcrierea continuă.",
     "recordingNotInHistory": "Înregistrarea nu este în istoric: fără o intrare, fișierul este șters după 7 zile. Mutați-l din dosarul înregistrărilor pentru a-l păstra.",
@@ -1812,7 +1810,8 @@
     "selectRangeUpTo": "Selectează totul până la acest mesaj",
     "copyTurn": "Copiază mesajul",
     "copyTurnTranslation": "Copiază traducerea",
-    "searchInDialog": "Căutare în dialog"
+    "searchInDialog": "Căutare în dialog",
+    "recordingStoppedBySettings": "Înregistrarea a fost oprită: setările istoricului dialogurilor s-au schimbat."
   },
   "toolPermissions": {
     "riskRead": "Citire",

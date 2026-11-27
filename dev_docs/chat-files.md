@@ -98,6 +98,10 @@ The file tools get their roots from the conversation, resolved in Rust
 `{ name, id }` of its conversation, Rust validates the names and reads the
 bytes from the session store or the history folder of that environment.
 
+A chat kept "While TyCo is running" writes its images and originals into the
+folder of the run instead (`storage::session_files`), which every read falls
+back to; see `config-storage.md`.
+
 ## Quick request
 
 The quick request owns one conversation session: its chat id, files and tool

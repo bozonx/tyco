@@ -225,5 +225,7 @@ pub fn shutdown(app: &AppHandle) {
     for name in expired {
         log::warn!("{name} shutdown deadline expired");
     }
+    // nothing of the memory-only histories outlives the run, also no file
+    crate::services::storage::clear_session_files(app);
     log::info!("Application service shutdown finished");
 }

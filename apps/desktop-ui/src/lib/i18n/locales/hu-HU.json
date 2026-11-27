@@ -549,7 +549,7 @@
     "recordings": "Felvételek",
     "stopRecording": "Lejátszás leállítása",
     "playbackSpeed": "Lejátszási sebesség",
-    "sessionOnly": "Az újdonságok csak a TyCo bezárásáig maradnak meg."
+    "sessionOnly": "Az újdonságok csak a TyCo bezárásáig maradnak meg. Fájljaik és hívásfelvételeik egy ideiglenes mappában vannak (Linuxon a memóriában), amely kilépéskor törlődik."
   },
   "input": {
     "historySearchPlaceholder": "Keresés az előzményekben...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Párbeszéd-előzmények",
     "dialogHistoryHint": "Mentett hívásleiratok és hangfelvételeik.",
     "dialogHistoryRetentionDays": "Párbeszédek megőrzése",
-    "dialogHistoryRetentionDaysHint": "A választott időszaknál régebbi párbeszédek és felvételeik automatikusan törlődnek. Amíg a Tyco fut — az új párbeszédek csak a memóriában vannak, kilépéskor elvesznek, és a hívások nem rögzítődnek; a mentett párbeszédek megmaradnak.",
+    "dialogHistoryRetentionDaysHint": "A választott időszaknál régebbi párbeszédek és felvételeik automatikusan törlődnek. Amíg a Tyco fut — az új párbeszédek kilépésig maradnak: a szöveg a memóriában, a hívásfelvételek egy ideiglenes mappában (Linuxon a memóriában, Windowson a lemezen), amely kilépéskor törlődik. A mentett párbeszédek megmaradnak. A beállítás módosításakor futó felvétel leáll.",
     "clearDialogsConfirmDialog": "Minden mentett párbeszéd és hangfelvétel véglegesen törlődik.",
     "dialogHistoryLink": "A párbeszédek előzményeinek és megőrzésének beállításai itt találhatók:",
     "chatHistoryKeeping": "Csevegések megőrzése",
-    "chatHistoryKeepingHint": "A csevegések helyben, titkosítás nélkül tárolódnak; a bennük lévő jelszavak és kulcsok nincsenek elrejtve. Egy csevegés törlődik, ha a választott időszaknál tovább nem érkezett bele új üzenet. Amíg a Tyco fut — az új csevegések csak a memóriában vannak, és kilépéskor elvesznek; a mentettek megmaradnak.",
+    "chatHistoryKeepingHint": "A csevegések helyben, titkosítás nélkül tárolódnak; a bennük lévő jelszavak és kulcsok nincsenek elrejtve. Egy csevegés törlődik, ha a választott időszaknál tovább nem érkezett bele új üzenet. Amíg a Tyco fut — az új csevegések kilépésig maradnak: a szöveg a memóriában, a képek és fájlok egy ideiglenes mappában (Linuxon a memóriában, Windowson a lemezen), amely kilépéskor törlődik. A mentett csevegések megmaradnak.",
     "deleteAllEntries": {
       "one": "{count} bejegyzés törlése",
       "few": "Mind a(z) {count} bejegyzés törlése",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "Leállítás és kibontás",
     "retryTranslation": "Újra",
     "channelFailed": "leállt",
-    "startRecording": "Indítás felvétellel",
-    "startRecordingNeedsHistory": "A felvételhez lemezre mentett előzmények szükségesek",
     "recording": "Felvétel folyamatban",
     "recordingFailed": "A felvétel leállt: a fájl nem írható. Az átirat folytatódik.",
     "recordingNotInHistory": "A felvétel nincs az előzményekben: bejegyzés nélkül a fájl 7 nap múlva törlődik. A megtartásához helyezze át a felvételek mappájából.",
@@ -1812,7 +1810,8 @@
     "selectRangeUpTo": "Összes kijelölése eddig az üzenetig",
     "copyTurn": "Üzenet másolása",
     "copyTurnTranslation": "Fordítás másolása",
-    "searchInDialog": "Keresés a párbeszédben"
+    "searchInDialog": "Keresés a párbeszédben",
+    "recordingStoppedBySettings": "A felvétel leállt: megváltoztak a párbeszéd-előzmények beállításai."
   },
   "toolPermissions": {
     "riskRead": "Olvasás",

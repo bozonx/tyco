@@ -283,7 +283,7 @@ describe('DialogToolbar.vue', () => {
     expect(startSpy).toHaveBeenCalledWith({ isRecording: false })
   })
 
-  it('disables record toggle when dialog history is not saved to disk', async () => {
+  it('offers recording while dialogs are kept until TyCo quits', async () => {
     desktop.setUserConfig({
       dialog: {
         ...DEFAULT_USER_CONFIG.dialog,
@@ -296,10 +296,7 @@ describe('DialogToolbar.vue', () => {
     })
 
     const toggle = wrapper.find('.dialog-toolbar-record-toggle')
-    expect(toggle.attributes('disabled')).toBeDefined()
-    expect(toggle.attributes('title')).toBe(
-      i18n.global.t('dialog.startRecordingNeedsHistory')
-    )
+    expect(toggle.attributes('disabled')).toBeUndefined()
   })
 
   it('starts a new dialog at once, without asking', async () => {

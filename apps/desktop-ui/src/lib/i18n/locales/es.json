@@ -549,7 +549,7 @@
     "recordings": "Grabaciones",
     "stopRecording": "Detener la reproducción",
     "playbackSpeed": "Velocidad de reproducción",
-    "sessionOnly": "Lo nuevo se conserva solo hasta que se cierre TyCo."
+    "sessionOnly": "Lo nuevo se conserva solo hasta que se cierre TyCo. Sus archivos y grabaciones de llamadas están en una carpeta temporal (en memoria en Linux) que se elimina al salir."
   },
   "input": {
     "historySearchPlaceholder": "Buscar en el historial...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Historial de diálogos",
     "dialogHistoryHint": "Transcripciones de llamadas guardadas y sus grabaciones de audio.",
     "dialogHistoryRetentionDays": "Conservar diálogos",
-    "dialogHistoryRetentionDaysHint": "Los diálogos y sus grabaciones más antiguos que el período elegido se eliminan automáticamente. Mientras Tyco esté abierto: los diálogos nuevos solo están en memoria y desaparecen al salir, y las llamadas no se graban; los diálogos guardados permanecen.",
+    "dialogHistoryRetentionDaysHint": "Los diálogos y sus grabaciones más antiguos que el período elegido se eliminan automáticamente. Mientras Tyco esté abierto: los diálogos nuevos se conservan hasta salir, el texto en memoria y las grabaciones de llamadas en una carpeta temporal (en memoria en Linux, en el disco en Windows) que se elimina al salir. Los diálogos guardados permanecen. Una grabación en curso al cambiar el ajuste se detiene.",
     "clearDialogsConfirmDialog": "Todos los diálogos guardados y sus grabaciones de audio se eliminarán de forma permanente.",
     "dialogHistoryLink": "La configuración del historial y retención de diálogos está en",
     "chatHistoryKeeping": "Conservar chats",
-    "chatHistoryKeepingHint": "Los chats se guardan localmente sin cifrar; las contraseñas y claves que contienen no se ocultan. Un chat se elimina si lleva sin mensajes nuevos más tiempo que el período elegido. Mientras Tyco esté abierto: los chats nuevos solo están en memoria y desaparecen al salir; los guardados permanecen.",
+    "chatHistoryKeepingHint": "Los chats se guardan localmente sin cifrar; las contraseñas y claves que contienen no se ocultan. Un chat se elimina si lleva sin mensajes nuevos más tiempo que el período elegido. Mientras Tyco esté abierto: los chats nuevos se conservan hasta salir, el texto en memoria y las imágenes y archivos en una carpeta temporal (en memoria en Linux, en el disco en Windows) que se elimina al salir. Los chats guardados permanecen.",
     "deleteAllEntries": {
       "one": "Eliminar {count} entrada",
       "few": "Eliminar las {count} entradas",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "Detener y expandir",
     "retryTranslation": "Reintentar",
     "channelFailed": "detenido",
-    "startRecording": "Iniciar con grabación",
-    "startRecordingNeedsHistory": "Para grabar, el historial debe guardarse en el disco",
     "recording": "Grabando",
     "recordingFailed": "La grabación se detuvo: no se pudo escribir el archivo. La transcripción continúa.",
     "recordingNotInHistory": "La grabación no está en el historial: sin una entrada, el archivo se elimina en 7 días. Muévelo fuera de la carpeta de grabaciones para conservarlo.",
@@ -1812,7 +1810,8 @@
     "selectRangeUpTo": "Seleccionar todo hasta este mensaje",
     "copyTurn": "Copiar mensaje",
     "copyTurnTranslation": "Copiar traducción",
-    "searchInDialog": "Buscar en el diálogo"
+    "searchInDialog": "Buscar en el diálogo",
+    "recordingStoppedBySettings": "La grabación se detuvo: cambiaron los ajustes del historial de diálogos."
   },
   "toolPermissions": {
     "riskRead": "Lectura",

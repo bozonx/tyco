@@ -549,7 +549,7 @@
     "recordings": "Aufnahmen",
     "stopRecording": "Wiedergabe stoppen",
     "playbackSpeed": "Wiedergabegeschwindigkeit",
-    "sessionOnly": "Neues wird nur bis zum Beenden von TyCo aufbewahrt."
+    "sessionOnly": "Neues wird nur bis zum Beenden von TyCo aufbewahrt. Seine Dateien und Anrufaufnahmen liegen in einem temporären Ordner (unter Linux im Arbeitsspeicher), der beim Beenden entfernt wird."
   },
   "input": {
     "historySearchPlaceholder": "Verlauf durchsuchen...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Dialogverlauf",
     "dialogHistoryHint": "Gespeicherte Gesprächstranskripte und ihre Audioaufnahmen.",
     "dialogHistoryRetentionDays": "Dialoge aufbewahren",
-    "dialogHistoryRetentionDaysHint": "Dialoge und ihre Aufnahmen, die älter als der gewählte Zeitraum sind, werden automatisch gelöscht. Solange Tyco läuft — neue Dialoge liegen nur im Speicher und verschwinden beim Beenden, und Anrufe werden nicht aufgenommen; gespeicherte Dialoge bleiben.",
+    "dialogHistoryRetentionDaysHint": "Dialoge und ihre Aufnahmen, die älter als der gewählte Zeitraum sind, werden automatisch gelöscht. Solange Tyco läuft — neue Dialoge bleiben bis zum Beenden: der Text im Speicher, Anrufaufnahmen in einem temporären Ordner (unter Linux im Arbeitsspeicher, unter Windows auf dem Datenträger), der beim Beenden entfernt wird. Gespeicherte Dialoge bleiben. Eine Aufnahme, die bei der Änderung läuft, wird beendet.",
     "clearDialogsConfirmDialog": "Alle gespeicherten Dialoge und ihre Audioaufnahmen werden dauerhaft gelöscht.",
     "dialogHistoryLink": "Einstellungen zu Dialogverlauf und Aufbewahrung finden Sie unter",
     "chatHistoryKeeping": "Chats aufbewahren",
-    "chatHistoryKeepingHint": "Chats werden lokal ohne Verschlüsselung gespeichert; Passwörter und Schlüssel darin werden nicht verborgen. Ein Chat wird gelöscht, wenn er länger als der gewählte Zeitraum keine neuen Nachrichten hatte. Solange Tyco läuft — neue Chats liegen nur im Speicher und verschwinden beim Beenden; gespeicherte bleiben.",
+    "chatHistoryKeepingHint": "Chats werden lokal ohne Verschlüsselung gespeichert; Passwörter und Schlüssel darin werden nicht verborgen. Ein Chat wird gelöscht, wenn er länger als der gewählte Zeitraum keine neuen Nachrichten hatte. Solange Tyco läuft — neue Chats bleiben bis zum Beenden: der Text im Speicher, Bilder und Dateien in einem temporären Ordner (unter Linux im Arbeitsspeicher, unter Windows auf dem Datenträger), der beim Beenden entfernt wird. Gespeicherte Chats bleiben.",
     "deleteAllEntries": {
       "one": "{count} Eintrag löschen",
       "few": "Alle {count} Einträge löschen",
@@ -1749,8 +1749,6 @@
     "stopAndExpand": "Beenden und erweitern",
     "retryTranslation": "Erneut versuchen",
     "channelFailed": "gestoppt",
-    "startRecording": "Mit Aufnahme starten",
-    "startRecordingNeedsHistory": "Aufnehmen ist nur möglich, wenn der Verlauf auf dem Datenträger gespeichert wird",
     "recording": "Aufnahme läuft",
     "recordingFailed": "Die Aufnahme wurde beendet: Die Datei konnte nicht geschrieben werden. Die Mitschrift läuft weiter.",
     "recordingNotInHistory": "Die Aufnahme ist nicht im Verlauf: Ohne Eintrag wird die Datei nach 7 Tagen gelöscht. Verschieben Sie sie aus dem Aufnahmeordner, um sie zu behalten.",
@@ -1812,7 +1810,8 @@
     "selectRangeUpTo": "Alles bis zu dieser Nachricht auswählen",
     "copyTurn": "Nachricht kopieren",
     "copyTurnTranslation": "Übersetzung kopieren",
-    "searchInDialog": "Im Dialog suchen"
+    "searchInDialog": "Im Dialog suchen",
+    "recordingStoppedBySettings": "Die Aufnahme wurde beendet: Die Einstellungen des Dialogverlaufs haben sich geändert."
   },
   "toolPermissions": {
     "riskRead": "Liest",

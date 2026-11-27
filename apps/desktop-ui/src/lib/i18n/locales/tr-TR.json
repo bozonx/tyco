@@ -549,7 +549,7 @@
     "recordings": "Kayıtlar",
     "stopRecording": "Oynatmayı durdur",
     "playbackSpeed": "Oynatma hızı",
-    "sessionOnly": "Yeni olanlar yalnızca TyCo kapanana kadar tutulur."
+    "sessionOnly": "Yeni olanlar yalnızca TyCo kapanana kadar tutulur. Dosyaları ve arama kayıtları, çıkışta silinen geçici bir klasördedir (Linux'ta bellekte)."
   },
   "input": {
     "historySearchPlaceholder": "Geçmişte ara...",
@@ -1364,11 +1364,11 @@
     "sectionDialogHistory": "Diyalog geçmişi",
     "dialogHistoryHint": "Kaydedilen görüşme dökümleri ve ses kayıtları.",
     "dialogHistoryRetentionDays": "Diyalogları sakla",
-    "dialogHistoryRetentionDaysHint": "Seçilen süreden eski diyaloglar ve kayıtları otomatik olarak silinir. Tyco çalışırken — yeni diyaloglar yalnızca bellekte tutulur ve çıkışta kaybolur, aramalar kaydedilmez; kaydedilen diyaloglar kalır.",
+    "dialogHistoryRetentionDaysHint": "Seçilen süreden eski diyaloglar ve kayıtları otomatik olarak silinir. Tyco çalışırken — yeni diyaloglar çıkışa kadar tutulur: metin bellekte, arama kayıtları çıkışta silinen geçici bir klasörde (Linux'ta bellekte, Windows'ta diskte). Kaydedilen diyaloglar kalır. Ayar değiştiğinde süren kayıt durdurulur.",
     "clearDialogsConfirmDialog": "Kaydedilen tüm diyaloglar ve ses kayıtları kalıcı olarak silinecek.",
     "dialogHistoryLink": "Diyalog geçmişi ve saklama ayarları şurada bulunur:",
     "chatHistoryKeeping": "Sohbetleri sakla",
-    "chatHistoryKeepingHint": "Sohbetler yerel olarak şifrelenmeden saklanır; içlerindeki parolalar ve anahtarlar gizlenmez. Seçilen süreden uzun süre yeni mesaj almayan sohbet silinir. Tyco çalışırken — yeni sohbetler yalnızca bellekte tutulur ve çıkışta kaybolur; kaydedilenler kalır.",
+    "chatHistoryKeepingHint": "Sohbetler yerel olarak şifrelenmeden saklanır; içlerindeki parolalar ve anahtarlar gizlenmez. Seçilen süreden uzun süre yeni mesaj almayan sohbet silinir. Tyco çalışırken — yeni sohbetler çıkışa kadar tutulur: metin bellekte, görseller ve dosyalar çıkışta silinen geçici bir klasörde (Linux'ta bellekte, Windows'ta diskte). Kaydedilen sohbetler kalır.",
     "deleteAllEntries": {
       "one": "{count} kaydı sil",
       "few": "{count} kaydın tümünü sil",
@@ -1745,8 +1745,6 @@
     "stopAndExpand": "Durdur ve genişlet",
     "retryTranslation": "Tekrar dene",
     "channelFailed": "durduruldu",
-    "startRecording": "Kayıtla başlat",
-    "startRecordingNeedsHistory": "Kayıt için geçmişin diske kaydedilmesi gerekir",
     "recording": "Kaydediliyor",
     "recordingFailed": "Kayıt durdu: dosya yazılamadı. Döküm devam ediyor.",
     "recordingNotInHistory": "Kayıt geçmişte yok: bir girdi olmadan dosya 7 gün içinde silinir. Saklamak için kayıtlar klasörünün dışına taşıyın.",
@@ -1808,7 +1806,8 @@
     "selectRangeUpTo": "Bu mesaja kadar olanları seç",
     "copyTurn": "Mesajı kopyala",
     "copyTurnTranslation": "Çeviriyi kopyala",
-    "searchInDialog": "Diyalogda ara"
+    "searchInDialog": "Diyalogda ara",
+    "recordingStoppedBySettings": "Kayıt durduruldu: diyalog geçmişi ayarları değişti."
   },
   "toolPermissions": {
     "riskRead": "Okuma",

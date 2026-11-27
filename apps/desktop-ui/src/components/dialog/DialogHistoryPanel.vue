@@ -108,7 +108,7 @@
       </section>
     </div>
 
-    <div v-if="!dialog.isHistoryEnabled" class="panel-footer">
+    <div v-if="!dialog.isHistoryOnDisk" class="panel-footer">
       <p class="history-disabled-hint">
         {{ t('history.sessionOnly') }}
       </p>

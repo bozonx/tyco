@@ -47,12 +47,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { chatHistoryRetentionChoices } from '../../lib/chat/chat-history-settings'
+import { desktopClient } from '../../lib/desktop/client'
 import { historyRetentionOptions } from '../../lib/history/history-retention'
 import {
   type KeptHistoryConfig,
@@ -67,7 +68,11 @@ import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import SettingsHistoryClear from './SettingsHistoryClear.vue'
 import SettingsSection from './SettingsSection.vue'
-import type { VaultChatHistory, VaultInfo } from '@tyco/shared'
+import {
+  DESKTOP_EVENTS,
+  type VaultChatHistory,
+  type VaultInfo,
+} from '@tyco/shared'
 
 /**
  * How the chats of the profiles of one workspace are kept. The workspace
@@ -145,6 +150,23 @@ watch(
   () => void refreshCount(),
   { immediate: true }
 )
+
+// the count follows the chats of profiles as they are kept or removed
+let stopListening: (() => void) | undefined
+let isUnmounted = false
+void desktopClient
+  .listen(DESKTOP_EVENTS.CHATS_CHANGED, (event) => {
+    if (event.profileId) void refreshCount()
+  })
+  .then((unlisten) => {
+    if (isUnmounted) unlisten()
+    else stopListening = unlisten
+  })
+  .catch(() => undefined)
+onBeforeUnmount(() => {
+  isUnmounted = true
+  stopListening?.()
+})
 
 async function clearChats() {
   try {

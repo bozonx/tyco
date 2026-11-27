@@ -184,7 +184,11 @@ pub fn respond_with(dirs: &RecordingDirs, request: &Request<Vec<u8>>) -> Respons
 
 /// Answers a request of the scheme with the recordings of the app.
 pub fn respond(app: &tauri::AppHandle, request: &Request<Vec<u8>>) -> Response<Vec<u8>> {
-    match RecordingDirs::of_app(app) {
+    let dirs = match recording_target(request.uri().path()) {
+        Some((dialog_id, _)) => RecordingDirs::of_dialog(app, &dialog_id),
+        None => RecordingDirs::of_app(app),
+    };
+    match dirs {
         Ok(dirs) => respond_with(&dirs, request),
         Err(_) => text_response(StatusCode::NOT_FOUND, "The recordings are unavailable"),
     }

@@ -257,13 +257,9 @@ useDismissibleLayer({
   keydown: onRecordingNoticeKeydown,
 })
 
-// a recording belongs to its dialog history entry: nothing would keep it otherwise
-const canRecord = computed(() => dialog.isHistoryEnabled)
-
-const isRecordToggleDisabled = computed(() => !canRecord.value || !isIdle.value)
+const isRecordToggleDisabled = computed(() => !isIdle.value)
 
 const recordToggleTitle = computed(() => {
-  if (!canRecord.value) return t('dialog.startRecordingNeedsHistory')
   if (!isIdle.value) return t('dialog.recordStopToChangeHint')
   return dialog.isRecordEnabled
     ? t('dialog.recordToggleDisableHint')
@@ -271,7 +267,7 @@ const recordToggleTitle = computed(() => {
 })
 
 const runButtonTitle = computed(() => {
-  const isRecording = dialog.isRecordEnabled && canRecord.value
+  const isRecording = dialog.isRecordEnabled
   if (isEmpty.value) {
     return isRecording
       ? t('dialog.listenTooltipWithRecord')
@@ -343,7 +339,7 @@ async function confirmRecordingNotice() {
 }
 
 function handleRun() {
-  void dialog.start({ isRecording: dialog.isRecordEnabled && canRecord.value })
+  void dialog.start({ isRecording: dialog.isRecordEnabled })
 }
 
 const channelNotice = computed(() => {

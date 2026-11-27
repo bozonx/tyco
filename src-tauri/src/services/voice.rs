@@ -196,18 +196,13 @@ pub async fn start_capture<S: EventSink>(
     .await
 }
 
-/// A recording belongs to its dialog history entry: without dialog history
-/// kept on disk, nothing would ever name or remove the file.
+/// A recording belongs to its dialog history entry: while new dialogs are
+/// kept until the app quits, so is it, in the folder of this run.
 fn new_recording(app: &AppHandle, dialog_id: &str) -> Result<RecordingRequest, AppError> {
     use tauri::Manager;
     let config = app.state::<crate::state::AppState>().user_config();
     let policy = super::storage::HistorySettings::from_config(&config).dialog;
-    if policy.is_session {
-        return Err(AppError::InvalidInput(
-            "A call is recorded only while dialog history is saved on disk".into(),
-        ));
-    }
-    let dirs = super::storage::recordings::RecordingDirs::of_app(app)?;
+    let dirs = super::storage::recording_dirs_for_new(app, policy.is_session)?;
     let local_time = chrono::Local::now().format("%Y-%m-%d %H-%M-%S").to_string();
     let options = crate::models::user_config::dialog_recording(&config);
     Ok(RecordingRequest {
