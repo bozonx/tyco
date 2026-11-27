@@ -67,7 +67,7 @@
       </div>
     </SettingsSection>
 
-    <SettingsSection :title="t('settings.sectionLlmImages')">
+    <SettingsSection :title="t('settings.sectionLlmChatLimits')">
       <FieldRow
         :label="t('settings.chatImageQuality')"
         :info="t('settings.chatImageQualityHint')"
@@ -78,9 +78,6 @@
           @update:model-value="llm.imageQuality = $event as LlmImageQuality"
         />
       </FieldRow>
-    </SettingsSection>
-
-    <SettingsSection :title="t('settings.sectionLlmTools')">
       <FieldRow
         :label="t('settings.maxToolSteps')"
         :info="t('settings.maxToolStepsHint')"
@@ -115,26 +112,6 @@
           :has-key="hasJinaKey"
           :save="saveJinaKey"
           :remove="removeJinaKey"
-        />
-      </FieldRow>
-      <FieldRow
-        :label="t('settings.webFetchMaxCharacters')"
-        :info="t('settings.webFetchMaxCharactersHint')"
-        :error="
-          webFetchMaxCharsError
-            ? t('settings.webFetchMaxCharactersError')
-            : undefined
-        "
-      >
-        <FieldNumber
-          min="1000"
-          max="100000"
-          step="1000"
-          :model-value="fetchMaxCharsText"
-          :placeholder="String(DEFAULT_WEB_FETCH_MAX_CHARACTERS)"
-          :aria-invalid="webFetchMaxCharsError || undefined"
-          @update:model-value="setFetchMaxChars"
-          @invalid-input="webFetchMaxCharsError = true"
         />
       </FieldRow>
     </SettingsSection>
@@ -178,14 +155,11 @@ import SecretStorageNotice from './SecretStorageNotice.vue'
 import SettingsSection from './SettingsSection.vue'
 import {
   DEFAULT_MAX_TOOL_STEPS,
-  DEFAULT_WEB_FETCH_MAX_CHARACTERS,
   LLM_TASKS,
   type LlmImageQuality,
   type LlmModelMode,
   type LlmProvider,
   MAX_TOOL_STEPS,
-  MAX_WEB_FETCH_MAX_CHARACTERS,
-  MIN_WEB_FETCH_MAX_CHARACTERS,
   WEB_SECRET_IDS,
   llmSecretId,
 } from '@tyco/shared'
@@ -196,9 +170,7 @@ const TASK_LABEL_KEYS = {
   voiceCorrection: 'settings.voiceTextCorrection',
   correction: 'settings.textCorrection',
   aiTask: 'settings.aiCommands',
-  transformation: 'settings.transformationsTab',
-  styling: 'settings.stylingTab',
-  quickRequest: 'action.quickAiRequest',
+  rewrite: 'settings.textRewrite',
 } as const
 
 const { t } = useI18n()
@@ -410,40 +382,6 @@ function setMaxToolSteps(text: string) {
     steps <= MAX_TOOL_STEPS
   )
   if (!maxToolStepsError.value) llm.value.maxToolSteps = steps
-}
-
-const webFetchMaxCharsError = ref(false)
-const fetchMaxCharsText = ref(
-  String(
-    userConfig.value.llm.webSearch?.fetchMaxCharacters ??
-      DEFAULT_WEB_FETCH_MAX_CHARACTERS
-  )
-)
-function setFetchMaxChars(text: string) {
-  fetchMaxCharsText.value = text
-  const trimmed = text.trim()
-  if (!trimmed) {
-    webFetchMaxCharsError.value = false
-    if (userConfig.value.llm.webSearch) {
-      delete userConfig.value.llm.webSearch.fetchMaxCharacters
-    }
-    return
-  }
-  const num = Number(trimmed)
-  if (
-    Number.isInteger(num) &&
-    num >= MIN_WEB_FETCH_MAX_CHARACTERS &&
-    num <= MAX_WEB_FETCH_MAX_CHARACTERS
-  ) {
-    webFetchMaxCharsError.value = false
-    if (!userConfig.value.llm.webSearch) {
-      userConfig.value.llm.webSearch = { fetchMaxCharacters: num }
-    } else {
-      userConfig.value.llm.webSearch.fetchMaxCharacters = num
-    }
-  } else {
-    webFetchMaxCharsError.value = true
-  }
 }
 
 onMounted(() => {

@@ -14,7 +14,7 @@ import { createDesktopChatTools } from '../chat-tools/desktop-chat-tools'
 import type { PluginChatToolsDependencies } from '../chat-tools/plugin-chat-tools'
 import type { ChatToolApprovalRequest } from '../chat-tools/chat-tool-loop'
 import { isQuickRequestSavingEnabled } from '../chat/chat-history-settings'
-import { chatModelOptions } from '../chat/chat-llm-selection'
+import { chatModelOptions, pickChatModel } from '../chat/chat-llm-selection'
 import { resolveProfileInstructions } from '../chat/chat-profile-runtime'
 import { profileTurnOptions } from '../chat/chat-profile-turn'
 import type { invokeDesktop } from '../desktop/invoke'
@@ -22,7 +22,7 @@ import { describeError } from '../errors/describe-error'
 import { resultOrThrow, type DesktopCall } from '../ipc/ipc-model'
 import type { createLlmActions } from '../llm/llm-actions'
 import { LlmError } from '../llm/llm-client'
-import { normalizeLlmConfig, withPickedTaskModel } from '../llm/llm-config'
+import { normalizeLlmConfig } from '../llm/llm-config'
 import { formatLlmError } from '../llm/llm-errors'
 import { isSecretUsable, type SecretsStatus } from '../net/secrets'
 import type { OperationLookup } from '../operations/operation-types'
@@ -88,7 +88,6 @@ export function createQuickAiRequestRuntime(
   deps: QuickAiRequestRuntimeDependencies
 ) {
   const { translate: t } = deps
-  const quickRequestTask = () => deps.getUserConfig()?.llm?.tasks?.quickRequest
   const profileOf = (id: string | null) =>
     id ? deps.getProfile(id) : undefined
 
@@ -123,8 +122,6 @@ export function createQuickAiRequestRuntime(
         getHasPersonalData: () =>
           Boolean(model.sourceText.value || model.sourceImages.value.length),
         getConversationText: () => model.conversationText(),
-        getFetchMaxCharacters: () =>
-          deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
         getMaxStepCount: () => maxToolStepsOf(deps.getUserConfig()?.llm),
         warn: (message) => deps.warn(message, 'tools'),
         commands: () => deps.getUserConfig()?.commands ?? [],
@@ -157,29 +154,37 @@ export function createQuickAiRequestRuntime(
       }
       return
     }
-    // "Ask AI" keeps its quick request model in the task settings
     const response = await deps.updateUserConfig({
-      llm: withPickedTaskModel(
-        normalizeLlmConfig(deps.getUserConfig()?.llm),
-        'quickRequest',
-        modelId
-      ),
+      llm: {
+        ...normalizeLlmConfig(deps.getUserConfig()?.llm),
+        quickRequestModelId: modelId,
+      },
     })
     if (!response.success) deps.toastError(describeError(response.error, t))
   }
 
+  const modelOptions = computed(() =>
+    chatModelOptions(normalizeLlmConfig(deps.getUserConfig()?.llm), (id) =>
+      isSecretUsable(deps.getSecrets(), llmSecretId(id))
+    )
+  )
   const model = createQuickAiRequestModel({
     context: deps.context,
     initialInputMode: deps.initialInputMode,
     initialProfileId: deps.initialProfileId,
-    getModelOptions: () =>
-      chatModelOptions(normalizeLlmConfig(deps.getUserConfig()?.llm), (id) =>
-        isSecretUsable(deps.getSecrets(), llmSecretId(id))
-      ),
-    getRememberedModelId: (profileId) =>
-      profileOf(profileId)?.quickRequestModelId ||
-      quickRequestTask()?.modelId ||
-      undefined,
+    getModelOptions: () => modelOptions.value,
+    getRememberedModelId: (profileId) => {
+      const llm = deps.getUserConfig().llm
+      const options = modelOptions.value
+      const picks = [
+        profileOf(profileId)?.quickRequestModelId,
+        llm.quickRequestModelId,
+      ]
+      return (
+        picks.find((id) => options.some((option) => option.id === id)) ??
+        pickChatModel(options, llm.tasks.chat.modelId)?.id
+      )
+    },
     rememberModelId,
     getRules: (profileId) =>
       profileId ? undefined : deps.getUserConfig()?.llm?.tasks.chat.rule,
@@ -218,7 +223,6 @@ export function createQuickAiRequestRuntime(
         {
           ...options,
           ...turn,
-          task: 'quickRequest',
           rules: profileId
             ? undefined
             : deps.getUserConfig()?.llm?.tasks.chat.rule,

@@ -20,9 +20,7 @@ const MAX_LOCALE_LEN: usize = 35;
 const WEB_TIMEOUT: Duration = Duration::from_secs(30);
 const USER_AGENT: &str = concat!("TyCo/", env!("CARGO_PKG_VERSION"));
 
-pub const DEFAULT_FETCH_MAX_CHARS: usize = 15_000;
-pub const MAX_FETCH_CHARS: usize = 100_000;
-pub const MIN_FETCH_CHARS: usize = 1_000;
+const MAX_FETCH_CHARS: usize = 50_000;
 const MAX_SEARCH_SNIPPET_LEN: usize = 1000;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, ts_rs::TS)]
@@ -341,8 +339,8 @@ fn prepare_fetch(
         url: parsed,
         offset: offset.unwrap_or(0),
         limit: max_characters
-            .unwrap_or(DEFAULT_FETCH_MAX_CHARS)
-            .clamp(MIN_FETCH_CHARS, MAX_FETCH_CHARS),
+            .unwrap_or(MAX_FETCH_CHARS)
+            .clamp(1, MAX_FETCH_CHARS),
         locale: parse_header_token(locale, "locale", Some(MAX_LOCALE_LEN))?,
     })
 }
@@ -679,6 +677,16 @@ mod tests {
         assert_eq!(req.headers().get("X-Return-Format").unwrap(), "markdown");
         assert_eq!(req.headers().get("X-Locale").unwrap(), "ru-RU");
         assert!(req.headers().get("Authorization").is_none());
+    }
+
+    #[test]
+    fn fetch_limit_respects_the_output_budget_and_page_cap() {
+        let url = "https://example.com";
+        for (max_characters, expected) in [(None, 50_000), (Some(60_000), 50_000), (Some(400), 400)]
+        {
+            let prepared = prepare_fetch(url.into(), max_characters, None, None).unwrap();
+            assert_eq!(prepared.limit, expected);
+        }
     }
 
     #[test]

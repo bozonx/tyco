@@ -203,8 +203,6 @@ export const useOperationsStore = defineStore('tools', () => {
   onScopeDispose(toolApprovals.cancelAll)
   const webTools = createDesktopWebToolProvider({
     invoke: invokeDesktop,
-    getFetchMaxCharacters: () =>
-      desktopStore.userConfig?.llm?.webSearch?.fetchMaxCharacters,
     warn: (message) => clientLogger.warn(message, 'tools'),
   })
   const systemContext = useSystemContextStore().context

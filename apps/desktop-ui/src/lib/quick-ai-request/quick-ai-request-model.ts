@@ -176,8 +176,10 @@ export function createQuickAiRequestModel(
   )
   const inputMode = ref<'text' | 'voice'>(deps.initialInputMode ?? 'text')
   const profileId = ref<string | null>(deps.initialProfileId ?? null)
-  const modelId = ref<string | null>(
-    deps.getRememberedModelId(profileId.value) ?? null
+  const pickedModelId = ref<string | null>(null)
+  const modelId = computed(
+    () =>
+      pickedModelId.value ?? deps.getRememberedModelId(profileId.value) ?? null
   )
   const sourceImages = ref<ChatImage[]>(
     context.kind === 'screenshot' ? [...(context.images ?? [])] : []
@@ -422,14 +424,14 @@ export function createQuickAiRequestModel(
     if (isProfileLocked.value || isPreparing.value) return
     profileId.value = id
     // every profile keeps the model it was last asked with
-    modelId.value = deps.getRememberedModelId(id) ?? null
+    pickedModelId.value = null
     notice.value = null
   }
 
   /** Picks the model of the next requests and remembers it for the profile */
   const setModelId = async (id: string) => {
     if (isPreparing.value || isGenerating.value || id === modelId.value) return
-    modelId.value = id
+    pickedModelId.value = id
     notice.value = null
     await deps.rememberModelId(profileId.value, id)
   }

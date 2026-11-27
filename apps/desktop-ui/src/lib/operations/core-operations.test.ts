@@ -200,15 +200,15 @@ describe('createCoreOperations', () => {
   it('tells why a tool of the LLM cannot run', () => {
     const { tools } = setup({
       getLlmUnavailableReasonKey: (task) =>
-        task === 'styling' ? 'operations.noLlm' : undefined,
+        task === 'rewrite' ? 'operations.noLlm' : undefined,
       getTranslatorUnavailableReasonKey: () => 'operations.noLlm',
     })
     expect(
       tools.get('core.correct')?.getUnavailableReasonKey?.()
     ).toBeUndefined()
-    expect(
-      tools.get('core.transformation')?.getUnavailableReasonKey?.()
-    ).toBeUndefined()
+    expect(tools.get('core.transformation')?.getUnavailableReasonKey?.()).toBe(
+      'operations.noLlm'
+    )
     expect(tools.get('core.styling')?.getUnavailableReasonKey?.()).toBe(
       'operations.noLlm'
     )

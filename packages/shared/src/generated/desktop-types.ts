@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 9be8fd6a62c985264bf9162611ac790e7409f7bc33f754df4ce5e977b72cb131
+// Source hash: 108a4041c865cfd5b8c8dcf16ff69d036d84364ca54d3ed0d88a5e9a8c0cac7b
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -1190,7 +1190,10 @@ export type SystemInfo = {
   arch: string
   /** The window system on Linux, `x11` or `wayland`; `None` elsewhere. */
   displayServer: string | null
-  /** The desktop environment on Linux when Tyco knows it, e.g. `KDE`. */
+  /**
+   * The desktop environment on Linux as the session names it, e.g. `KDE`,
+   * `XFCE` or `ubuntu:GNOME`.
+   */
   desktop: string | null
 }
 

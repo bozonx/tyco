@@ -36,7 +36,7 @@ describe('QuickAiRequestMenu', () => {
         ...desktop.backend.userConfig.llm,
         tasks: {
           ...desktop.backend.userConfig.llm.tasks,
-          quickRequest: { modelId: 'gpt-4', rule: '' },
+          chat: { modelId: 'gpt-4', rule: '' },
         },
         models: [
           {
@@ -461,7 +461,7 @@ describe('QuickAiRequestMenu', () => {
         ...desktop.backend.userConfig.llm,
         tasks: {
           ...desktop.backend.userConfig.llm.tasks,
-          quickRequest: { modelId: '', rule: '' },
+          chat: { modelId: '', rule: '' },
         },
         models: [],
       },
@@ -483,7 +483,7 @@ describe('QuickAiRequestMenu', () => {
         ...desktop.backend.userConfig.llm,
         tasks: {
           ...desktop.backend.userConfig.llm.tasks,
-          quickRequest: { modelId: 'simple-model', rule: '' },
+          chat: { modelId: 'simple-model', rule: '' },
         },
         models: [
           {
@@ -579,10 +579,15 @@ describe('QuickAiRequestMenu', () => {
     await modelSelect.setValue('1')
     await flushPromises()
 
-    expect(desktop.backend.userConfig.llm.tasks.quickRequest.modelId).toBe(
-      'local'
-    )
+    expect(desktop.backend.userConfig.llm.quickRequestModelId).toBe('local')
     expect(wrapper.find('.quick-error-text').text()).toBe(
+      'llmErrors.toolsRequired'
+    )
+    wrapper.unmount()
+
+    const reopened = mountMenu()
+    await flushPromises()
+    expect(reopened.find('.quick-error-text').text()).toBe(
       'llmErrors.toolsRequired'
     )
   })

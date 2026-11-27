@@ -160,9 +160,16 @@ describe('LLM application actions', () => {
     expect(
       await f.actions.transformationPrompt('  Summarize  ', 'Sample')
     ).toBe('Answer')
-    expect(f.aiRequest).toHaveBeenCalledWith('transformation', 'Sample', {
+    expect(f.aiRequest).toHaveBeenCalledWith('rewrite', 'Sample', {
       instructions: APP_CONFIG.aiInstructions.transformation,
       rules: 'Summarize',
+    })
+    expect(await f.actions.stylingPrompt('Make it formal', 'Sample')).toBe(
+      'Answer'
+    )
+    expect(f.aiRequest).toHaveBeenLastCalledWith('rewrite', 'Sample', {
+      instructions: APP_CONFIG.aiInstructions.styling,
+      rules: 'Make it formal',
     })
     f.aiRequest.mockClear()
     await expect(

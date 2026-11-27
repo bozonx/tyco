@@ -193,7 +193,7 @@ describe('web-tools', () => {
     expect(result).toContain('Page content here.')
   })
 
-  it('passes min of configured maxCharacters and outputLimitCharacters to web_fetch', async () => {
+  it('caps page content at 50,000 characters within the tool output budget', async () => {
     const run = vi
       .fn()
       .mockResolvedValue({
@@ -205,19 +205,15 @@ describe('web-tools', () => {
         totalCharacters: 23,
       } satisfies AiWebToolOutput)
 
-    const provider = createWebToolProvider({
-      run,
-      getMaxCharacters: () => 8000,
-    })
+    const provider = createWebToolProvider({ run })
     const tools = await provider.tools({
       ...toolContext('prof-1'),
       modelId: 'gemini',
     })
 
     const fetchTool = tools.find((t) => t.name === 'web_fetch')!
-    expect(fetchTool.outputLimitCharacters).toBe(8000)
+    expect(fetchTool.outputLimitCharacters).toBe(50_500)
 
-    // When outputLimit is smaller than configured max, use outputLimit
     await fetchTool.execute(
       { url: 'https://example.com/page' },
       {
@@ -237,13 +233,12 @@ describe('web-tools', () => {
       'web-call-2'
     )
 
-    // When configured max is smaller than outputLimit, use configured max
     await fetchTool.execute(
       { url: 'https://example.com/page' },
       {
         signal: new AbortController().signal,
         toolCallId: 'call-3',
-        outputLimitCharacters: 12000,
+        outputLimitCharacters: 60_000,
       }
     )
 
@@ -252,7 +247,7 @@ describe('web-tools', () => {
       {
         operation: 'fetch',
         url: 'https://example.com/page',
-        maxCharacters: 7500,
+        maxCharacters: 50_000,
       },
       'web-call-3'
     )

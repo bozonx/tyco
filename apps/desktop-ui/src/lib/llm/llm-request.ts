@@ -53,8 +53,6 @@ export interface AiChatTurnOptions extends Omit<AiRequestOptions, 'onChunk'> {
   tools?: AiChatTools
   /** Whether the model calls tools, which decides how earlier steps are sent */
   canUseTools?: boolean
-  /** The task whose model chain answers: the main chat or a quick request */
-  task?: 'chat' | 'quickRequest'
 }
 
 export interface LlmRequestDependencies extends LlmRequestErrorDependencies {
@@ -148,7 +146,6 @@ export function createLlmRequest(deps: LlmRequestDependencies) {
     options: AiChatTurnOptions
   ): Promise<ChatToolLoopState> {
     const tools = options.tools ?? NO_TOOLS
-    const task = options.task ?? 'chat'
     // what the tools need the model to know, e.g. the folders they reach
     const instructions = [options.instructions, tools.tools?.instructions]
       .map((text) => text?.trim())
@@ -163,7 +160,7 @@ export function createLlmRequest(deps: LlmRequestDependencies) {
       return await runChatToolLoop(
         {
           stream: (turnPrompt, streamOptions) =>
-            deps.client.stream(task, turnPrompt, streamOptions),
+            deps.client.stream('chat', turnPrompt, streamOptions),
           requestApproval: tools.requestApproval,
           policy: tools.policy,
         },
@@ -182,12 +179,7 @@ export function createLlmRequest(deps: LlmRequestDependencies) {
         }
       )
     } catch (error) {
-      handleLlmRequestError(
-        error,
-        `LLM request "${task}" failed`,
-        options,
-        deps
-      )
+      handleLlmRequestError(error, 'LLM request "chat" failed', options, deps)
       return { content: '', parts: [] }
     }
   }

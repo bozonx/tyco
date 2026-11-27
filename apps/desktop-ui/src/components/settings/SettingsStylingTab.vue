@@ -1,6 +1,6 @@
 <template>
   <RuleLibrarySettings
-    task="styling"
+    task="rewrite"
     title-key="settings.stylingTab"
     hint-key="settings.stylingHint"
     library-key="styling"

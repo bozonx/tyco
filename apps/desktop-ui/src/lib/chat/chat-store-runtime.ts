@@ -229,8 +229,6 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
         toolPermissions,
       }
     },
-    getFetchMaxCharacters: () =>
-      deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
     getMaxStepCount: () => maxToolStepsOf(deps.getUserConfig()?.llm),
     warn,
     commands: () => deps.getUserConfig()?.commands ?? [],

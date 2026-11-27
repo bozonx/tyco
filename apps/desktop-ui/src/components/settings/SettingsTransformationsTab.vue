@@ -1,6 +1,6 @@
 <template>
   <RuleLibrarySettings
-    task="transformation"
+    task="rewrite"
     title-key="settings.transformationsTab"
     hint-key="settings.transformationsHint"
     library-key="transformations"

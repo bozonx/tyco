@@ -273,8 +273,7 @@ export function createCoreOperations(
       icon: 'mdi:auto-fix',
       description:
         'Applies the transformation instruction to the text with the LLM',
-      getUnavailableReasonKey: () =>
-        deps.getLlmUnavailableReasonKey('transformation'),
+      getUnavailableReasonKey: () => deps.getLlmUnavailableReasonKey('rewrite'),
     },
     (call, text) => {
       const prompt = stringOf(call.config.prompt)
@@ -291,7 +290,7 @@ export function createCoreOperations(
       descriptionKey: 'operations.stylingDescription',
       icon: 'mdi:palette-outline',
       description: 'Rewrites the text in the requested style with the LLM',
-      getUnavailableReasonKey: () => deps.getLlmUnavailableReasonKey('styling'),
+      getUnavailableReasonKey: () => deps.getLlmUnavailableReasonKey('rewrite'),
     },
     (call, text) => {
       const prompt = stringOf(call.config.prompt)

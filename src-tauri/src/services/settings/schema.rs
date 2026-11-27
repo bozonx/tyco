@@ -326,6 +326,12 @@ fn operation_config_schema(operation_id: &Value) -> Option<&'static Value> {
     }
 }
 
+fn is_known_llm_task(name: &str) -> bool {
+    SCHEMA["properties"]["llm"]["properties"]["tasks"]["properties"]
+        .get(name)
+        .is_some()
+}
+
 fn validate_references(config: &Value) -> Result<(), AppError> {
     for pointer in ENTITY_COLLECTIONS {
         let mut seen = HashSet::new();
@@ -395,12 +401,19 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     for id in config["llm"]["tasks"]
         .as_object()
         .into_iter()
-        .flat_map(|tasks| tasks.values())
-        .filter_map(|task| task["modelId"].as_str())
+        .flat_map(|tasks| tasks.iter())
+        .filter(|(name, _)| is_known_llm_task(name))
+        .filter_map(|(_, task)| task["modelId"].as_str())
     {
         if !id.is_empty() && !models.contains(id) {
             return Err(invalid_field("llm.tasks.modelId"));
         }
+    }
+    if config["llm"]["quickRequestModelId"]
+        .as_str()
+        .is_some_and(|id| !id.is_empty() && !models.contains(id))
+    {
+        return Err(invalid_field("llm.quickRequestModelId"));
     }
     let Some(action_pages) = config["actionPages"].as_array() else {
         return Err(invalid_field("actionPages"));
@@ -660,8 +673,9 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
         .collect();
     if let Some(tasks) = config["llm"]["tasks"].as_object_mut() {
         for model_id in tasks
-            .values_mut()
-            .filter_map(|task| task.get_mut("modelId"))
+            .iter_mut()
+            .filter(|(name, _)| is_known_llm_task(name))
+            .filter_map(|(_, task)| task.get_mut("modelId"))
         {
             if !model_ids.contains(model_id.as_str().unwrap_or_default()) {
                 *model_id = Value::String(String::new());
@@ -673,11 +687,21 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             *common_id = Value::String(String::new());
         }
     }
+    if let Some(llm) = config["llm"].as_object_mut().filter(|llm| {
+        llm.get("quickRequestModelId")
+            .and_then(Value::as_str)
+            .is_some_and(|id| !id.is_empty() && !model_ids.contains(id))
+    }) {
+        llm.remove("quickRequestModelId");
+    }
     if let Some(custom_tasks) = config["llm"]
         .get_mut("customTaskModels")
         .and_then(Value::as_object_mut)
     {
-        for model_id in custom_tasks.values_mut() {
+        for (_, model_id) in custom_tasks
+            .iter_mut()
+            .filter(|(name, _)| is_known_llm_task(name))
+        {
             if !model_ids.contains(model_id.as_str().unwrap_or_default()) {
                 *model_id = Value::String(String::new());
             }
@@ -1215,6 +1239,17 @@ mod tests {
         normalize_user_config(&mut config);
         assert_eq!(config["actionPages"], defaults["actionPages"]);
         assert_eq!(config["mainActions"], slots);
+    }
+
+    #[test]
+    fn ignores_model_references_in_unknown_llm_tasks() {
+        let mut config = crate::services::settings::defaults::default_user_config();
+        let unknown_task = json!({"modelId": "missing"});
+        config["llm"]["tasks"]["unknownTask"] = unknown_task.clone();
+
+        validate_user_config(&config).unwrap();
+        normalize_user_config(&mut config);
+        assert_eq!(config["llm"]["tasks"]["unknownTask"], unknown_task);
     }
 
     #[test]

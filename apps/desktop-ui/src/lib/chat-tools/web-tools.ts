@@ -22,8 +22,6 @@ export interface WebToolsDependencies {
     runId?: string
   ) => Promise<AiWebToolOutput>
   cancel?: (runId: string) => void
-  getMaxCharacters?: () => number | undefined
-  warn?: (message: string) => void
 }
 
 type Input = Record<string, unknown>
@@ -43,6 +41,7 @@ const count = (value: unknown) =>
 
 /** Room left in the output for the page title, source and the note */
 const PAGE_FRAME_CHARACTERS = 500
+const MAX_WEB_PAGE_CHARACTERS = 50_000
 
 const withAbort = async <T>(
   start: () => Promise<T>,
@@ -302,7 +301,8 @@ export function createWebToolProvider(
             required: ['url'],
           },
           approvalScope: hostOf,
-          outputLimitCharacters: deps.getMaxCharacters?.(),
+          outputLimitCharacters:
+            MAX_WEB_PAGE_CHARACTERS + PAGE_FRAME_CHARACTERS,
           execute: async (input: unknown, options: ChatToolExecuteOptions) => {
             const args = asInput(input)
             const url = text(args.url).trim()
@@ -311,12 +311,10 @@ export function createWebToolProvider(
             const offset = Math.max(0, Math.floor(count(args.offset) ?? 0))
             const locale = optionalText(args.locale)
 
-            const configuredMax = deps.getMaxCharacters?.()
-            const limit =
-              configuredMax !== undefined
-                ? Math.min(configuredMax, options.outputLimitCharacters)
-                : options.outputLimitCharacters
-            const maxCharacters = Math.max(1, limit - PAGE_FRAME_CHARACTERS)
+            const maxCharacters = Math.min(
+              MAX_WEB_PAGE_CHARACTERS,
+              Math.max(1, options.outputLimitCharacters - PAGE_FRAME_CHARACTERS)
+            )
 
             const runId = `web-${options.toolCallId}`
             const response = await withAbort(

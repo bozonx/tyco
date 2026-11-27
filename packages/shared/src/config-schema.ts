@@ -275,6 +275,9 @@ export function normalizeLlmConfig(value: unknown): UserConfig['llm'] {
   if (llm.commonModelId && !models.has(llm.commonModelId)) {
     llm.commonModelId = ''
   }
+  if (llm.quickRequestModelId && !models.has(llm.quickRequestModelId)) {
+    delete llm.quickRequestModelId
+  }
   if (llm.customTaskModels) {
     for (const task of LLM_TASKS) {
       if (

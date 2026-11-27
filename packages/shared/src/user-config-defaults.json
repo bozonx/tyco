@@ -200,9 +200,7 @@
       "dialogTranslation": { "modelId": "ollama-qwen", "rule": "" },
       "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
       "aiTask": { "modelId": "ollama-qwen" },
-      "transformation": { "modelId": "ollama-qwen" },
-      "styling": { "modelId": "ollama-qwen" },
-      "quickRequest": { "modelId": "ollama-qwen", "rule": "" }
+      "rewrite": { "modelId": "ollama-qwen" }
     },
     "imageQuality": "balanced"
   },

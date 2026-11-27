@@ -354,8 +354,7 @@ describe('SettingsLlmTab.vue', () => {
       translation: { modelId: '', rule: '', qualityGateRule: '' },
       voiceCorrection: { modelId: '', rule: '' },
       aiTask: { modelId: '' },
-      transformation: { modelId: '' },
-      styling: { modelId: '' },
+      rewrite: { modelId: '' },
     },
     imageQuality: 'balanced',
   }
@@ -410,6 +409,14 @@ describe('SettingsLlmTab.vue', () => {
 
     expect(wrapper.find('[data-title="settings.chat"]').exists()).toBe(false)
     expect(wrapper.findAll('.textarea-stub')).toHaveLength(0)
+    const chatLimits = wrapper.get(
+      '[data-title="settings.sectionLlmChatLimits"]'
+    )
+    expect(
+      chatLimits
+        .findAll('.field-row-stub')
+        .map((row) => row.attributes('data-label'))
+    ).toEqual(['settings.chatImageQuality', 'settings.maxToolSteps'])
     expect(
       wrapper
         .findAll('.field-row-stub')
@@ -418,7 +425,6 @@ describe('SettingsLlmTab.vue', () => {
       'settings.chatImageQuality',
       'settings.maxToolSteps',
       'settings.webJinaApiKey',
-      'settings.webFetchMaxCharacters',
     ])
 
     const modeControl = wrapper.findComponent({ name: 'SegmentedControl' })
@@ -435,13 +441,10 @@ describe('SettingsLlmTab.vue', () => {
       'settings.voiceTextCorrection',
       'settings.textCorrection',
       'settings.aiCommands',
-      'settings.transformationsTab',
-      'settings.stylingTab',
-      'action.quickAiRequest',
+      'settings.textRewrite',
       'settings.chatImageQuality',
       'settings.maxToolSteps',
       'settings.webJinaApiKey',
-      'settings.webFetchMaxCharacters',
     ])
   })
 })

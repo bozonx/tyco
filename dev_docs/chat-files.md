@@ -144,5 +144,5 @@ The built-in system prompt identifies the current environment as chat or quick
 request. Without a profile, both environments use the user instructions stored in
 `llm.tasks.chat.rule`. With a profile, both use its SOUL.md and memory instead;
 the general user instructions do not apply. Users can put environment-specific
-requirements in either instruction source. The legacy `quickRequest.rule` field
-is no longer read; `quickRequest.modelId` still selects the quick request model.
+requirements in either instruction source. The request recalls the model picked
+in its window and falls back to the active “Ask AI” chat model.

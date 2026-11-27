@@ -138,7 +138,8 @@ export function createLlmActions(deps: LlmActionsDependencies) {
       if (options.notifyError !== false) deps.notifyEmptyText()
       return ''
     }
-    const result = await aiRequest(kind, text, {
+    const task = kind === LlmInstructionKind.CORRECTION ? kind : 'rewrite'
+    const result = await aiRequest(task, text, {
       ...options,
       instructions: deps.getAppConfig().aiInstructions[kind],
       rules,

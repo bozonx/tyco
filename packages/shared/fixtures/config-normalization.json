@@ -339,9 +339,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "dialogTranslation": { "modelId": "", "rule": "" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "rewrite": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -548,6 +546,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" }
         },
+        "quickRequestModelId": "missing",
         "imageQuality": "balanced"
       },
       "markdown": {
@@ -735,9 +734,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "dialogTranslation": { "modelId": "", "rule": "" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "rewrite": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -1161,9 +1158,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "dialogTranslation": { "modelId": "", "rule": "" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "rewrite": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -1592,9 +1587,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "dialogTranslation": { "modelId": "", "rule": "" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "rewrite": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -2011,9 +2004,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "dialogTranslation": { "modelId": "", "rule": "" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "rewrite": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -2437,9 +2428,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "dialogTranslation": { "modelId": "", "rule": "" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "rewrite": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -2865,9 +2854,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "dialogTranslation": { "modelId": "", "rule": "" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "rewrite": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -3306,9 +3293,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "dialogTranslation": { "modelId": "", "rule": "" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "rewrite": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -3752,9 +3737,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "dialogTranslation": { "modelId": "", "rule": "" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "rewrite": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -4268,9 +4251,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "dialogTranslation": { "modelId": "", "rule": "" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "rewrite": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -4812,9 +4793,7 @@
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
           "aiTask": { "modelId": "ollama-qwen" },
           "dialogTranslation": { "modelId": "", "rule": "" },
-          "transformation": { "modelId": "" },
-          "styling": { "modelId": "" },
-          "quickRequest": { "modelId": "", "rule": "" }
+          "rewrite": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },

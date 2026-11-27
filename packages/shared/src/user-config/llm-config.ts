@@ -57,9 +57,7 @@ export const LLM_TASKS = [
   'voiceCorrection',
   'correction',
   'aiTask',
-  'transformation',
-  'styling',
-  'quickRequest',
+  'rewrite',
 ] as const
 
 export type LlmTask = (typeof LLM_TASKS)[number]
@@ -94,12 +92,8 @@ export interface LlmTasksConfig {
   voiceCorrection: LlmTaskConfig
   /** Each AI command has its own prompt, see `AiCommandOperationConfig` */
   aiTask: Pick<LlmTaskConfig, 'modelId'>
-  /** Each transformation has its own rule, see `TransformationConfig` */
-  transformation: Pick<LlmTaskConfig, 'modelId'>
-  /** Each styling preset has its own rule, see `StylingConfig` */
-  styling: Pick<LlmTaskConfig, 'modelId'>
-  /** Single quick AI request overlay */
-  quickRequest: LlmTaskConfig
+  /** Each transformation and styling preset supplies its own prompt */
+  rewrite: Pick<LlmTaskConfig, 'modelId'>
 }
 
 /** How much attached images are scaled down before a request */
@@ -131,18 +125,6 @@ export function maxToolStepsOf(
     : DEFAULT_MAX_TOOL_STEPS
 }
 
-export const DEFAULT_WEB_FETCH_MAX_CHARACTERS = 15_000
-export const MIN_WEB_FETCH_MAX_CHARACTERS = 1_000
-export const MAX_WEB_FETCH_MAX_CHARACTERS = 100_000
-
-export interface WebSearchConfig {
-  /**
-   * Maximum number of characters fetched from a single web page (1,000 to
-   * 100,000)
-   */
-  fetchMaxCharacters?: number
-}
-
 export interface LlmConfig {
   providers: LlmProvider[]
   models: LlmModel[]
@@ -157,8 +139,8 @@ export interface LlmConfig {
    * `MAX_TOOL_STEPS`); `DEFAULT_MAX_TOOL_STEPS` when unset
    */
   maxToolSteps?: number
-  /** Web search and page fetch settings for AI agents */
-  webSearch?: WebSearchConfig
+  /** The model last picked in the quick AI request without a profile */
+  quickRequestModelId?: string
 }
 
 export const DEFAULT_LLM_CONFIG = configDefaults.llm as LlmConfig

@@ -142,7 +142,6 @@ export const CHAT_TOOL_COMMANDS = [
 
 export interface DesktopWebToolsDependencies {
   invoke: DesktopChatToolsInvoke
-  getFetchMaxCharacters?: () => number | undefined
   warn: (message: string) => void
 }
 
@@ -158,8 +157,6 @@ export function createDesktopWebToolProvider(
         deps.warn(`Could not cancel the web tool call: ${String(error)}`)
       })
     },
-    getMaxCharacters: deps.getFetchMaxCharacters,
-    warn: deps.warn,
   })
 }
 
@@ -171,7 +168,6 @@ export interface DesktopChatToolsDependencies {
   getChatId?: () => string | null | undefined
   /** The originals attached to the conversation, for the file tools */
   getAttachedFiles?: () => readonly AiAttachedFile[]
-  getFetchMaxCharacters?: () => number | undefined
   /** Model steps one answer may take, see `llm.maxToolSteps` */
   getMaxStepCount: () => number
   /** Whether the "Ask AI" chat has the web, used when `profileId` is null */

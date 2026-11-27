@@ -78,8 +78,9 @@ computer use (отложен).
 **Интернет (фаза 4)** — `services/ai_tools/web.rs`, команда `run_ai_web_tool`,
 `web-tools.ts`: `web_search` (`s.jina.ai`, `X-Respond-With: no-content`) и
 `web_fetch` (`r.jina.ai`, Markdown). Ключ `web.jina` в `SecretStore`,
-бесплатный тариф без ключа; `fetchMaxCharacters` (1 000–100 000, 15 000) и
-ключ в `SettingsLlmTab.vue`; 429/401 отсылают в настройки LLM.
+бесплатный тариф без ключа; ключ в `SettingsLlmTab.vue`. Страница читается
+частями до 50 000 символов с учётом бюджета вывода инструмента. Ошибки
+429/401 отсылают в настройки LLM.
 
 ---
 

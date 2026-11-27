@@ -12,7 +12,7 @@ import { describeError } from '../lib/errors/describe-error'
 import { getDesktopWindowLabel } from '../lib/desktop/window'
 import { createChatHistoryModel } from '../lib/history/chat-history'
 import { translate } from '../lib/i18n'
-import { normalizeLlmConfig, withPickedTaskModel } from '../lib/llm/llm-config'
+import { normalizeLlmConfig, withPickedChatModel } from '../lib/llm/llm-config'
 import { clientLogger } from '../lib/logger'
 import { useSystemContextStore } from './system-context'
 import { appNavigation } from '../navigation'
@@ -100,9 +100,8 @@ function createChatStoreSetup(profileId: string | null) {
       saveSessionState: desktopStore.patchSessionState,
       saveChatModelId: async (modelId) => {
         const response = await desktopStore.updateUserConfig({
-          llm: withPickedTaskModel(
+          llm: withPickedChatModel(
             normalizeLlmConfig(desktopStore.userConfig.llm),
-            'chat',
             modelId
           ),
         })
