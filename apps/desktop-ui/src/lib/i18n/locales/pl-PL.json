@@ -752,7 +752,7 @@
     "aiWorkspaces": {
       "attach": "Podłącz przestrzeń roboczą…",
       "attachedDeviceScopedHint": "Podłączone przestrzenie robocze ustawia się na każdym komputerze osobno; główna synchronizuje się z folderem danych.",
-      "detach": "Usuń z listy",
+      "detach": "Odłącz przestrzeń roboczą",
       "detachConfirm": "Przestrzeń robocza zostaje usunięta tylko z tego urządzenia; jej pliki zostają na miejscu.",
       "hint": "Przestrzeń robocza to folder z profilami, projektami, ich czatami i pamięcią. Główna jest w folderze danych; podłącz inne, np. służbową, synchronizowaną osobno. Profil widzi tylko projekty swojej przestrzeni roboczej.",
       "main": "Główny",

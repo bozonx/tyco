@@ -752,7 +752,7 @@
     "aiWorkspaces": {
       "attach": "Çalışma alanı bağla…",
       "attachedDeviceScopedHint": "Bağlı çalışma alanları her bilgisayarda ayrı ayrı ayarlanır; ana çalışma alanı veri klasörüyle eşitlenir.",
-      "detach": "Listeden kaldır",
+      "detach": "Çalışma alanı bağlantısını kes",
       "detachConfirm": "Çalışma alanı yalnızca bu cihazdan kaldırılır; dosyaları yerinde kalır.",
       "hint": "Çalışma alanı; profillerin, projelerin, sohbetlerinin ve belleklerinin bulunduğu bir klasördür. Ana çalışma alanı veri klasöründedir; başkalarını da bağlayın, örneğin ayrı eşitlenen bir iş çalışma alanı. Bir profil yalnızca kendi çalışma alanının projelerine erişir.",
       "main": "Ana",

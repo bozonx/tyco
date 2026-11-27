@@ -752,7 +752,7 @@
     "aiWorkspaces": {
       "attach": "Připojit prostor…",
       "attachedDeviceScopedHint": "Připojené prostory se nastavují na každém počítači zvlášť; hlavní se synchronizuje se složkou dat.",
-      "detach": "Odebrat ze seznamu",
+      "detach": "Odpojit pracovní prostor",
       "detachConfirm": "Prostor se odebere jen z tohoto zařízení; jeho soubory zůstanou na místě.",
       "hint": "Prostor je složka s profily, projekty, jejich chaty a pamětí. Hlavní je ve složce dat; připojte další, třeba pracovní, který se synchronizuje zvlášť. Profil vidí jen projekty svého prostoru.",
       "main": "Hlavní",

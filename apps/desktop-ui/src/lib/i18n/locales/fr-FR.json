@@ -752,7 +752,7 @@
     "aiWorkspaces": {
       "attach": "Ajouter un espace de travail…",
       "attachedDeviceScopedHint": "Les espaces de travail ajoutés se règlent sur chaque ordinateur séparément ; le principal est synchronisé avec le dossier de données.",
-      "detach": "Retirer de la liste",
+      "detach": "Détacher l’espace de travail",
       "detachConfirm": "L’espace de travail est retiré de cet appareil uniquement ; ses fichiers restent où ils sont.",
       "hint": "Un espace de travail est un dossier de profils, de projets, de leurs discussions et de leur mémoire. Le principal est dans le dossier de données ; ajoutez-en d’autres, par exemple un espace professionnel synchronisé à part. Un profil n’accède qu’aux projets de son espace de travail.",
       "main": "Principal",

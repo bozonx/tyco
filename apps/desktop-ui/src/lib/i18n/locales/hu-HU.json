@@ -752,7 +752,7 @@
     "aiWorkspaces": {
       "attach": "Munkaterület csatolása…",
       "attachedDeviceScopedHint": "A csatolt munkaterületek minden számítógépen külön állíthatók be; a fő munkaterület az adatmappával szinkronizálódik.",
-      "detach": "Eltávolítás a listából",
+      "detach": "Munkaterület leválasztása",
       "detachConfirm": "A munkaterület csak erről az eszközről kerül le; a fájljai a helyükön maradnak.",
       "hint": "A munkaterület profilok, projektek, csevegéseik és memóriájuk mappája. A fő az adatmappában van; csatoljon másokat is, például egy külön szinkronizált munkahelyit. Egy profil csak a saját munkaterülete projektjeit éri el.",
       "main": "Fő",

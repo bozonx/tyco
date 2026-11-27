@@ -752,7 +752,7 @@
     "aiWorkspaces": {
       "attach": "Priključi radni prostor…",
       "attachedDeviceScopedHint": "Priključeni radni prostori postavljaju se na svakom računalu zasebno; glavni se sinkronizira s mapom podataka.",
-      "detach": "Ukloni s popisa",
+      "detach": "Odspoji radni prostor",
       "detachConfirm": "Radni prostor uklanja se samo s ovog uređaja; njegove datoteke ostaju gdje jesu.",
       "hint": "Radni prostor je mapa s profilima, projektima, njihovim razgovorima i memorijom. Glavni je u mapi podataka; priključite druge, npr. poslovni koji se sinkronizira zasebno. Profil vidi samo projekte svog radnog prostora.",
       "main": "Glavno",

@@ -752,7 +752,7 @@
     "aiWorkspaces": {
       "attach": "Collega area di lavoro…",
       "attachedDeviceScopedHint": "Le aree di lavoro collegate si impostano su ogni computer separatamente; quella principale è sincronizzata con la cartella dei dati.",
-      "detach": "Rimuovi dall’elenco",
+      "detach": "Scollega spazio di lavoro",
       "detachConfirm": "L’area di lavoro viene rimossa solo da questo dispositivo; i suoi file restano dove sono.",
       "hint": "Un’area di lavoro è una cartella di profili, progetti, delle loro chat e memoria. Quella principale è nella cartella dei dati; collegane altre, ad esempio una di lavoro sincronizzata a parte. Un profilo raggiunge solo i progetti della sua area di lavoro.",
       "main": "Principale",

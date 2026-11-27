@@ -752,7 +752,7 @@
     "aiWorkspaces": {
       "attach": "Attach workspace…",
       "attachedDeviceScopedHint": "Attached workspaces are set separately on each computer; the main one is synced with the data folder.",
-      "detach": "Remove from list",
+      "detach": "Detach",
       "detachConfirm": "The workspace is removed from this device only; its files stay where they are.",
       "hint": "A workspace is a folder of profiles, projects, their chats and memory. The main one is in the data folder; attach others, e.g. a work one synced on its own. A profile reaches only the projects of its workspace.",
       "main": "Main",

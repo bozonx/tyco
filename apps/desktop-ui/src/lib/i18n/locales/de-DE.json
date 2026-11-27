@@ -752,7 +752,7 @@
     "aiWorkspaces": {
       "attach": "Arbeitsbereich anbinden…",
       "attachedDeviceScopedHint": "Angebundene Arbeitsbereiche werden auf jedem Computer einzeln festgelegt; der Hauptbereich wird mit dem Datenordner synchronisiert.",
-      "detach": "Aus der Liste entfernen",
+      "detach": "Arbeitsbereich trennen",
       "detachConfirm": "Der Arbeitsbereich wird nur von diesem Gerät entfernt; seine Dateien bleiben, wo sie sind.",
       "hint": "Ein Arbeitsbereich ist ein Ordner mit Profilen, Projekten, deren Chats und Gedächtnis. Der Hauptbereich liegt im Datenordner; binde weitere an, etwa einen beruflichen, der eigenständig synchronisiert wird. Ein Profil erreicht nur die Projekte seines Arbeitsbereichs.",
       "main": "Haupttresor",

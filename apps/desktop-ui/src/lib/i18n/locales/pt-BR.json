@@ -752,7 +752,7 @@
     "aiWorkspaces": {
       "attach": "Conectar espaço de trabalho…",
       "attachedDeviceScopedHint": "Os espaços de trabalho conectados são definidos em cada computador separadamente; o principal é sincronizado com a pasta de dados.",
-      "detach": "Remover da lista",
+      "detach": "Desconectar espaço de trabalho",
       "detachConfirm": "O espaço de trabalho é removido só deste dispositivo; seus arquivos ficam onde estão.",
       "hint": "Um espaço de trabalho é uma pasta de perfis, projetos, seus chats e memória. O principal fica na pasta de dados; conecte outros, por exemplo um de trabalho sincronizado à parte. Um perfil só alcança os projetos do seu espaço de trabalho.",
       "main": "Principal",

@@ -752,7 +752,7 @@
     "aiWorkspaces": {
       "attach": "Atașează spațiu de lucru…",
       "attachedDeviceScopedHint": "Spațiile de lucru atașate se setează pe fiecare computer separat; cel principal se sincronizează cu dosarul de date.",
-      "detach": "Elimină din listă",
+      "detach": "Deconectează spațiul de lucru",
       "detachConfirm": "Spațiul de lucru este eliminat doar de pe acest dispozitiv; fișierele lui rămân unde sunt.",
       "hint": "Un spațiu de lucru este un dosar cu profiluri, proiecte, conversațiile și memoria lor. Cel principal e în dosarul de date; atașați altele, de exemplu unul de serviciu sincronizat separat. Un profil ajunge doar la proiectele spațiului său de lucru.",
       "main": "Principal",
