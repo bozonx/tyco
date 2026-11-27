@@ -49,6 +49,8 @@ import type {
   ProfileMemorySearchResult,
   ProfileMemoryTopic,
   ProfileSoul,
+  ProjectConversion,
+  ProjectTransferPreview,
   QuietRunEvent,
   QuietRunLabels,
   ScriptActionRequest,
@@ -168,9 +170,10 @@ export interface DesktopCommands {
       id: string
       targetPath?: string | null
       transferFiles: boolean
+      trashSource: boolean
       expectedRevision?: string | null
     }
-    result: string
+    result: ProjectConversion
   }
   copy_text: { args: { text: string }; result: void }
   create_ai_profile: {
@@ -227,6 +230,10 @@ export interface DesktopCommands {
   hide_quick_window_on_blur: { args: { activationId: number }; result: void }
   hide_subtitles: { args: undefined; result: WindowGeometry | null }
   hide_window: { args: { activationId: number }; result: void }
+  inspect_ai_project_transfer: {
+    args: { id: string; targetPath?: string | null }
+    result: ProjectTransferPreview
+  }
   inspect_ai_vault_folder: { args: { path: string }; result: VaultFolder }
   inspect_user_data_target: {
     args: { path?: string | null }
@@ -277,6 +284,7 @@ export interface DesktopCommands {
     result: MovedEntity
   }
   open_action_log: { args: undefined; result: boolean }
+  open_ai_project_location: { args: { id: string }; result: void }
   open_ai_vault_location: {
     args: { vaultId?: string | null; profileId?: string | null }
     result: void

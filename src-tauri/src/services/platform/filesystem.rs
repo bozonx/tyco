@@ -231,32 +231,75 @@ pub(crate) fn remove_link(path: &Path) -> io::Result<()> {
 }
 
 /// Makes `link` lead where `source`, a link, leads.
-#[cfg(unix)]
 pub(crate) fn copy_link(source: &Path, link: &Path) -> io::Result<()> {
-    std::os::unix::fs::symlink(std::fs::read_link(source)?, link)
+    create_link(
+        &std::fs::read_link(source)?,
+        link,
+        is_dir_link_entry(source)?,
+    )
 }
 
-/// Makes `link` lead where `source`, a link, leads. A link to a folder that
-/// cannot be made a symbolic link, which needs a privilege or the developer
-/// mode, becomes a junction, which any user may make for a local folder.
+/// Whether the link `path` itself is a link to a folder: Windows tells the
+/// two kinds apart, Unix by what the link leads to.
+fn is_dir_link_entry(path: &Path) -> io::Result<bool> {
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::FileTypeExt;
+        Ok(std::fs::symlink_metadata(path)?
+            .file_type()
+            .is_symlink_dir())
+    }
+    #[cfg(unix)]
+    {
+        Ok(std::fs::metadata(path).is_ok_and(|meta| meta.is_dir()))
+    }
+}
+
+/// Makes `link` lead to `target`, relative to the folder of `link` or
+/// absolute; `is_dir` tells a link to a folder.
+#[cfg(unix)]
+pub(crate) fn create_link(target: &Path, link: &Path, _is_dir: bool) -> io::Result<()> {
+    std::os::unix::fs::symlink(target, link)
+}
+
+/// Makes `link` lead to `target`, relative to the folder of `link` or
+/// absolute. A link to a folder that cannot be a symbolic link, which needs
+/// a privilege or the developer mode, becomes a junction, which any user may
+/// make for a local folder; a junction takes an absolute target.
 #[cfg(windows)]
-pub(crate) fn copy_link(source: &Path, link: &Path) -> io::Result<()> {
-    use std::os::windows::fs::FileTypeExt;
+pub(crate) fn create_link(target: &Path, link: &Path, is_dir: bool) -> io::Result<()> {
     /// `ERROR_PRIVILEGE_NOT_HELD`
     const PRIVILEGE_NOT_HELD: i32 = 1314;
-    let target = std::fs::read_link(source)?;
-    if !std::fs::symlink_metadata(source)?
-        .file_type()
-        .is_symlink_dir()
-    {
+    if !is_dir {
         return std::os::windows::fs::symlink_file(target, link);
     }
-    match std::os::windows::fs::symlink_dir(&target, link) {
+    match std::os::windows::fs::symlink_dir(target, link) {
         Err(error) if error.raw_os_error() == Some(PRIVILEGE_NOT_HELD) => {
-            create_junction(&target, link)
+            let absolute = match link.parent() {
+                Some(parent) if target.is_relative() => normalize(&parent.join(target)),
+                _ => target.to_path_buf(),
+            };
+            create_junction(&absolute, link)
         }
         result => result,
     }
+}
+
+/// `path` with its `.` and `..` parts taken out, without touching the disk.
+#[cfg(windows)]
+fn normalize(path: &Path) -> std::path::PathBuf {
+    use std::path::Component;
+    let mut normal = std::path::PathBuf::new();
+    for part in path.components() {
+        match part {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                normal.pop();
+            }
+            other => normal.push(other.as_os_str()),
+        }
+    }
+    normal
 }
 
 /// `mklink /J`: the standard library makes no junctions yet.

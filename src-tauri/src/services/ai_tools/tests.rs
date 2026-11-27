@@ -109,6 +109,42 @@ fn a_link_out_of_the_root_is_refused() {
     assert!(error.contains("leads outside"), "{error}");
     assert!(!dir.join("outside/new.txt").exists());
 
+    // a list shows a link inside the root as what it leads to, and leaves
+    // out the links leading elsewhere; a search reads through it
+    fs::create_dir_all(dir.join("workspace/sub")).unwrap();
+    std::os::unix::fs::symlink(dir.join("workspace/sub"), dir.join("workspace/sub-link")).unwrap();
+    let listed = run(
+        &files,
+        serde_json::json!({"operation": "listDir", "path": "workspace"}),
+    )
+    .unwrap();
+    let AiFileToolOutput::ListDir { entries, .. } = listed else {
+        panic!("not a list");
+    };
+    let shown: Vec<(&str, &EntryKind, Option<u64>)> = entries
+        .iter()
+        .map(|entry| (entry.path.as_str(), &entry.kind, entry.size))
+        .collect();
+    assert_eq!(
+        shown,
+        vec![
+            ("workspace/inside.txt", &EntryKind::File, Some(4)),
+            ("workspace/real.txt", &EntryKind::File, Some(4)),
+            ("workspace/sub/", &EntryKind::Dir, None),
+            ("workspace/sub-link/", &EntryKind::Dir, None),
+        ]
+    );
+    let found = run(
+        &files,
+        serde_json::json!({"operation": "searchFiles", "path": "workspace", "query": "real"}),
+    )
+    .unwrap();
+    let AiFileToolOutput::SearchFiles { matches, .. } = found else {
+        panic!("not a search");
+    };
+    let found: Vec<&str> = matches.iter().map(|found| found.path.as_str()).collect();
+    assert_eq!(found, vec!["workspace/inside.txt", "workspace/real.txt"]);
+
     // a link inside the root is followed to read, and deleted as a link
     let read = run(
         &files,

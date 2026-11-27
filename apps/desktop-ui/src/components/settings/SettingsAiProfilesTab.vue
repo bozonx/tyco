@@ -113,6 +113,9 @@
                   openable
                   @open="navigate(projectTab(project.id))"
                 >
+                  <Badge v-if="project.isExternal" tone="accent">
+                    {{ t('settings.projectBadgeExternal') }}
+                  </Badge>
                   <template #actions>
                     <DropdownMenu
                       size="xs"
@@ -159,7 +162,7 @@
         vertical
         :separator="false"
         :label="t('settings.projectType')"
-        :info="t('settings.projectTypeConvertHint')"
+        :info="t('settings.projectTypeHint')"
       >
         <SegmentedControl
           size="sm"
@@ -211,7 +214,14 @@
     <ConfirmModal
       :open="showDeleteProjectConfirm"
       :title="t('settings.deleteProject')"
-      :message="t('settings.deleteProjectConfirm')"
+      :message="
+        t(
+          projectToDelete?.isExternal
+            ? 'settings.deleteExternalProjectConfirm'
+            : 'settings.deleteInternalProjectConfirm',
+          { name: projectToDelete?.name ?? '' }
+        )
+      "
       :confirm-text="t('settings.deleteProject')"
       danger
       @confirm="handleDeleteProject"
@@ -236,9 +246,11 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { moveTargets } from '../../lib/ai-profiles/entity-move'
 import { splitRef, vaultOfRef } from '../../lib/ai-profiles/profile-ref'
+import { isProjectEmpty } from '../../lib/ai-profiles/project-files'
 import { vaultLabel } from '../../lib/ai-profiles/vault-groups'
 import { profileTab, projectTab } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
+import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
@@ -306,6 +318,14 @@ const isWithoutFolder = (project: AiProject) =>
 const projectsWithoutFolder = computed(() =>
   activeProjects.value.filter(isWithoutFolder)
 )
+
+async function openProjectFolder(project: AiProject) {
+  try {
+    await aiProfilesStore.openProjectFolder(project.id)
+  } catch (error) {
+    toastError(error)
+  }
+}
 
 async function setProjectFolder(project: AiProject) {
   try {
@@ -438,15 +458,17 @@ async function handleDeleteProfile() {
 
 function projectMenuItems(project: AiProject): DropdownMenuItem[] {
   return [
-    ...(isWithoutFolder(project)
-      ? [
-          {
-            label: t('settings.projectSetFolder'),
-            icon: 'mdi:folder-open-outline',
-            action: () => setProjectFolder(project),
-          },
-        ]
-      : []),
+    isWithoutFolder(project)
+      ? {
+          label: t('settings.projectSetFolder'),
+          icon: 'mdi:folder-plus-outline',
+          action: () => setProjectFolder(project),
+        }
+      : {
+          label: t('settings.projectFolderOpen'),
+          icon: 'mdi:folder-open-outline',
+          action: () => openProjectFolder(project),
+        },
     ...moveItem('project', project),
     {
       label: t('common.delete'),
@@ -459,10 +481,17 @@ function projectMenuItems(project: AiProject): DropdownMenuItem[] {
 const showDeleteProjectConfirm = ref(false)
 const projectToDelete = ref<AiProject | null>(null)
 
-function askDeleteProject(project: AiProject) {
+/** Asks before deleting a project, unless deleting it loses nothing */
+async function askDeleteProject(project: AiProject) {
   projectToDelete.value = project
-  if (!project.targetPath && !project.description?.trim()) {
-    void handleDeleteProject()
+  const fileCount = project.isExternal
+    ? null
+    : await aiProfilesStore
+        .inspectProjectTransfer(project.id)
+        .then((preview) => preview.files.fileCount)
+        .catch(() => null)
+  if (isProjectEmpty(project, profiles.value, fileCount)) {
+    await handleDeleteProject()
     return
   }
   showDeleteProjectConfirm.value = true

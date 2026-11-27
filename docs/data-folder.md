@@ -25,9 +25,13 @@ the general rules in a few common programs.
 4. **A project with code.** An external project: its description lives in the
    workspace, its folder is set on each computer, or not set ("not connected
    on this device"). The type of a project is chosen when it is created. To
-   change it later, use "Make external…" or "Make internal…" in the project
-   settings: the files can be moved to the new folder, or copied back into
-   the workspace; the external folder itself is never deleted.
+   change it later, use "Make external…" or "Make internal…" next to the
+   project folder in its settings. Making a project external moves its files
+   to the folder you choose. Making it internal copies the files of its
+   folder into the workspace; the folder stays where it is, unless you ask to
+   move it to the trash. The dialog shows how many files move, and nothing is
+   deleted before everything is copied. "Change…" only points an external
+   project to another folder on this computer: its files are not moved.
 
 Call recordings of the dialog are kept per dialog in
 `dialogs/recordings/<dialog-id>/` of the data folder (see `docs/dialog.md`).
@@ -196,9 +200,15 @@ On Linux use a symbolic link with an absolute target
 (`ln -s /mnt/big/tyco-recordings ~/.local/share/com.tyco.app/dialogs/recordings`).
 On Windows use a junction (`mklink /J <folder> <target>`), which needs no
 administrator rights, or a symbolic link. Quit TyCo, move the folder's
-contents to the target, and put the link in its place. Links anywhere else,
-e.g. inside a profile or a project, are not followed; for your own folders
-use an external project.
+contents to the target, and put the link in its place. Links anywhere else
+in the data folder are not followed.
+
+Inside a project or the files of a profile, a link that leads elsewhere in
+that same project works: the AI reads and writes through it, and moving or
+converting the project keeps it as a link. A link that leads out of the
+project, or nowhere, does not: the AI does not see it, and moving or
+converting the project is refused until you move or delete it. To give the AI
+another folder, add it as another external project.
 
 A link whose target is not there, such as a disk that is not mounted, is
 not replaced by a new folder: what would go there waits, e.g. a finished

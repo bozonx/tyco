@@ -3,7 +3,7 @@
     class="project-folder-field"
     vertical
     :separator="false"
-    :label="t('settings.projectTargetPath')"
+    :label="t('settings.projectFolder')"
   >
     <PathDisplay
       :path="path"

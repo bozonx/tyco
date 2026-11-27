@@ -108,6 +108,9 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::ai_vault::VaultChatHistory>();
     visitor.visit::<services::ai_vault::VaultHistoryStorage>();
     visitor.visit::<services::ai_vault::MovedEntity>();
+    visitor.visit::<services::ai_vault::ProjectConversion>();
+    visitor.visit::<services::ai_vault::ProjectTransferPreview>();
+    visitor.visit::<services::ai_vault::entity_files::TreeSummary>();
     visitor.visit::<models::StorageChangedEvent>();
     visitor.visit::<models::VaultChange>();
     visitor.visit::<services::ai_vault::ProfileMemoryChange>();

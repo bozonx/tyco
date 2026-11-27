@@ -18,7 +18,9 @@ describe('ai-projects-model', () => {
     listProjects: vi.fn().mockResolvedValue([mockProject]),
     createProject: vi.fn().mockResolvedValue('r1'),
     saveProject: vi.fn().mockResolvedValue('r2'),
-    convertProject: vi.fn().mockResolvedValue('r3'),
+    convertProject: vi
+      .fn()
+      .mockResolvedValue({ revision: 'r3', isSourceLeft: false }),
     deleteProject: vi.fn().mockResolvedValue(undefined),
     pickExternalFolder: vi.fn().mockResolvedValue('/path/to/folder'),
     now: vi.fn().mockReturnValue(2000),
@@ -248,33 +250,36 @@ describe('ai-projects-model', () => {
 
     const external = await model.convertProject('docs-app', {
       targetPath: '/work/docs',
-      transferFiles: true,
+      transferFiles: false,
+      trashSource: false,
     })
     expect(deps.convertProject).toHaveBeenCalledWith(
       'docs-app',
-      { targetPath: '/work/docs', transferFiles: true },
+      { targetPath: '/work/docs', transferFiles: false, trashSource: false },
       'r1'
     )
     expect(external).toMatchObject({
-      isExternal: true,
-      targetPath: '/work/docs',
-      revision: 'r3',
+      project: { isExternal: true, targetPath: '/work/docs', revision: 'r3' },
+      isSourceLeft: false,
     })
-    expect(model.getProject('docs-app')).toEqual(external)
+    expect(model.getProject('docs-app')).toEqual(external.project)
 
-    deps.convertProject.mockResolvedValueOnce('r4')
+    deps.convertProject.mockResolvedValueOnce({
+      revision: 'r4',
+      isSourceLeft: true,
+    })
     const internal = await model.convertProject('docs-app', {
-      transferFiles: false,
+      transferFiles: true,
+      trashSource: true,
     })
     expect(deps.convertProject).toHaveBeenLastCalledWith(
       'docs-app',
-      { transferFiles: false },
+      { transferFiles: true, trashSource: true },
       'r3'
     )
     expect(internal).toMatchObject({
-      isExternal: false,
-      targetPath: undefined,
-      revision: 'r4',
+      project: { isExternal: false, targetPath: undefined, revision: 'r4' },
+      isSourceLeft: true,
     })
   })
 })

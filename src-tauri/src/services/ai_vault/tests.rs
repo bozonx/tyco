@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
+use std::path::Path;
 
 use super::*;
 use crate::services::storage::device::{DeviceFile, DeviceStore};
@@ -1237,6 +1238,11 @@ fn converting_a_project_moves_its_files_out_and_copies_them_back() {
         .revision
         .clone();
 
+    let preview = inspect_project_transfer(&vault_root, &paths(), "docs", site.to_str()).unwrap();
+    assert_eq!(preview.files.file_count, 2);
+    assert_eq!(preview.files.total_bytes, 2);
+    assert!(preview.taken_names.is_empty());
+
     // a stale revision is refused
     assert!(matches!(
         convert_project(
@@ -1244,7 +1250,8 @@ fn converting_a_project_moves_its_files_out_and_copies_them_back() {
             &paths(),
             "docs",
             site.to_str(),
-            true,
+            false,
+            None,
             Some("old")
         ),
         Err(AppError::StaleRevision(_))
@@ -1255,23 +1262,31 @@ fn converting_a_project_moves_its_files_out_and_copies_them_back() {
         &paths(),
         "docs",
         own.join("notes").to_str(),
-        true,
+        false,
+        None,
         None
     )
     .is_err());
 
-    convert_project(
+    // the files always move out
+    let converted = convert_project(
         &vault_root,
         &paths(),
         "docs",
         site.to_str(),
-        true,
+        false,
+        None,
         revision.as_deref(),
     )
     .unwrap();
+    assert!(!converted.is_source_left);
     let listed = list_projects(&vault_root, &paths()).unwrap();
     assert!(listed[0].is_external);
     assert_eq!(listed[0].target_path.as_deref(), site.to_str());
+    assert_eq!(
+        listed[0].revision.as_deref(),
+        Some(converted.revision.as_str())
+    );
     assert_eq!(fs::read_to_string(site.join("notes/a.md")).unwrap(), "a");
     assert_eq!(fs::read_to_string(site.join("b.md")).unwrap(), "b");
     assert!(!site.join(PROJECT_FILE).exists());
@@ -1280,36 +1295,149 @@ fn converting_a_project_moves_its_files_out_and_copies_them_back() {
 
     // back: copied into the vault, the folder of the user stays
     fs::write(own.join("b.md"), "taken").unwrap();
+    let preview = inspect_project_transfer(&vault_root, &paths(), "docs", None).unwrap();
+    assert_eq!(preview.taken_names, vec!["b.md"]);
     assert!(matches!(
-        convert_project(&vault_root, &paths(), "docs", None, true, None),
+        convert_project(&vault_root, &paths(), "docs", None, true, None, None),
         Err(AppError::AlreadyExists(_))
     ));
     assert!(!own.join("notes").exists(), "nothing copied on a refusal");
     fs::remove_file(own.join("b.md")).unwrap();
-    convert_project(&vault_root, &paths(), "docs", None, true, None).unwrap();
+    convert_project(&vault_root, &paths(), "docs", None, true, None, None).unwrap();
     let listed = list_projects(&vault_root, &paths()).unwrap();
     assert!(!listed[0].is_external);
     assert_eq!(listed[0].target_path, None);
     assert_eq!(fs::read_to_string(own.join("notes/a.md")).unwrap(), "a");
     assert!(site.join("b.md").is_file());
-    assert_eq!(listed[0].target_path, None);
 }
 
 #[test]
-fn converting_without_transfer_leaves_the_files_and_needs_a_folder() {
-    let test_dir = TestDir::new("ai_vault_project_convert_plain");
+fn without_its_files_the_folder_is_not_discarded() {
+    let test_dir = TestDir::new("ai_vault_project_convert_discard");
+    let vault_root = test_dir.join("vault");
+    let site = test_dir.join("site");
+    fs::create_dir_all(&site).unwrap();
+    fs::write(site.join("a.md"), "a").unwrap();
+    let mut external = project("docs", 1);
+    external.is_external = true;
+    external.target_path = Some(site.to_str().unwrap().into());
+    create_project(&vault_root, &paths(), external).unwrap();
+
+    let discarded = std::cell::RefCell::new(Vec::new());
+    let discard = |path: &Path| {
+        discarded.borrow_mut().push(path.to_path_buf());
+        Ok(())
+    };
+    // without the files nothing is discarded
+    let converted = convert_project(
+        &vault_root,
+        &paths(),
+        "docs",
+        None,
+        false,
+        Some(&discard),
+        None,
+    )
+    .unwrap();
+    assert!(!converted.is_source_left);
+    assert!(discarded.borrow().is_empty());
+    assert!(!vault_root.join("projects/docs/a.md").exists());
+}
+
+#[test]
+fn a_folder_that_cannot_be_discarded_is_reported_not_failed() {
+    let test_dir = TestDir::new("ai_vault_project_convert_left");
+    let vault_root = test_dir.join("vault");
+    let site = test_dir.join("site");
+    fs::create_dir_all(&site).unwrap();
+    fs::write(site.join("a.md"), "a").unwrap();
+    let mut external = project("docs", 1);
+    external.is_external = true;
+    external.target_path = Some(site.to_str().unwrap().into());
+    let paths = paths();
+    create_project(&vault_root, &paths, external).unwrap();
+
+    let refuse = |_: &Path| Err(AppError::Failed("No trash".into()));
+    let converted =
+        convert_project(&vault_root, &paths, "docs", None, true, Some(&refuse), None).unwrap();
+    assert!(converted.is_source_left);
+    assert_eq!(
+        fs::read_to_string(vault_root.join("projects/docs/a.md")).unwrap(),
+        "a"
+    );
+    assert!(site.join("a.md").is_file());
+}
+
+#[test]
+fn a_folder_another_project_uses_is_never_discarded() {
+    let test_dir = TestDir::new("ai_vault_project_convert_shared");
+    let vault_root = test_dir.join("vault");
+    let site = test_dir.join("site");
+    fs::create_dir_all(&site).unwrap();
+    let paths = paths();
+    for id in ["one", "two"] {
+        let mut external = project(id, 1);
+        external.is_external = true;
+        external.target_path = Some(site.to_str().unwrap().into());
+        create_project(&vault_root, &paths, external).unwrap();
+    }
+    assert_eq!(
+        inspect_project_transfer(&vault_root, &paths, "one", None)
+            .unwrap()
+            .shared_folder_count,
+        1
+    );
+    let discard = |_: &Path| -> Result<(), AppError> { panic!("must not be discarded") };
+    assert!(convert_project(&vault_root, &paths, "one", None, true, Some(&discard), None).is_err());
+    assert!(list_projects(&vault_root, &paths).unwrap()[0].is_external);
+}
+
+#[cfg(unix)]
+#[test]
+fn converting_keeps_inner_links_and_refuses_outer_ones() {
+    use std::os::unix::fs::symlink;
+    let test_dir = TestDir::new("ai_vault_project_convert_links");
     let vault_root = test_dir.join("vault");
     let site = test_dir.join("site");
     fs::create_dir_all(&site).unwrap();
     create_project(&vault_root, &paths(), project("docs", 1)).unwrap();
     let own = vault_root.join("projects/docs");
-    fs::write(own.join("b.md"), "b").unwrap();
+    fs::create_dir_all(own.join("notes")).unwrap();
+    fs::write(own.join("notes/a.md"), "a").unwrap();
+    symlink(own.join("notes"), own.join("latest")).unwrap();
+    symlink(test_dir.join("elsewhere"), own.join("out")).unwrap();
 
-    assert!(convert_project(&vault_root, &paths(), "docs", None, false, None).is_err());
-    convert_project(&vault_root, &paths(), "docs", site.to_str(), false, None).unwrap();
-    assert!(own.join("b.md").is_file());
-    assert!(!site.join("b.md").exists());
-    assert!(list_projects(&vault_root, &paths()).unwrap()[0].is_external);
+    let preview = inspect_project_transfer(&vault_root, &paths(), "docs", site.to_str()).unwrap();
+    assert_eq!(preview.files.outside_links, vec!["out"]);
+    assert!(convert_project(
+        &vault_root,
+        &paths(),
+        "docs",
+        site.to_str(),
+        false,
+        None,
+        None
+    )
+    .is_err());
+    assert!(!site.join("notes").exists(), "nothing copied on a refusal");
+
+    fs::remove_file(own.join("out")).unwrap();
+    convert_project(
+        &vault_root,
+        &paths(),
+        "docs",
+        site.to_str(),
+        false,
+        None,
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        fs::read_link(site.join("latest")).unwrap(),
+        Path::new("notes")
+    );
+    assert_eq!(fs::read_to_string(site.join("latest/a.md")).unwrap(), "a");
+    assert!(own.join(PROJECT_FILE).is_file() && !own.join("latest").exists());
 }
 
 #[test]

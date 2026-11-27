@@ -1,5 +1,6 @@
 import {
   DESKTOP_EVENTS,
+  type ProjectTransferPreview,
   type VaultChatHistory,
   type VaultFolder,
   type VaultInfo,
@@ -73,6 +74,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
           id,
           targetPath: options.targetPath,
           transferFiles: options.transferFiles,
+          trashSource: options.trashSource,
           expectedRevision,
         })
       ),
@@ -174,6 +176,23 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   ): Promise<void> => {
     resultOrThrow(await call('open_ai_vault_location', { profileId, vaultId }))
   }
+
+  /** Shows the folder of a project on this device in the file manager */
+  const openProjectFolder = async (projectId: string): Promise<void> => {
+    resultOrThrow(await call('open_ai_project_location', { id: projectId }))
+  }
+
+  /**
+   * What converting a project would transfer; `targetPath` is the folder an
+   * internal project would get
+   */
+  const inspectProjectTransfer = async (
+    projectId: string,
+    targetPath?: string
+  ): Promise<ProjectTransferPreview> =>
+    resultOrThrow(
+      await call('inspect_ai_project_transfer', { id: projectId, targetPath })
+    )
 
   /** What a folder holds as a vault to attach */
   const inspectVaultFolder = async (path: string): Promise<VaultFolder> =>
@@ -314,6 +333,8 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     isLoaded: readonly(isLoaded),
     loadAll,
     openVaultDir,
+    openProjectFolder,
+    inspectProjectTransfer,
     vaults: readonly(vaults),
     connectedVaultIds,
     inspectVaultFolder,

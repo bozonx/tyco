@@ -2,6 +2,7 @@
 mod tests;
 
 pub mod config_refs;
+pub(crate) mod entity_files;
 pub mod marker;
 pub mod memory;
 pub mod operations;

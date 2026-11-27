@@ -615,16 +615,33 @@ of the tool. The model sees `projects/<id>/` whatever the folder is.
 
 The type of a project is chosen when it is created; `save_ai_project` refuses
 to change `isExternal`. `convert_ai_project` changes it on purpose, from a
-dialog of the settings. With `transferFiles`, an internal project moves its
-files (all but `project.json`) to the new folder, and an external one copies
-the files of its folder on this device into the vault; the folder of the user
-is never deleted. The files are copied before the description is written, a
-name taken in the destination or a symbolic link refuses the conversion before
-anything is copied, and a failed copy removes what it copied. Without
-`transferFiles` only the type changes. Other devices see the new type with the
-next sync: an internal project turned external is not connected there until
-its folder is set. Changing the folder of an external project only relinks
-it: its files are not moved.
+dialog of the settings that first shows `inspect_ai_project_transfer`: the
+files to transfer (`TreeSummary`: count, bytes, a `.git` folder, links that
+lead out of the files), the names taken in the destination, whether it is
+another disk, and how many other projects of this device use the same
+folder. An internal project always moves its files (all but `project.json`)
+to the new folder. An external one copies the files of its folder on this
+device into the vault with `transferFiles`, and with `trashSource` then moves
+that folder to the trash, which a folder another project of this device uses
+refuses; without `trashSource` the folder of the user is never touched. A
+name taken in the destination or a link leading out of the files refuses the
+conversion before anything is copied; the files are copied (never renamed, so
+another disk is the same path) before the description is written, and a
+failed copy removes what it copied. Files of the old place that cannot be
+removed afterwards are left there: the result (`ProjectConversion`) says so
+with `isSourceLeft`, and the settings show a warning. Without `transferFiles`
+only the type changes. Other devices see the new type with the next sync: an
+internal project turned external is not connected there until its folder is
+set. Changing the folder of an external project only relinks it: its files
+are not moved. `open_ai_project_location` shows the folder of a project on
+this device; the path is resolved in Rust.
+
+Links inside a profile or a project (`ai_vault::entity_files`): one that leads
+elsewhere in the same entity is copied as a link, made relative so that it
+leads to the same file of the copy (on Windows a folder link that cannot be a
+symbolic link becomes a junction); one that leads out of the entity or
+nowhere refuses a conversion or a move to another vault. The file tools
+follow the same rule (`chat-files.md`).
 
 The settings of a vault live in `tyco-vault-settings.json` next to its marker
 (`ai_vault::settings`), synced with it and kept apart from the marker so that

@@ -64,18 +64,30 @@
             />
           </FieldRow>
           <FieldRow
-            v-else
-            :label="t('settings.projectType')"
-            :info="t('settings.projectTypeConvertHint')"
+            v-if="!isNew || isExternal"
+            vertical
+            :label="t('settings.projectFolder')"
+            :info="
+              isExternal
+                ? t('settings.projectFolderExternalHint')
+                : t('settings.projectFolderInternalHint')
+            "
+            :error="
+              isExternal && !targetPath.trim() && !isStored
+                ? t('settings.projectPathRequired')
+                : undefined
+            "
+            :warning="
+              isExternal && !targetPath.trim() && isStored
+                ? t('settings.projectFolderNotSetOnDeviceHint')
+                : isInsideSyncedFolder
+                  ? t('settings.projectInsideSyncedFolder')
+                  : undefined
+            "
+            :device-scoped="isExternal"
+            data-testid="project-folder"
           >
-            <div class="project-type">
-              <span>
-                {{
-                  isExternal
-                    ? t('settings.projectTypeExternal')
-                    : t('settings.projectTypeInternal')
-                }}
-              </span>
+            <template v-if="!isNew" #action>
               <Button
                 size="sm"
                 variant="neutral"
@@ -89,49 +101,55 @@
                     : t('settings.projectConvertToExternal')
                 }}
               </Button>
+            </template>
+            <div class="project-folder">
+              <Badge
+                :tone="isExternal ? 'accent' : 'muted'"
+                data-testid="project-type"
+              >
+                {{
+                  isExternal
+                    ? t('settings.projectBadgeExternal')
+                    : t('settings.projectBadgeInternal')
+                }}
+              </Badge>
+              <PathDisplay
+                :path="isExternal ? targetPath : `projects/${projectId}`"
+                :placeholder="
+                  isStored
+                    ? t('settings.projectFolderNotSetOnDevice')
+                    : t('settings.projectFolderNotSelected')
+                "
+                :can-open="canOpenFolder"
+                :open-label="t('settings.projectFolderOpen')"
+                @open="handleOpenFolder"
+              >
+                <template v-if="isExternal" #actions>
+                  <Button
+                    size="sm"
+                    :variant="targetPath.trim() ? 'ghost' : 'primary'"
+                    :icon="
+                      targetPath.trim()
+                        ? 'mdi:folder-edit-outline'
+                        : 'mdi:folder-open-outline'
+                    "
+                    :title="
+                      targetPath.trim()
+                        ? t('settings.projectFolderRelinkHint')
+                        : undefined
+                    "
+                    data-testid="project-folder-pick"
+                    @click="handlePickFolder"
+                  >
+                    {{
+                      targetPath.trim()
+                        ? t('settings.projectFolderChange')
+                        : t('settings.selectFolder')
+                    }}
+                  </Button>
+                </template>
+              </PathDisplay>
             </div>
-          </FieldRow>
-          <FieldRow
-            v-if="!isExternal && !isNew"
-            :label="t('settings.vaultFolder')"
-            :info="t('settings.projectFolderFixedHint')"
-          >
-            <PathDisplay :path="`projects/${projectId}`" />
-          </FieldRow>
-          <FieldRow
-            v-else-if="isExternal"
-            :label="t('settings.projectTargetPath')"
-            :hint="targetPath || undefined"
-            :error="
-              targetPath.trim() || isStored
-                ? undefined
-                : t('settings.projectPathRequired')
-            "
-            :warning="
-              !targetPath.trim() && isStored
-                ? t('settings.projectFolderNotSetOnDevice')
-                : isInsideSyncedFolder
-                  ? t('settings.projectInsideSyncedFolder')
-                  : undefined
-            "
-            device-scoped
-          >
-            <PathDisplay
-              :path="targetPath"
-              :placeholder="t('settings.projectFolderNotSelected')"
-            >
-              <template #actions>
-                <Button
-                  size="sm"
-                  variant="neutral"
-                  icon="mdi:folder-open-outline"
-                  :title="t('settings.projectFolderRelinkHint')"
-                  @click="handlePickFolder"
-                >
-                  {{ t('settings.selectFolder') }}
-                </Button>
-              </template>
-            </PathDisplay>
           </FieldRow>
         </SettingsSection>
 
@@ -228,6 +246,7 @@
       :has-source-folder="Boolean(project.targetPath)"
       :is-busy="isConvertBusy"
       :select-folder="pickFolderSafely"
+      :inspect="inspectTransfer"
       @confirm="handleConvert"
       @cancel="isConverting = false"
     />
@@ -296,7 +315,7 @@ const formId = useId()
 const { navigate } = useSettingsContext()
 
 const { t } = useI18n()
-const { toastError } = useToast()
+const { toastError, toastKey } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
 const { isBusy: isCreating, run: runCreating } = useBusyAction()
@@ -488,6 +507,23 @@ async function handlePickFolder() {
   }
 }
 
+/** The folder of a stored project is there to open on this device */
+const canOpenFolder = computed(
+  () =>
+    !isNew.value &&
+    (!isExternal.value ||
+      (Boolean(targetPath.value.trim()) &&
+        targetPath.value.trim() === (project.value?.targetPath ?? '')))
+)
+
+async function handleOpenFolder() {
+  try {
+    await aiProfilesStore.openProjectFolder(props.projectId)
+  } catch (error) {
+    toastError(error)
+  }
+}
+
 const isConverting = ref(false)
 const { isBusy: isConvertBusy, run: runConverting } = useBusyAction()
 
@@ -500,16 +536,25 @@ async function pickFolderSafely(): Promise<string | null> {
   }
 }
 
+/** What converting the project would transfer into `targetPath` */
+const inspectTransfer = (targetPath?: string) =>
+  aiProfilesStore.inspectProjectTransfer(props.projectId, targetPath)
+
 /** Changes the type after the edits typed so far are stored */
 async function handleConvert(options: ConvertProjectOptions) {
   await runConverting(async () => {
     await editor.flush()
-    const converted = await aiProfilesStore.convertProject(
-      props.projectId,
-      options
-    )
+    const { project: converted, isSourceLeft } =
+      await aiProfilesStore.convertProject(props.projectId, options)
     editor.load(converted)
     isConverting.value = false
+    if (isSourceLeft)
+      toastKey(
+        converted.isExternal
+          ? 'settings.projectConvertLeftInWorkspace'
+          : 'settings.projectConvertLeftInFolder',
+        'warn'
+      )
   })
 }
 
@@ -533,12 +578,11 @@ async function handleCreate() {
 </script>
 
 <style scoped>
-.project-type {
+.project-folder {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-sm);
-  font-size: var(--text-control);
+  min-width: 0;
 }
 
 .access-warning {

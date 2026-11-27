@@ -93,6 +93,16 @@ The file tools get their roots from the conversation, resolved in Rust
 - AI command: no files at all;
 - memory stays a separate capability of a profile.
 
+A root is resolved to its canonical folder, so the folder of an external
+project may itself be a link. Inside a root, a link that leads elsewhere in
+the same root is followed: reading and writing go to what it leads to,
+`list_dir` shows it as that file or folder, and a search reads a linked file
+but does not enter a linked folder, which it walks where it lies. A link that
+leads out of the root or nowhere is refused by every tool and left out of
+lists and searches. Deleting or moving a link acts on the link itself; a move
+across filesystems copies a file or a whole folder (links as they are) and
+removes the source only once the copy is in place.
+
 `attachments/<name>` names an attachment by its file name; equal names get
 ` (2)`, ` (3)` in the order they were attached. The webview sends the list of
 `{ name, id }` of its conversation, Rust validates the names and reads the

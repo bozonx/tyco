@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 121414c19ac227b4f38346eda248b5c276e3b2a967333f670eca6ef41a0e5846
+// Source hash: 538361a25c8134ef3717bcc1e8b54d38ba08f9f0baa6f47d630b119f81a05711
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -915,11 +915,40 @@ export type ProfileToolSettings = {
 
 export type ProjectAccessMode = 'allow' | 'ask' | 'deny'
 
+/** The result of a conversion. */
+export type ProjectConversion = {
+  /** The revision of the new description. */
+  revision: string
+  /**
+   * The project was converted and its files are in the new place, but some
+   * could not be removed from the old one.
+   */
+  isSourceLeft: boolean
+}
+
 export type ProjectPermission = {
   read: ProjectAccessMode
   write: ProjectAccessMode
   /** Never freer than `write`: the stricter of the two applies. */
   delete: ProjectAccessMode
+}
+
+/**
+ * What converting a project would transfer, for the settings to show before
+ * anything changes.
+ */
+export type ProjectTransferPreview = {
+  /**
+   * The files that would be transferred: those of the vault folder of an
+   * internal project, or of the folder of an external one on this device.
+   */
+  files: TreeSummary
+  /** Names of the project that the destination holds already. */
+  takenNames: Array<string>
+  /** The files go to another disk: they are copied byte by byte. */
+  isOtherDisk: boolean
+  /** Other projects of this device, in any vault, with the same folder. */
+  sharedFolderCount: number
 }
 
 export type QuietRunEvent = {
@@ -1178,6 +1207,17 @@ export type ToolSourceSettings = { isEnabled: boolean }
  * before each call, or allowed.
  */
 export type ToolState = 'off' | 'ask' | 'allow'
+
+/** What a tree holds, for the settings to show before a transfer. */
+export type TreeSummary = {
+  /** Files, links counted as files. */
+  fileCount: number
+  totalBytes: number
+  /** A `.git` folder anywhere in the tree. */
+  hasGit: boolean
+  /** Links that lead out of the tree or nowhere, relative to it with `/`. */
+  outsideLinks: Array<string>
+}
 
 /**
  * How `relocate_user_data` changes the user data folder; the user says it, the

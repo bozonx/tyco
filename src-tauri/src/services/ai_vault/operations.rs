@@ -1,6 +1,9 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use serde::Serialize;
+
+use super::entity_files::{check_entry_links, copy_tree, remove_entry, summarize, TreeSummary};
 use super::types::{AiProfile, AiProject, ProfileSoul};
 use crate::errors::AppError;
 use crate::services::atomic_file::{create_private_dir, write_private};
@@ -694,21 +697,159 @@ pub(super) fn read_project(dir: &Path) -> Result<AiProject, AppError> {
     )?)?)
 }
 
+/// The folder of the project `id` on this device: its vault folder, or the
+/// folder of an external project, checked as for the file tools.
+pub fn project_folder_on_device(
+    vault_root: &Path,
+    paths: &ProjectPaths,
+    id: &str,
+) -> Result<PathBuf, AppError> {
+    let dir = project_dir(vault_root, id)?;
+    if !dir.join(PROJECT_FILE).is_file() {
+        return Err(not_found("Project", id));
+    }
+    let stored = read_project(&dir)?;
+    project_files_dir_checked(
+        vault_root,
+        paths,
+        &AiProject {
+            target_path: paths.get(id),
+            ..stored
+        },
+    )
+}
+
+/// What converting a project would transfer, for the settings to show
+/// before anything changes.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectTransferPreview {
+    /// The files that would be transferred: those of the vault folder of an
+    /// internal project, or of the folder of an external one on this device.
+    pub files: TreeSummary,
+    /// Names of the project that the destination holds already.
+    pub taken_names: Vec<String>,
+    /// The files go to another disk: they are copied byte by byte.
+    pub is_other_disk: bool,
+    /// Other projects of this device, in any vault, with the same folder.
+    pub shared_folder_count: u32,
+}
+
+/// Takes a folder away once its files are copied: the trash, in the app.
+pub type DiscardFolder<'a> = dyn Fn(&Path) -> Result<(), AppError> + 'a;
+
+/// The result of a conversion.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectConversion {
+    /// The revision of the new description.
+    pub revision: String,
+    /// The project was converted and its files are in the new place, but
+    /// some could not be removed from the old one.
+    pub is_source_left: bool,
+}
+
+/// What converting the project `id` would transfer; `target_path` is the
+/// folder an internal project would get.
+pub fn inspect_project_transfer(
+    vault_root: &Path,
+    paths: &ProjectPaths,
+    id: &str,
+    target_path: Option<&str>,
+) -> Result<ProjectTransferPreview, AppError> {
+    let dir = project_dir(vault_root, id)?;
+    if !dir.join(PROJECT_FILE).is_file() {
+        return Err(not_found("Project", id));
+    }
+    let stored = read_project(&dir)?;
+    let (source, destination) = if stored.is_external {
+        let source = project_files_dir_checked(
+            vault_root,
+            paths,
+            &AiProject {
+                target_path: paths.get(id),
+                ..stored
+            },
+        )?;
+        (source, Some(dir))
+    } else {
+        let target = target_path
+            .map(str::trim)
+            .filter(|target| !target.is_empty())
+            .map(PathBuf::from)
+            .filter(|target| target.is_dir());
+        if let Some(target) = &target {
+            check_project_folder(target, vault_root, &paths.protected_roots)?;
+        }
+        (dir, target)
+    };
+    let entries = project_entries(&source)?;
+    let mut taken_names = Vec::new();
+    if let Some(destination) = &destination {
+        for entry in &entries {
+            if let Some(name) = entry.file_name() {
+                if destination.join(name).symlink_metadata().is_ok() {
+                    taken_names.push(name.to_string_lossy().into_owned());
+                }
+            }
+        }
+    }
+    Ok(ProjectTransferPreview {
+        files: summarize(&source, &entries)?,
+        taken_names,
+        is_other_disk: destination.as_deref().is_some_and(|destination| {
+            crate::services::platform::filesystem::is_other_disk(&source, destination)
+        }),
+        shared_folder_count: if stored.is_external {
+            shared_folder_count(paths, id, &source)
+        } else {
+            0
+        },
+    })
+}
+
+/// The other projects of this device, in any vault, whose folder is `folder`.
+fn shared_folder_count(paths: &ProjectPaths, id: &str, folder: &Path) -> u32 {
+    let folder = canonical_or_same(folder);
+    let snapshot = paths.device.snapshot();
+    let count = snapshot
+        .ai_project_paths
+        .iter()
+        .flat_map(|(vault_id, projects)| {
+            projects
+                .iter()
+                .map(move |(project_id, path)| (vault_id, project_id, path))
+        })
+        .filter(|(vault_id, project_id, path)| {
+            !(vault_id.as_str() == paths.vault_id && project_id.as_str() == id)
+                && canonical_or_same(Path::new(path)) == folder
+        })
+        .count();
+    u32::try_from(count).unwrap_or(u32::MAX)
+}
+
 /// Turns an internal project into an external one with its folder at
-/// `target_path`, or an external one into an internal one. With
-/// `transfer_files` an internal project moves its files to the folder, and
-/// an external one copies the files of its folder on this device into the
-/// vault: the folder of the user is never removed. Files are copied first,
-/// so a failure leaves the project as it was; a name taken in the
-/// destination is refused, not overwritten. Returns the new revision.
+/// `target_path`, or an external one into an internal one.
+///
+/// An internal project always moves its files to the folder. An external
+/// one copies the files of its folder on this device into the vault with
+/// `transfer_files`; its folder is then left as it is, or handed to
+/// `discard_source` (the trash, in the app), which a folder another project
+/// of this device uses refuses. Links leading out of the files, or a name
+/// taken in the destination, refuse the conversion before anything is
+/// copied; the files are copied before the description is written and a
+/// failed copy removes what it copied, so a failure leaves the project as it
+/// was. Files of the old place that cannot be removed afterwards are left:
+/// the result says so.
 pub fn convert_project(
     vault_root: &Path,
     paths: &ProjectPaths,
     id: &str,
     target_path: Option<&str>,
     transfer_files: bool,
+    discard_source: Option<&DiscardFolder<'_>>,
     expected_revision: Option<&str>,
-) -> Result<String, AppError> {
+) -> Result<ProjectConversion, AppError> {
     let dir = project_dir(vault_root, id)?;
     if !dir.join(PROJECT_FILE).is_file() {
         return Err(not_found("Project", id));
@@ -736,26 +877,20 @@ pub fn convert_project(
             AppError::InvalidInput("External project requires a target path".into())
         })?;
         let target = Path::new(target);
-        if transfer_files {
-            if fs::canonicalize(target)?.starts_with(fs::canonicalize(&dir)?) {
-                return Err(AppError::InvalidInput(
-                    "The folder of the project cannot be inside its vault folder".into(),
-                ));
-            }
-            copy_project_files(&dir, target)?;
-        }
+        copy_project_files(&dir, target)?;
         let revision = write_checked(
             &dir.join(PROJECT_FILE),
             &project_file_content(&converted)?,
             None,
         )?;
         paths.set(id, target.to_str())?;
-        if transfer_files {
-            remove_project_files(&dir)?;
-        }
-        Ok(revision)
+        let is_source_left = !remove_project_files(&dir);
+        Ok(ProjectConversion {
+            revision,
+            is_source_left,
+        })
     } else {
-        if transfer_files {
+        let source = if transfer_files {
             let source = project_files_dir_checked(
                 vault_root,
                 paths,
@@ -764,56 +899,75 @@ pub fn convert_project(
                     ..stored
                 },
             )?;
+            if discard_source.is_some() && shared_folder_count(paths, id, &source) > 0 {
+                return Err(AppError::InvalidInput(
+                    "Another project of this device uses the folder: it is not moved to the trash"
+                        .into(),
+                ));
+            }
             copy_project_files(&source, &dir)?;
-        }
+            Some(source)
+        } else {
+            None
+        };
         let revision = write_checked(
             &dir.join(PROJECT_FILE),
             &project_file_content(&converted)?,
             None,
         )?;
         paths.set(id, None)?;
-        Ok(revision)
+        let mut is_source_left = false;
+        if let (Some(source), Some(discard)) = (source, discard_source) {
+            if let Err(error) = discard(&source) {
+                log::warn!("Could not discard {}: {error}", source.display());
+                is_source_left = true;
+            }
+        }
+        Ok(ProjectConversion {
+            revision,
+            is_source_left,
+        })
     }
 }
 
 /// The entries of a project folder, without the description of the project.
-fn project_entries(dir: &Path) -> Result<Vec<fs::DirEntry>, AppError> {
+fn project_entries(dir: &Path) -> Result<Vec<PathBuf>, AppError> {
     let mut entries = Vec::new();
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
         if entry.file_name() != PROJECT_FILE {
-            entries.push(entry);
+            entries.push(entry.path());
         }
     }
     Ok(entries)
 }
 
 /// Copies the files of the project folder `from` into `to`. Refuses before
-/// copying anything when a name is taken in `to` or a link is found; on a
-/// failure removes what it copied.
+/// copying anything when a name is taken in `to` or a link leads out of
+/// `from`; on a failure removes what it copied.
 fn copy_project_files(from: &Path, to: &Path) -> Result<(), AppError> {
     let entries = project_entries(from)?;
     for entry in &entries {
-        let destination = to.join(entry.file_name());
+        let destination = to.join(entry.file_name().unwrap_or_default());
         if destination.symlink_metadata().is_ok() {
             return Err(AppError::AlreadyExists(format!(
                 "{} already exists",
                 destination.display()
             )));
         }
-        check_no_links(&entry.path())?;
     }
+    check_entry_links(from, &entries)?;
     let mut copied = Vec::new();
     for entry in &entries {
-        let destination = to.join(entry.file_name());
+        let destination = to.join(entry.file_name().unwrap_or_default());
         copied.push(destination.clone());
-        if let Err(error) = copy_tree(&entry.path(), &destination) {
+        if let Err(error) = copy_tree(from, entry, &destination) {
             for path in &copied {
-                let _ = if path.is_dir() {
-                    fs::remove_dir_all(path)
-                } else {
-                    fs::remove_file(path)
-                };
+                if let Err(cleanup) = remove_entry(path) {
+                    if cleanup.kind() != std::io::ErrorKind::NotFound {
+                        log::warn!("Could not remove {}: {cleanup}", path.display());
+                    }
+                }
             }
             return Err(error);
         }
@@ -821,48 +975,34 @@ fn copy_project_files(from: &Path, to: &Path) -> Result<(), AppError> {
     Ok(())
 }
 
-pub(super) fn check_no_links(path: &Path) -> Result<(), AppError> {
-    let kind = path.symlink_metadata()?.file_type();
-    if kind.is_symlink() {
-        return Err(AppError::InvalidInput(format!(
-            "{} is a link: move it by hand",
-            path.display()
-        )));
-    }
-    if kind.is_dir() {
-        for entry in fs::read_dir(path)? {
-            check_no_links(&entry?.path())?;
-        }
-    }
-    Ok(())
-}
-
-pub(super) fn copy_tree(from: &Path, to: &Path) -> Result<(), AppError> {
-    if from.is_dir() {
-        fs::create_dir(to)?;
-        for entry in fs::read_dir(from)? {
-            let entry = entry?;
-            copy_tree(&entry.path(), &to.join(entry.file_name()))?;
-        }
-    } else {
-        fs::copy(from, to)?;
-    }
-    Ok(())
-}
-
 /// Removes the files of an internal project folder, keeping its description.
-fn remove_project_files(dir: &Path) -> Result<(), AppError> {
-    for entry in project_entries(dir)? {
-        let path = entry.path();
-        if entry.file_type()?.is_dir() {
-            crate::services::storage::watcher::remove_tree(&path)?;
-        } else {
-            crate::services::storage::user_data::ensure_write_allowed(&path)?;
-            fs::remove_file(&path)?;
-            crate::services::storage::watcher::deleted(&path);
+/// Goes on past a file it cannot remove; returns whether all are gone.
+fn remove_project_files(dir: &Path) -> bool {
+    let entries = match project_entries(dir) {
+        Ok(entries) => entries,
+        Err(error) => {
+            log::warn!("Could not list {}: {error}", dir.display());
+            return false;
+        }
+    };
+    let mut is_clean = true;
+    for path in entries {
+        let removed = (|| -> Result<(), AppError> {
+            if path.symlink_metadata()?.is_dir() {
+                crate::services::storage::watcher::remove_tree(&path)
+            } else {
+                crate::services::storage::user_data::ensure_write_allowed(&path)?;
+                remove_entry(&path)?;
+                crate::services::storage::watcher::deleted(&path);
+                Ok(())
+            }
+        })();
+        if let Err(error) = removed {
+            log::warn!("Could not remove {}: {error}", path.display());
+            is_clean = false;
         }
     }
-    Ok(())
+    is_clean
 }
 
 /// Removes the project and every profile's permissions for it. The files of

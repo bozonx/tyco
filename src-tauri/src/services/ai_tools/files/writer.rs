@@ -84,15 +84,26 @@ impl ConversationFiles<'_> {
             &destination_parent,
             destination_name,
         ) {
-            if error.kind() != io::ErrorKind::CrossesDevices || !meta.is_file() {
+            if error.kind() != io::ErrorKind::CrossesDevices {
                 return Err(error.into());
             }
-            scoped_io::copy_move(
-                &source_parent,
-                source_name,
-                &destination_parent,
-                destination_name,
-            )?;
+            if meta.is_dir() {
+                scoped_io::copy_move_dir(
+                    &source_parent,
+                    source_name,
+                    &destination_parent,
+                    destination_name,
+                )?;
+            } else if meta.is_file() {
+                scoped_io::copy_move(
+                    &source_parent,
+                    source_name,
+                    &destination_parent,
+                    destination_name,
+                )?;
+            } else {
+                return Err(error.into());
+            }
         }
         Ok(AiFileToolOutput::MovePath {
             from: source.virtual_path(),

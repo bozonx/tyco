@@ -6,7 +6,8 @@ use crate::{
     errors::AppError,
     services::ai_vault::{
         self, AiProfile, AiProject, ProfileMemoryChange, ProfileMemorySearchResult,
-        ProfileMemoryTopic, ProfileSoul, VaultFolder, VaultInfo,
+        ProfileMemoryTopic, ProfileSoul, ProjectConversion, ProjectTransferPreview, VaultFolder,
+        VaultInfo,
     },
     services::storage,
 };
@@ -269,19 +270,42 @@ pub async fn save_ai_project(
     .await?
 }
 
+/// What converting the project would transfer; `target_path` is the folder
+/// an internal project would get.
+#[tauri::command]
+pub async fn inspect_ai_project_transfer(
+    app: AppHandle,
+    id: String,
+    target_path: Option<String>,
+) -> Result<ProjectTransferPreview, AppError> {
+    run_blocking(move || {
+        let (vault_id, project_id) = ai_vault::split_ref(&id);
+        ai_vault::with_projects(&app, vault_id, |dir, paths| {
+            ai_vault::inspect_project_transfer(dir, paths, project_id, target_path.as_deref())
+        })
+    })
+    .await?
+}
+
 /// Turns an internal project into an external one with its folder at
-/// `target_path`, or back; `transfer_files` moves or copies its files.
-/// Returns the new revision.
+/// `target_path`, moving its files there, or back; an external one copies
+/// the files of its folder with `transfer_files`, then moves that folder to
+/// the trash with `trash_source`.
 #[tauri::command]
 pub async fn convert_ai_project(
     app: AppHandle,
     id: String,
     target_path: Option<String>,
     transfer_files: bool,
+    trash_source: bool,
     expected_revision: Option<String>,
-) -> Result<String, AppError> {
+) -> Result<ProjectConversion, AppError> {
     run_blocking(move || {
         let (vault_id, project_id) = ai_vault::split_ref(&id);
+        let to_trash = |path: &std::path::Path| {
+            trash::delete(path)
+                .map_err(|error| AppError::Failed(format!("Could not move to the trash: {error}")))
+        };
         ai_vault::with_projects(&app, vault_id, |dir, paths| {
             ai_vault::convert_project(
                 dir,
@@ -289,8 +313,24 @@ pub async fn convert_ai_project(
                 project_id,
                 target_path.as_deref(),
                 transfer_files,
+                trash_source.then_some(&to_trash as &ai_vault::DiscardFolder),
                 expected_revision.as_deref(),
             )
+        })
+    })
+    .await?
+}
+
+/// Shows the folder of the project in the file manager: its vault folder,
+/// or the folder of an external project on this device. The path is
+/// resolved here: the webview never names a folder to open.
+#[tauri::command]
+pub async fn open_ai_project_location(app: AppHandle, id: String) -> Result<(), AppError> {
+    run_blocking(move || {
+        let (vault_id, project_id) = ai_vault::split_ref(&id);
+        ai_vault::with_projects(&app, vault_id, |dir, paths| {
+            let folder = ai_vault::project_folder_on_device(dir, paths, project_id)?;
+            crate::services::platform::open_dir(&folder)
         })
     })
     .await?

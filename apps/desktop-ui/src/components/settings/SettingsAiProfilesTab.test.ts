@@ -53,6 +53,13 @@ function createStore() {
     ],
     connectedVaultIds: [] as string[],
     setProjectFolder: vi.fn(async () => true),
+    openProjectFolder: vi.fn(async () => {}),
+    inspectProjectTransfer: vi.fn(async () => ({
+      files: { fileCount: 0, totalBytes: 0, hasGit: false, outsideLinks: [] },
+      takenNames: [],
+      isOtherDisk: false,
+      sharedFolderCount: 0,
+    })),
     loadAll: vi.fn(async () => {}),
     openVaultDir: vi.fn(async () => {}),
     pickFolder: vi.fn(async (): Promise<string | null> => '/elsewhere'),
@@ -338,45 +345,75 @@ describe('SettingsAiProfilesTab.vue', () => {
     expect(store.deleteProfile).toHaveBeenCalledWith('writer')
   })
 
-  it('deletes a project through its menu upon confirmation when not empty', async () => {
-    store.projects.push({
-      id: 'proj-1',
-      name: 'Project 1',
-      targetPath: '/some/path',
-    })
-    const wrapper = mountTab()
-    const items = wrapper.findAllComponents({ name: 'SettingsEntityItem' })
-    const projectItem = items[0]!
-    const menu = projectItem.findComponent({ name: 'DropdownMenu' })
-    const menuItems = menu.props('items') as Array<{
-      label: string
-      action: () => void
-    }>
-    expect(menuItems.map((i) => i.label)).toEqual(['common.delete'])
-    expect((menuItems[0] as { danger?: boolean }).danger).toBeFalsy()
+  const projectMenu = (wrapper: ReturnType<typeof mountTab>, title: string) =>
+    wrapper
+      .findAllComponents({ name: 'SettingsEntityItem' })
+      .find((item) => item.props('title') === title)!
+      .findComponent({ name: 'DropdownMenu' })
+      .props('items') as Array<{ label: string; action: () => Promise<void> }>
 
-    await menuItems[0]!.action()
+  it('marks external projects and opens the folder of a project', async () => {
+    store.projects.push(
+      { id: 'notes', name: 'Notes', isExternal: false },
+      { id: 'site', name: 'Site', isExternal: true, targetPath: '/site' }
+    )
+    const wrapper = mountTab()
+    const badges = wrapper.findAllComponents({ name: 'Badge' })
+    expect(badges.map((badge) => badge.text())).toEqual([
+      'settings.projectBadgeExternal',
+    ])
+    const items = projectMenu(wrapper, 'Site')
+    expect(items.map((item) => item.label)).toEqual([
+      'settings.projectFolderOpen',
+      'common.delete',
+    ])
+    await items[0]!.action()
+    expect(store.openProjectFolder).toHaveBeenCalledWith('site')
+  })
+
+  it.each([
+    ['an internal project with files', { isExternal: false }, 3],
+    [
+      'an external project with a folder',
+      { isExternal: true, targetPath: '/w' },
+      0,
+    ],
+    ['a described project', { isExternal: false, description: 'Docs' }, 0],
+  ])('asks before deleting %s', async (_, fields, fileCount) => {
+    store.inspectProjectTransfer.mockResolvedValueOnce({
+      files: { fileCount, totalBytes: 1, hasGit: false, outsideLinks: [] },
+      takenNames: [],
+      isOtherDisk: false,
+      sharedFolderCount: 0,
+    })
+    store.projects.push({ id: 'proj-1', name: 'Project 1', ...fields })
+    const wrapper = mountTab()
+    const items = projectMenu(wrapper, 'Project 1')
+    const remove = items.find((item) => item.label === 'common.delete')!
+    expect((remove as { danger?: boolean }).danger).toBeFalsy()
+
+    await remove.action()
     await flushPromises()
     const confirm = wrapper.get('[data-title="settings.deleteProject"]')
     expect(confirm.attributes('data-open')).toBe('true')
+    expect(store.deleteProject).not.toHaveBeenCalled()
     await confirm.get('.confirm-yes').trigger('click')
     await flushPromises()
     expect(store.deleteProject).toHaveBeenCalledWith('proj-1')
   })
 
   it('deletes an empty project immediately without confirmation', async () => {
-    store.projects.push({ id: 'proj-empty', name: 'Empty Project' })
+    store.projects.push({
+      id: 'proj-empty',
+      name: 'Empty Project',
+      isExternal: false,
+    })
     const wrapper = mountTab()
-    const items = wrapper.findAllComponents({ name: 'SettingsEntityItem' })
-    const projectItem = items[0]!
-    const menu = projectItem.findComponent({ name: 'DropdownMenu' })
-    const menuItems = menu.props('items') as Array<{
-      label: string
-      action: () => void
-    }>
+    const items = projectMenu(wrapper, 'Empty Project')
 
-    await menuItems[0]!.action()
+    await items.find((item) => item.label === 'common.delete')!.action()
     await flushPromises()
+    expect(store.inspectProjectTransfer).toHaveBeenCalledWith('proj-empty')
     const confirm = wrapper.get('[data-title="settings.deleteProject"]')
     expect(confirm.attributes('data-open')).toBe('false')
     expect(store.deleteProject).toHaveBeenCalledWith('proj-empty')

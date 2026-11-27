@@ -60,6 +60,29 @@ fn walker(target: &Resolved<'_>, max_depth: Option<usize>) -> ignore::Walk {
         .build()
 }
 
+/// What a link met in a walk leads to, when that is inside its root and
+/// not hidden from the tools; a link leading elsewhere or nowhere is left
+/// out, as if it were not there. The walk does not enter a linked folder: its
+/// files are listed where they are.
+fn inner_link_target(target: &Resolved<'_>, link: &Path) -> Option<std::fs::Metadata> {
+    let real = std::fs::canonicalize(link).ok()?;
+    let relative = real.strip_prefix(&target.root_dir).ok()?;
+    if is_forbidden(target.root, relative) {
+        return None;
+    }
+    std::fs::metadata(&real).ok()
+}
+
+/// The metadata of a walked entry, or of what a link leads to; `None` for a
+/// link the tools do not follow.
+fn entry_metadata(target: &Resolved<'_>, entry: &WalkEntry) -> Option<std::fs::Metadata> {
+    if entry.path_is_symlink() {
+        inner_link_target(target, entry.path())
+    } else {
+        entry.metadata().ok()
+    }
+}
+
 /// The entries of a folder, `depth` levels down.
 pub(super) fn list(
     target: &Resolved<'_>,
@@ -73,7 +96,10 @@ pub(super) fn list(
         if entry.depth() == 0 {
             continue;
         }
-        let is_dir = entry.file_type().is_some_and(|kind| kind.is_dir());
+        let Some(meta) = entry_metadata(target, &entry) else {
+            continue;
+        };
+        let is_dir = meta.is_dir();
         if let (Some(matcher), Some(pattern)) = (&matcher, pattern) {
             if is_dir || !matches_name(matcher, pattern, &entry, &target.path) {
                 continue;
@@ -93,9 +119,7 @@ pub(super) fn list(
             } else {
                 EntryKind::File
             },
-            size: (!is_dir)
-                .then(|| entry.metadata().ok().map(|meta| meta.len()))
-                .flatten(),
+            size: (!is_dir).then_some(meta.len()),
         });
     }
     Ok((entries, false))
@@ -217,9 +241,9 @@ pub(super) fn search(
     }
     for target in &targets {
         for entry in walker(target, None).flatten() {
-            if !entry.file_type().is_some_and(|kind| kind.is_file()) {
+            let Some(meta) = entry_metadata(target, &entry).filter(|meta| meta.is_file()) else {
                 continue;
-            }
+            };
             if let (Some(matcher), Some(pattern)) = (&name_matcher, name_pattern) {
                 if !matches_name(matcher, pattern, &entry, &target.path) {
                     continue;
@@ -240,10 +264,7 @@ pub(super) fn search(
                 });
                 continue;
             };
-            if entry
-                .metadata()
-                .map_or(true, |meta| meta.len() > MAX_SEARCH_FILE_BYTES)
-            {
+            if meta.len() > MAX_SEARCH_FILE_BYTES {
                 continue;
             }
             let mut is_full = false;

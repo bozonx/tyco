@@ -71,9 +71,11 @@ function createStore() {
           targetPath: options.targetPath,
         }
         state.projects = [converted]
-        return converted
+        return { project: converted, isSourceLeft: false }
       }
     ),
+    inspectProjectTransfer: vi.fn(),
+    openProjectFolder: vi.fn(async () => {}),
     pickFolder: vi.fn(async (): Promise<string | null> => '/work'),
     setProjectAccess: vi.fn(async () => {}),
   })
@@ -115,7 +117,7 @@ describe('SettingsProjectDetailTab.vue', () => {
     await wrapper
       .findComponent({ name: 'SegmentedControl' })
       .vm.$emit('update:modelValue', 'external')
-    await button(wrapper, 'settings.selectFolder').trigger('click')
+    await wrapper.get('[data-testid="project-folder-pick"]').trigger('click')
     await flushPromises()
     await button(wrapper, 'settings.saveProject').trigger('click')
     await flushPromises()
@@ -171,15 +173,59 @@ describe('SettingsProjectDetailTab.vue', () => {
     expect(store.saveProject).not.toHaveBeenCalled()
   })
 
-  it('shows the folder of an existing internal project and hides it for external', () => {
+  it('shows the type and folder of a project in one field', async () => {
     const internal = mountTab()
-    expect(internal.text()).toContain('projects/notes')
+    const field = internal.get('[data-testid="project-folder"]')
+    expect(field.get('[data-testid="project-type"]').text()).toBe(
+      'settings.projectBadgeInternal'
+    )
+    expect(field.text()).toContain('projects/notes')
+    expect(field.text()).toContain('settings.projectConvertToExternal')
+    expect(field.find('[data-testid="project-folder-pick"]').exists()).toBe(
+      false
+    )
     expect(internal.findComponent({ name: 'SegmentedControl' }).exists()).toBe(
       false
     )
+    await internal.findComponent({ name: 'PathDisplay' }).vm.$emit('open')
+    expect(store.openProjectFolder).toHaveBeenCalledWith('notes')
     internal.unmount()
+
     store.projects[0]!.isExternal = true
-    expect(mountTab().text()).not.toContain('projects/notes')
+    store.projects[0]!.targetPath = '/work'
+    const external = mountTab()
+    const externalField = external.get('[data-testid="project-folder"]')
+    expect(externalField.get('[data-testid="project-type"]').text()).toBe(
+      'settings.projectBadgeExternal'
+    )
+    expect(externalField.text()).not.toContain('projects/notes')
+    expect(externalField.text()).toContain('/work')
+    expect(externalField.text()).toContain('settings.projectConvertToInternal')
+    expect(
+      externalField.get('[data-testid="project-folder-pick"]').text()
+    ).toBe('settings.projectFolderChange')
+    expect(
+      external.findComponent({ name: 'PathDisplay' }).props('canOpen')
+    ).toBe(true)
+  })
+
+  it('relinks an external project to another folder without converting it', async () => {
+    store.projects[0]!.isExternal = true
+    store.projects[0]!.targetPath = '/work'
+    store.pickFolder.mockResolvedValueOnce('/elsewhere')
+    const wrapper = mountTab()
+    await wrapper.get('[data-testid="project-folder-pick"]').trigger('click')
+    await flushPromises()
+    // a folder not stored yet cannot be opened
+    expect(
+      wrapper.findComponent({ name: 'PathDisplay' }).props('canOpen')
+    ).toBe(false)
+    wrapper.unmount()
+    await flushPromises()
+    expect(store.saveProject).toHaveBeenCalledWith(
+      expect.objectContaining({ targetPath: '/elsewhere', isExternal: true })
+    )
+    expect(store.convertProject).not.toHaveBeenCalled()
   })
 
   it('converts an existing project through its dialog', async () => {
@@ -193,15 +239,14 @@ describe('SettingsProjectDetailTab.vue', () => {
       toExternal: true,
       hasSourceFolder: false,
     })
-    await dialog.vm.$emit('confirm', {
+    const options = {
       targetPath: '/work',
-      transferFiles: true,
-    })
+      transferFiles: false,
+      trashSource: false,
+    }
+    await dialog.vm.$emit('confirm', options)
     await flushPromises()
-    expect(store.convertProject).toHaveBeenCalledWith('notes', {
-      targetPath: '/work',
-      transferFiles: true,
-    })
+    expect(store.convertProject).toHaveBeenCalledWith('notes', options)
     expect(dialog.props('open')).toBe(false)
     expect(wrapper.text()).not.toContain('projects/notes')
   })
@@ -238,8 +283,10 @@ describe('SettingsProjectDetailTab.vue', () => {
       { ...profile({}), id: 'reader', name: 'Reader' }
     )
     const wrapper = mountTab()
-    const badge = wrapper.findComponent({ name: 'Badge' })
-    expect(badge.text()).toBe('settings.accessLevelReadWrite')
+    const badges = wrapper.findAllComponents({ name: 'Badge' })
+    expect(badges.map((badge) => badge.text())).toContain(
+      'settings.accessLevelReadWrite'
+    )
     expect(wrapper.text()).toContain('settings.projectAccessFileToolsOff')
 
     const menu = wrapper.findComponent({ name: 'DropdownMenu' })
@@ -279,7 +326,7 @@ describe('SettingsProjectDetailTab.vue', () => {
     store.projects[0]!.isExternal = true
     store.pickFolder.mockRejectedValueOnce(new Error('Denied'))
     const wrapper = mountTab()
-    await button(wrapper, 'settings.selectFolder').trigger('click')
+    await wrapper.get('[data-testid="project-folder-pick"]').trigger('click')
     await flushPromises()
     expect(toastError).toHaveBeenCalledWith(new Error('Denied'))
   })

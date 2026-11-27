@@ -92,6 +92,80 @@ pub(super) fn copy_move(
     Ok(())
 }
 
+/// Moves the folder `source_name` across filesystems: copies it under a
+/// temporary name beside the destination, publishes the copy without
+/// replacing anything, then removes the source. Links are copied as they
+/// are. A failure before publication removes the copy and keeps the source.
+pub(super) fn copy_move_dir(
+    source: &Dir,
+    source_name: &OsStr,
+    destination: &Dir,
+    destination_name: &OsStr,
+) -> Result<(), AppError> {
+    let temporary = OsString::from(format!(
+        ".tyco-tmp-{}",
+        crate::services::atomic_file::unique_file_suffix()
+    ));
+    destination.create_dir(&temporary)?;
+    let published = (|| -> io::Result<()> {
+        copy_dir_contents(
+            &source.open_dir(source_name)?,
+            &destination.open_dir(&temporary)?,
+        )?;
+        crate::services::platform::filesystem::rename_no_replace(
+            destination,
+            &temporary,
+            destination,
+            destination_name,
+        )
+    })();
+    if let Err(error) = published {
+        if let Err(cleanup) = destination.remove_dir_all(&temporary) {
+            log::warn!("Could not remove the temporary folder {temporary:?}: {cleanup}");
+        }
+        return Err(error.into());
+    }
+    crate::services::platform::filesystem::sync_directory(destination)?;
+    source.remove_dir_all(source_name).map_err(|error| {
+        AppError::Failed(format!(
+            "The folder was copied to {destination_name:?}, but the original could not be removed: {error}"
+        ))
+    })
+}
+
+fn copy_dir_contents(from: &Dir, to: &Dir) -> io::Result<()> {
+    for entry in from.entries()? {
+        let entry = entry?;
+        let name = entry.file_name();
+        let kind = entry.file_type()?;
+        if kind.is_symlink() {
+            copy_link_entry(from, &name, to)?;
+        } else if kind.is_dir() {
+            to.create_dir(&name)?;
+            copy_dir_contents(&from.open_dir(&name)?, &to.open_dir(&name)?)?;
+        } else {
+            from.copy(&name, to, &name)?;
+        }
+    }
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn copy_link_entry(from: &Dir, name: &OsStr, to: &Dir) -> io::Result<()> {
+    to.symlink_contents(from.read_link_contents(name)?, name)
+}
+
+#[cfg(windows)]
+fn copy_link_entry(from: &Dir, name: &OsStr, to: &Dir) -> io::Result<()> {
+    use cap_std::fs::FileTypeExt;
+    let target = from.read_link_contents(name)?;
+    if from.symlink_metadata(name)?.file_type().is_symlink_dir() {
+        to.symlink_dir(target, name)
+    } else {
+        to.symlink_file(target, name)
+    }
+}
+
 fn copy_move_with(
     mut input: impl Read,
     permissions: cap_std::fs::Permissions,
@@ -238,6 +312,33 @@ mod tests {
         assert_eq!(
             fs::read_to_string(directory.join("target")).unwrap(),
             "existing"
+        );
+    }
+
+    #[test]
+    fn a_folder_moves_whole_and_never_over_an_existing_one() {
+        let directory = TestDir::new("move-copy-dir");
+        fs::create_dir_all(directory.join("source/nested")).unwrap();
+        fs::write(directory.join("source/nested/a.txt"), "a").unwrap();
+        #[cfg(unix)]
+        std::os::unix::fs::symlink("nested/a.txt", directory.join("source/link")).unwrap();
+        fs::create_dir(directory.join("taken")).unwrap();
+        let dir = open_dir(&directory);
+
+        assert!(copy_move_dir(&dir, OsStr::new("source"), &dir, OsStr::new("taken")).is_err());
+        assert!(directory.join("source/nested/a.txt").is_file());
+        assert_eq!(fs::read_dir(&directory).unwrap().count(), 2, "no copy left");
+
+        copy_move_dir(&dir, OsStr::new("source"), &dir, OsStr::new("target")).unwrap();
+        assert!(!directory.join("source").exists());
+        assert_eq!(
+            fs::read_to_string(directory.join("target/nested/a.txt")).unwrap(),
+            "a"
+        );
+        #[cfg(unix)]
+        assert_eq!(
+            fs::read_link(directory.join("target/link")).unwrap(),
+            std::path::PathBuf::from("nested/a.txt")
         );
     }
 

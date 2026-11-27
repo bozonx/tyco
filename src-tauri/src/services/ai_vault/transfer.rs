@@ -1,6 +1,7 @@
 //! Moving a profile or a project to another vault. The entity is copied into
 //! a hidden folder of the destination and moved into place whole; the source
-//! is removed only then, so a failure never loses it. Vaults are kept apart:
+//! is removed only then, so a failure never loses it. Links inside the entity
+//! are copied as links; one leading out of it refuses the move. Vaults are kept apart:
 //! a moved profile drops its permissions for the projects it leaves behind,
 //! and the profiles left behind drop theirs for a moved project.
 use serde::Serialize;
@@ -8,10 +9,11 @@ use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use super::entity_files::{check_links, copy_tree};
 use super::operations::{
-    check_no_links, copy_tree, create_entity_dir, delete_project, ensure_vault_dirs,
-    existing_profile_dir, profile_dir, project_dir, read_project, remove_stale_staging,
-    ProjectPaths, PROFILE_FILE, PROJECT_FILE, STAGING_PREFIX,
+    create_entity_dir, delete_project, ensure_vault_dirs, existing_profile_dir, profile_dir,
+    project_dir, read_project, remove_stale_staging, ProjectPaths, PROFILE_FILE, PROJECT_FILE,
+    STAGING_PREFIX,
 };
 use crate::errors::AppError;
 use crate::services::atomic_file::write_private;
@@ -89,7 +91,7 @@ fn place_copy(
     let target = parent.join(id);
     let laid_out = (|| -> Result<(), AppError> {
         match source {
-            Some(source) => copy_tree(source, &staging)?,
+            Some(source) => copy_tree(source, source, &staging)?,
             None => create_entity_dir(&staging)?,
         }
         prepare(&staging)?;
@@ -132,7 +134,7 @@ fn check_other_vault(from_root: &Path, to_root: &Path) -> Result<(), AppError> {
 pub fn move_profile(from_root: &Path, to_root: &Path, id: &str) -> Result<MovedEntity, AppError> {
     check_other_vault(from_root, to_root)?;
     let source = existing_profile_dir(from_root, id)?;
-    check_no_links(&source)?;
+    check_links(&source)?;
     ensure_vault_dirs(to_root)?;
     let new_id = free_id(id, |id| profile_dir(to_root, id))?;
     place_copy(&to_root.join("profiles"), &new_id, Some(&source), |copy| {
@@ -167,7 +169,7 @@ pub fn move_project(
     }
     let project = read_project(&source)?;
     if !project.is_external {
-        check_no_links(&source)?;
+        check_links(&source)?;
     }
     ensure_vault_dirs(to_root)?;
     let new_id = free_id(id, |id| project_dir(to_root, id))?;

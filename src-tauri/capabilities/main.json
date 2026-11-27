@@ -63,6 +63,8 @@
     "allow-save-ai-profile",
     "allow-save-ai-project",
     "allow-convert-ai-project",
+    "allow-inspect-ai-project-transfer",
+    "allow-open-ai-project-location",
     "allow-delete-secret",
     "allow-set-secret",
     "allow-set-tray-menu-labels",

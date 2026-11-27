@@ -42,7 +42,7 @@ function projects() {
     listProjects: async () => [disk],
     createProject: async () => 'created',
     saveProject,
-    convertProject: async () => 'r',
+    convertProject: async () => ({ revision: 'r', isSourceLeft: false }),
     deleteProject: async () => {},
     pickExternalFolder: async () => null,
   })
@@ -173,7 +173,7 @@ it('checks the creation revision on the first profile and project edits', async 
     listProjects: async () => [],
     createProject: async () => 'created',
     saveProject: stale,
-    convertProject: async () => 'r',
+    convertProject: async () => ({ revision: 'r', isSourceLeft: false }),
     deleteProject: async () => {},
     pickExternalFolder: async () => null,
     randomSuffix: () => '00000001',
