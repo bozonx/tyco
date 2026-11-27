@@ -110,7 +110,7 @@ const { viewMode, stepMode } = usePersistedTranslationViewMode(() =>
   Boolean(props.sourceText)
 )
 
-useViewModeArrowKeys(stepMode)
+useViewModeArrowKeys(stepMode, () => Boolean(props.sourceText))
 
 const { t } = useI18n()
 

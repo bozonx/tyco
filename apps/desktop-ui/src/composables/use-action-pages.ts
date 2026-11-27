@@ -46,20 +46,16 @@ export function useActionPages(options: ActionPagesOptions = {}) {
   }
 
   function handleKeyDown(event: KeyboardEvent) {
-    if (options.isDisabled?.()) return
-    if (event.isComposing) return
+    if (!hasPages.value || options.isDisabled?.()) return
+    if (event.defaultPrevented || event.isComposing) return
     if (isTextEntryTarget(event.target)) return
     if (event.ctrlKey || event.altKey || event.metaKey) return
 
     if (event.key === 'Tab') {
       event.preventDefault()
-      if (hasPages.value) {
-        stepPage(event.shiftKey ? -1 : 1)
-      }
+      stepPage(event.shiftKey ? -1 : 1)
       return
     }
-
-    if (!hasPages.value) return
 
     if (
       (event.key === 'ArrowRight' || event.key === 'ArrowLeft') &&

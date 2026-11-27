@@ -1,31 +1,30 @@
 import { onMounted, onUnmounted } from 'vue'
 
 import type { ModeStep } from '../lib/diff/diff-model'
+import { isTextEntryTarget } from '../lib/ui/text-entry-target'
 
 const ARROW_STEPS: Record<string, ModeStep> = { ArrowLeft: -1, ArrowRight: 1 }
-
-/** A field keeps the arrows for moving its caret. */
-function isTextInput(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false
-  return (
-    target.isContentEditable ||
-    target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement
-  )
-}
 
 /**
  * Shift+←/→ pick the previous or the next view mode of a result; the plain
  * arrows are left to the action pages.
  */
-export function useViewModeArrowKeys(step: (step: ModeStep) => void) {
+export function useViewModeArrowKeys(
+  step: (step: ModeStep) => void,
+  isAvailable: () => boolean = () => true
+) {
   function handleKeyDown(event: KeyboardEvent) {
     const modeStep = ARROW_STEPS[event.key]
-    if (!modeStep || event.defaultPrevented) return
+    if (
+      !modeStep ||
+      event.defaultPrevented ||
+      event.isComposing ||
+      !isAvailable()
+    )
+      return
     if (!event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
       return
-    if (isTextInput(event.target)) return
+    if (isTextEntryTarget(event.target)) return
     event.preventDefault()
     step(modeStep)
   }

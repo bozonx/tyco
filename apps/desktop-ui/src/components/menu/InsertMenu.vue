@@ -201,9 +201,7 @@ watch(
   { immediate: true }
 )
 
-useViewModeArrowKeys((step) => {
-  if (hasDiff.value) stepMode(step)
-})
+useViewModeArrowKeys(stepMode, () => hasDiff.value && !props.shortcutsDisabled)
 
 const activeActionText = computed(() => {
   if (isContextDisabled.value) return ''

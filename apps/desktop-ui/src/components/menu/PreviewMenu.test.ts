@@ -74,6 +74,16 @@ describe('PreviewMenu', () => {
       global: { stubs: { ShortcutList: true } },
     })
     expect(actionMenu.pageIndex).toBe(0)
+    expect(wrapper.find('.action-pages-bar').exists()).toBe(false)
+    for (const init of [
+      { key: 'Tab' },
+      { key: 'Tab', shiftKey: true },
+      { key: 'ArrowRight', shiftKey: true },
+    ]) {
+      const event = new KeyboardEvent('keydown', { cancelable: true, ...init })
+      window.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+    }
     wrapper.unmount()
   })
 

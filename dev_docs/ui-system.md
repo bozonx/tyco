@@ -399,7 +399,17 @@ Shift+Tab and Tab from interactive controls keep normal focus navigation.
 
 Esc in the editor opens the action menu, as do its Actions (Esc) button and Ctrl+Enter. Overlays in the main window offer Back (Esc) only: the window frame closes the window, so they draw no close cross. At the root, Back dismisses the overlay and returns to the editor. Each navigation step owns its text draft; edits on a child step never replace its parent draft. Preview and diff drafts persist separately from their original result so Reset remains available.
 
-## Action page motion
+## Action page navigation and motion
+
+Preview and diff open on the first action page and offer only pages configured
+to accept selected text. The page switcher appears when at least two such pages
+are available. The editor conflict view offers no action pages.
+
+Outside text entry, Tab and Shift+Tab, Left and Right, or Page Up and Page Down
+cycle through the available pages. Number keys select pages by their configured
+number, with 0 selecting page 10. With a single available page, Tab keeps its
+normal focus navigation. Shift+Left and Shift+Right switch the result view when
+a view switcher is available.
 
 The action menu moves its active page background over 170 ms. Changed action
 labels and icons crossfade with a directional 4 px offset over 130 ms; tile
