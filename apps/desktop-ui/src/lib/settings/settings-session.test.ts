@@ -281,7 +281,7 @@ describe('settings concurrency and recovery', () => {
     model.draft.value.appearance.theme = 'dark'
     const first = model.persist()
     await Promise.resolve()
-    model.draft.value.chat.history.storage = 'off'
+    model.draft.value.chat.history.storage = 'session'
     const second = model.persist()
     model.draft.value.chat.history.storage = 'disk'
     finish({

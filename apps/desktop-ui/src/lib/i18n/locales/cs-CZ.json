@@ -487,7 +487,6 @@
     "unknownCaller": "Tyco nedokáže zjistit, která aplikace žádá: může to udělat kterýkoli program vaší relace."
   },
   "history": {
-    "chatsDisabled": "Historie se neukládá na disk",
     "clear": "Vymazat historii",
     "clearConfirm": "Smazat všechny záznamy ({count})?",
     "clearConfirmButton": "Smazat vše",
@@ -531,7 +530,6 @@
     "requestFailed": "chyba požadavku",
     "requestTimedOut": "bez odpovědi",
     "retry": "Zkusit znovu",
-    "textsDisabled": "Ukládání textů je v nastavení vypnuto.",
     "today": "Dnes",
     "undo": "Zpět",
     "yesterday": "Včera",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "nahrávka je neúplná",
     "recordings": "Nahrávky",
     "stopRecording": "Zastavit přehrávání",
-    "playbackSpeed": "Rychlost přehrávání"
+    "playbackSpeed": "Rychlost přehrávání",
+    "sessionOnly": "Nové se uchovává jen do ukončení TyCo."
   },
   "input": {
     "historySearchPlaceholder": "Hledat v historii...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "Vytvořit kopii profilu „{name}“?",
     "editorHistoryRetentionForever": "Navždy",
     "editorHistoryStorage": "Uchovávat historii",
-    "editorHistoryStorageHint": "Na disku — historie přetrvá restarty v nešifrovaném souboru; záznamy starší než zvolené období se mažou. Dokud běží Tyco — nové záznamy jsou jen v paměti a po ukončení zmizí. Nezaznamenávat — nové texty se neukládají. Změna tohoto nastavení nikdy nemaže uložené záznamy: zůstanou, dokud je nevymažete.",
-    "editorHistoryStorageOff": "Nezaznamenávat",
+    "editorHistoryStorageHint": "Na disku — historie přetrvá restarty v nešifrovaném souboru; záznamy starší než zvolené období se mažou. Dokud běží Tyco — nové záznamy jsou jen v paměti a po ukončení zmizí. Změna tohoto nastavení nikdy nemaže uložené záznamy: zůstanou, dokud je nesmažete.",
     "editorHistoryStorageSession": "Dokud běží Tyco",
     "editorHotkeyHint": "Klávesové zkratky pro ovládání editoru lze zobrazit a upravit na záložce {tab}.",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "Historie chatů prostoru",
       "hint": "Jak se uchovávají chaty profilů tohoto pracovního prostoru včetně rychlých dotazů na ně. Rozhoduje o tom jen samotný prostor.",
       "syncedHint": "Uloženo ve složce prostoru a platí na všech počítačích, kde se synchronizuje.",
-      "notSaved": "Neukládat",
       "clearConfirm": "Smazat uložené chaty všech profilů tohoto prostoru? Tuto akci nelze vrátit."
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "Historie dialogů",
     "dialogHistoryHint": "Uložené přepisy hovorů a jejich zvukové nahrávky.",
     "dialogHistoryRetentionDays": "Uchovávat dialogy",
-    "dialogHistoryRetentionDaysHint": "Dialogy a jejich nahrávky starší než zvolené období se mažou automaticky. Neukládat — nové dialogy se neukládají; uložené zůstanou, dokud je nevymažete.",
+    "dialogHistoryRetentionDaysHint": "Dialogy a jejich nahrávky starší než zvolené období se mažou automaticky. Dokud běží Tyco — nové dialogy jsou jen v paměti a po ukončení zmizí a hovory se nenahrávají; uložené dialogy zůstanou.",
     "clearDialogsConfirmDialog": "Všechny uložené dialogy a jejich zvukové nahrávky budou trvale smazány.",
     "dialogHistoryLink": "Nastavení historie a uchovávání dialogů najdete v",
     "chatHistoryKeeping": "Uchovávat chaty",
-    "chatHistoryKeepingHint": "Chaty se ukládají místně bez šifrování; hesla a klíče v nich se neskrývají. Chat se smaže, když v něm déle než zvolené období nebyla nová zpráva. Neukládat — nové chaty se neukládají; uložené zůstanou, dokud je nevymažete.",
+    "chatHistoryKeepingHint": "Chaty se ukládají místně bez šifrování; hesla a klíče v nich se neskrývají. Chat se smaže, když v něm déle než zvolené období nebyla nová zpráva. Dokud běží Tyco — nové chaty jsou jen v paměti a po ukončení zmizí; uložené zůstanou.",
     "deleteAllEntries": {
       "one": "Smazat {count} záznam",
       "few": "Smazat všechny {count} záznamy",
@@ -1763,9 +1760,6 @@
     "listen": "Poslouchat",
     "resume": "Pokračovat",
     "clear": "Vymazat",
-    "clearTitle": "Vymazat přepis?",
-    "clearMessage": "Historie je v nastavení vypnuta. Aktuální přepis bude ztracen.",
-    "clearConfirm": "Vymazat",
     "sessionResumed": "Relace obnovena",
     "sessionResumedRecording": "Záznam pokračuje",
     "record": "Záznam",
@@ -1783,7 +1777,6 @@
     "resumeTooltipWithRecord": "Pokračovat v rozpoznávání řeči a záznamu do zvukového souboru",
     "recordToggleEnableHint": "Při spuštění zapnout nahrávání zvuku do souboru a ukládání do historie",
     "recordToggleDisableHint": "Vypnout nahrávání zvuku (pouze rozpoznávání řeči)",
-    "clearMessageSaved": "Aktuální přepis bude z okna vymazán. Konverzace zůstane uložena v historii.",
     "history": "Historie",
     "newDialog": "Nový dialog",
     "searchHistory": "Hledat v dialozích",

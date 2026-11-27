@@ -487,7 +487,6 @@
     "unknownCaller": "Tyco ne može utvrditi koja aplikacija traži: to može učiniti bilo koji program vaše sesije."
   },
   "history": {
-    "chatsDisabled": "Povijest se ne sprema na disk",
     "clear": "Očisti povijest",
     "clearConfirm": "Izbrisati sve unose ({count})?",
     "clearConfirmButton": "Izbriši sve",
@@ -531,7 +530,6 @@
     "requestFailed": "pogreška zahtjeva",
     "requestTimedOut": "nema odgovora",
     "retry": "Pokušaj ponovno",
-    "textsDisabled": "Spremanje tekstova isključeno je u postavkama.",
     "today": "Danas",
     "undo": "Poništi",
     "yesterday": "Jučer",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "snimka je nepotpuna",
     "recordings": "Snimke",
     "stopRecording": "Zaustavi reprodukciju",
-    "playbackSpeed": "Brzina reprodukcije"
+    "playbackSpeed": "Brzina reprodukcije",
+    "sessionOnly": "Novo se čuva samo do izlaska iz TyCo."
   },
   "input": {
     "historySearchPlaceholder": "Pretraži povijest...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "Stvoriti kopiju profila „{name}”?",
     "editorHistoryRetentionForever": "Zauvijek",
     "editorHistoryStorage": "Čuvaj povijest",
-    "editorHistoryStorageHint": "Na disku — povijest ostaje između pokretanja u nešifriranoj datoteci; zapisi stariji od odabranog razdoblja brišu se. Dok Tyco radi — novi zapisi su samo u memoriji i nestaju pri izlasku. Ne bilježi — novi tekstovi se ne spremaju. Promjena ove postavke nikad ne briše spremljene zapise: ostaju dok ih ne očistite.",
-    "editorHistoryStorageOff": "Ne bilježi",
+    "editorHistoryStorageHint": "Na disku — povijest ostaje između pokretanja u nešifriranoj datoteci; zapisi stariji od odabranog razdoblja brišu se. Dok Tyco radi — novi zapisi su samo u memoriji i nestaju pri izlasku. Promjena ove postavke nikad ne briše spremljene zapise: ostaju dok ih ne izbrišete.",
     "editorHistoryStorageSession": "Dok Tyco radi",
     "editorHotkeyHint": "Prečace za upravljanje uređivačem možete pregledati i prilagoditi na kartici {tab}.",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "Povijest razgovora radnog prostora",
       "hint": "Kako se čuvaju chatovi profila ovog radnog prostora, uključujući brze upite. O tome odlučuje samo radni prostor.",
       "syncedHint": "Sprema se u mapu radnog prostora i vrijedi na svakom računalu koje ga sinkronizira.",
-      "notSaved": "Ne spremaj",
       "clearConfirm": "Izbrisati spremljene razgovore svih profila ovog radnog prostora? Ovo se ne može poništiti."
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "Povijest dijaloga",
     "dialogHistoryHint": "Spremljeni transkripti poziva i njihove audio snimke.",
     "dialogHistoryRetentionDays": "Čuvaj dijaloge",
-    "dialogHistoryRetentionDaysHint": "Dijalozi i njihove snimke stariji od odabranog razdoblja brišu se automatski. Ne spremaj — novi dijalozi se ne spremaju; spremljeni ostaju dok ih ne očistite.",
+    "dialogHistoryRetentionDaysHint": "Dijalozi i njihove snimke stariji od odabranog razdoblja brišu se automatski. Dok Tyco radi — novi dijalozi su samo u memoriji i nestaju pri izlasku, a pozivi se ne snimaju; spremljeni dijalozi ostaju.",
     "clearDialogsConfirmDialog": "Svi spremljeni dijalozi i njihove audio snimke bit će trajno izbrisani.",
     "dialogHistoryLink": "Postavke povijesti i čuvanja dijaloga nalaze se u",
     "chatHistoryKeeping": "Čuvaj chatove",
-    "chatHistoryKeepingHint": "Chatovi se spremaju lokalno bez šifriranja; lozinke i ključevi u njima nisu skriveni. Chat se briše kad u njemu dulje od odabranog razdoblja nije bilo novih poruka. Ne spremaj — novi chatovi se ne spremaju; spremljeni ostaju dok ih ne očistite.",
+    "chatHistoryKeepingHint": "Chatovi se spremaju lokalno bez šifriranja; lozinke i ključevi u njima nisu skriveni. Chat se briše kad u njemu dulje od odabranog razdoblja nije bilo novih poruka. Dok Tyco radi — novi chatovi su samo u memoriji i nestaju pri izlasku; spremljeni ostaju.",
     "deleteAllEntries": {
       "one": "Izbriši {count} zapis",
       "few": "Izbriši sva {count} zapisa",
@@ -1763,9 +1760,6 @@
     "listen": "Slušaj",
     "resume": "Nastavi",
     "clear": "Očisti",
-    "clearTitle": "Očistiti prijepis?",
-    "clearMessage": "Povijest je isključena u postavkama. Trenutni prijepis bit će izgubljen.",
-    "clearConfirm": "Očisti",
     "sessionResumed": "Sesija nastavljena",
     "sessionResumedRecording": "Snimanje nastavljeno",
     "record": "Snimanje",
@@ -1783,7 +1777,6 @@
     "resumeTooltipWithRecord": "Nastavi prepoznavanje govora i snimanje u audio datoteku",
     "recordToggleEnableHint": "Omogući snimanje zvuka u datoteku i spremanje u povijest pri pokretanju",
     "recordToggleDisableHint": "Isključi snimanje zvuka (samo prepoznavanje govora)",
-    "clearMessageSaved": "Trenutni prijepis bit će izbrisan iz prozora. Razgovor ostaje spremljen u povijesti.",
     "history": "Povijest",
     "newDialog": "Novi dijalog",
     "searchHistory": "Pretraži dijaloge",

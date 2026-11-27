@@ -4,21 +4,15 @@ import { onScopeDispose } from 'vue'
 
 import { desktopClient } from '../lib/desktop/client'
 import { createDialogHistoryModel } from '../lib/dialog/dialog-history-model'
-import {
-  createIpcDialogStorageDriver,
-  isDialogHistoryEnabled,
-} from '../lib/dialog/dialog-history-storage'
+import { createIpcDialogStorageDriver } from '../lib/dialog/dialog-history-storage'
 import { clientLogger } from '../lib/logger'
-import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 
 export const useDialogHistoryStore = defineStore('dialog-history', () => {
   const ipcStore = useIpcStore()
-  const desktopStore = useDesktopStore()
 
   const model = createDialogHistoryModel({
     storage: createIpcDialogStorageDriver({ call: ipcStore.call }),
-    isHistoryEnabled: () => isDialogHistoryEnabled(desktopStore.userConfig),
     reportError: (error) =>
       clientLogger.warn(
         `A dialog history operation failed: ${String(error)}`,

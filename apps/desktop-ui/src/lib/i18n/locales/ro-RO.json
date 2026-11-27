@@ -487,7 +487,6 @@
     "unknownCaller": "Tyco nu poate afla ce aplicație cere: orice program din sesiunea dvs. poate face acest lucru."
   },
   "history": {
-    "chatsDisabled": "Istoricul nu este salvat pe disc",
     "clear": "Golește istoricul",
     "clearConfirm": "Ștergeți toate intrările ({count})?",
     "clearConfirmButton": "Șterge tot",
@@ -531,7 +530,6 @@
     "requestFailed": "eroare de solicitare",
     "requestTimedOut": "fără răspuns",
     "retry": "Reîncearcă",
-    "textsDisabled": "Salvarea textelor este dezactivată în setări.",
     "today": "Astăzi",
     "undo": "Anulează",
     "yesterday": "Ieri",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "înregistrare incompletă",
     "recordings": "Înregistrări",
     "stopRecording": "Oprește redarea",
-    "playbackSpeed": "Viteza de redare"
+    "playbackSpeed": "Viteza de redare",
+    "sessionOnly": "Ce e nou se păstrează doar până la închiderea TyCo."
   },
   "input": {
     "historySearchPlaceholder": "Caută în istoric...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "Creați o copie a profilului „{name}”?",
     "editorHistoryRetentionForever": "Pentru totdeauna",
     "editorHistoryStorage": "Păstrează istoricul",
-    "editorHistoryStorageHint": "Pe disc — istoricul rămâne între reporniri într-un fișier necriptat; intrările mai vechi decât perioada aleasă sunt șterse. Cât timp rulează Tyco — intrările noi sunt doar în memorie și dispar la ieșire. Nu înregistra — textele noi nu sunt salvate. Schimbarea acestei setări nu șterge niciodată intrările salvate: rămân până le ștergeți.",
-    "editorHistoryStorageOff": "Nu înregistra",
+    "editorHistoryStorageHint": "Pe disc — istoricul rămâne între reporniri într-un fișier necriptat; intrările mai vechi decât perioada aleasă sunt șterse. Cât timp rulează Tyco — intrările noi sunt doar în memorie și dispar la ieșire. Schimbarea acestei setări nu șterge niciodată intrările salvate: rămân până le ștergeți.",
     "editorHistoryStorageSession": "Cât timp rulează Tyco",
     "editorHotkeyHint": "Comenzile rapide pentru controlul editorului pot fi vizualizate și personalizate în fila {tab}.",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "Istoricul conversațiilor spațiului de lucru",
       "hint": "Cum sunt păstrate chaturile profilurilor acestui spațiu de lucru, inclusiv cererile rapide. Decide doar spațiul de lucru.",
       "syncedHint": "Salvat în dosarul spațiului de lucru și aplicat pe fiecare computer care îl sincronizează.",
-      "notSaved": "Nu salva",
       "clearConfirm": "Ștergeți conversațiile salvate ale tuturor profilurilor din acest spațiu de lucru? Acțiunea nu poate fi anulată."
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "Istoricul dialogurilor",
     "dialogHistoryHint": "Transcrierile salvate ale apelurilor și înregistrările audio.",
     "dialogHistoryRetentionDays": "Păstrează dialogurile",
-    "dialogHistoryRetentionDaysHint": "Dialogurile și înregistrările lor mai vechi decât perioada aleasă sunt șterse automat. Nu salva — dialogurile noi nu sunt salvate; cele salvate rămân până le ștergeți.",
+    "dialogHistoryRetentionDaysHint": "Dialogurile și înregistrările lor mai vechi decât perioada aleasă sunt șterse automat. Cât timp rulează Tyco — dialogurile noi sunt doar în memorie și dispar la ieșire, iar apelurile nu sunt înregistrate; dialogurile salvate rămân.",
     "clearDialogsConfirmDialog": "Toate dialogurile salvate și înregistrările lor audio vor fi șterse definitiv.",
     "dialogHistoryLink": "Setările de istoric și păstrare a dialogurilor se află în",
     "chatHistoryKeeping": "Păstrează chaturile",
-    "chatHistoryKeepingHint": "Chaturile sunt stocate local fără criptare; parolele și cheile din ele nu sunt ascunse. Un chat este șters dacă nu a avut mesaje noi mai mult decât perioada aleasă. Nu salva — chaturile noi nu sunt salvate; cele salvate rămân până le ștergeți.",
+    "chatHistoryKeepingHint": "Chaturile sunt stocate local fără criptare; parolele și cheile din ele nu sunt ascunse. Un chat este șters dacă nu a avut mesaje noi mai mult decât perioada aleasă. Cât timp rulează Tyco — chaturile noi sunt doar în memorie și dispar la ieșire; cele salvate rămân.",
     "deleteAllEntries": {
       "one": "Șterge {count} intrare",
       "few": "Șterge toate cele {count} intrări",
@@ -1763,9 +1760,6 @@
     "listen": "Ascultă",
     "resume": "Reia",
     "clear": "Șterge",
-    "clearTitle": "Ștergeți transcrierea?",
-    "clearMessage": "Istoricul este dezactivat în setări. Transcrierea curentă se va pierde.",
-    "clearConfirm": "Șterge",
     "sessionResumed": "Sesiune reluată",
     "sessionResumedRecording": "Înregistrare reluată",
     "record": "Înregistrare",
@@ -1783,7 +1777,6 @@
     "resumeTooltipWithRecord": "Continuați recunoașterea vocală și înregistrarea într-un fișier audio",
     "recordToggleEnableHint": "Activați înregistrarea audio în fișier și salvarea în istoric la pornire",
     "recordToggleDisableHint": "Dezactivați înregistrarea audio (doar recunoaștere vocală)",
-    "clearMessageSaved": "Transcrierea curentă va fi ștearsă din fereastră. Conversația rămâne salvată în istoric.",
     "history": "Istoric",
     "newDialog": "Dialog nou",
     "searchHistory": "Caută dialoguri",

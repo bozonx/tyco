@@ -95,7 +95,7 @@ const keepingOptions = computed(() =>
   historyKeepingOptions(
     dialogHistoryRetentionChoices(history.value.retentionDays),
     {
-      off: t('settings.workspaceHistory.notSaved'),
+      session: t('settings.editorHistoryStorageSession'),
       forever: t('settings.editorHistoryRetentionForever'),
       period: periodName,
     }

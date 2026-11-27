@@ -219,9 +219,9 @@
       </div>
     </div>
 
-    <div v-if="chatHistoryDisabled" class="sidebar-footer">
+    <div v-if="isChatHistoryInSession" class="sidebar-footer">
       <p class="history-disabled-hint">
-        {{ t('history.chatsDisabled') }}
+        {{ t('history.sessionOnly') }}
       </p>
     </div>
 
@@ -250,7 +250,7 @@ import {
   filterChatHistory,
   groupChatHistory,
 } from '../../lib/chat/chat-history-list'
-import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
+import { isChatHistoryOnDisk } from '../../lib/chat/chat-history-settings'
 import { clientLogger } from '../../lib/logger'
 import { preventMouseFocus } from '../../lib/ui/focus'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
@@ -310,9 +310,9 @@ const chatToDelete = ref<string | null>(null)
 const removedChat = computed(() => chatStore.removedChat)
 const undoRemoveChat = () => chatStore.undoRemoveChat()
 
-const chatHistoryDisabled = computed(
+const isChatHistoryInSession = computed(
   () =>
-    !isChatHistoryEnabled(
+    !isChatHistoryOnDisk(
       desktopStore.userConfig,
       chatStore.profileId,
       aiProfilesStore.vaultChatHistoryOf(chatStore.profileId)

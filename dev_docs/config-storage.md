@@ -84,7 +84,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `aiVaults`          | `attached`: `[{ path, vaultId }]`, the vaults this device attached                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `markdown`          | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `plugins`           | per plugin id: `isEnabled` and the plugin-owned `settings`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `chat`              | `history` (`storage`: `off` or `disk`, `retentionDays`, `isQuickRequestSavingEnabled`): "Ask AI"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `chat`              | `history` (`storage`: `session` or `disk`, `retentionDays`, `isQuickRequestSavingEnabled`): "Ask AI"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `stt`               | `provider`, `correctionMode`, `isVoiceInputHoldEnabled`, `isVoiceCommandsHoldEnabled`, `microphoneId` (device), `listenAppId` (device), `listenAppLabel` (device), `listenLanguage` (the computer sound; set in the listening window only), `isStylingBarEnabled`, `isStylingBarDirectInsertEnabled`, `providers.deepgram`, `providers.sherpaOnnx`, `providers.geminiLive`                                                                                                                                                                                                                            |
 | `dialog`            | `isEnabled` (the Dialog tab and view; off: hidden, a running dialog stops and is saved), `source` (`microphoneAndSystem`, `system`), `translationTargetLanguage` (empty: no translation), `remoteLanguage` (Deepgram only; `auto`: detected), `ownLanguage` (empty: the primary spoken language), `isTranslationOnly` (a translated turn without its original; no effect without a translation), `isHistoryOpen` (history drawer state in dialog view), `compactGeometry` (device), `isRecordingNoticeAcknowledged` (no setting of its own), `isHeadphonesNoticeAcknowledged` (no setting of its own) |
 
@@ -158,7 +158,7 @@ Conventions:
 - Text that is not set is an empty string (a hotkey, an operation
   path); a number that is not set is absent (model limits,
   `retentionDays`, which keeps everything without it). Zero is never a
-  sentinel: a feature is turned off by its own field (`storage: "off"`).
+  sentinel: a feature is turned off by its own field (`isEnabled: false`).
 - Ids of the user's entities (commands, models, transformations, styles,
   action pages) match `^[a-z0-9][a-z0-9._-]{0,63}$`; provider ids are at most 60 characters,
   as they go into secret ids. An entity with a malformed id is dropped.
@@ -433,9 +433,17 @@ latest `clear`. Times are the clocks of the devices: a clock that is off moves
 entries in the order, nothing more.
 
 Changing a history setting never deletes the history and never asks to:
-deleting is a separate action of the settings. Turning a history off stops
-recording and keeps what is stored; entries expire only by the retention
-period chosen. The memory-only editor history (`session`) shows the entries
+deleting is a separate action of the settings; entries expire only by the
+retention period chosen. A history is never off: `storage` is `session`
+(while TyCo runs) or `disk`. In `session`, what is new lives in the memory of
+the process and the stored history is shown along with it, untouched; no
+retention applies then. Chats and dialogs of a `session` history live in
+`storage::session_history`: listing, reading, searching and renaming see
+both, a session copy hides a stored one of the same id, a removal or clearing
+takes both. The images of session chats are held in the image store by the
+`session-history` owner. When a scope goes back to `disk`, its session chats
+and dialogs are written there. A session dialog is never recorded
+(`voice::new_recording` refuses). The memory-only editor history shows the entries
 of the journals along with the new ones it keeps in memory. A change to a
 stored entry goes to the own journal as a record without text (`delete`,
 `result`); a stored entry rewritten in memory is hidden by the memory copy.
@@ -616,7 +624,7 @@ it: its files are not moved.
 The settings of a vault live in `tyco-vault-settings.json` next to its marker
 (`ai_vault::settings`), synced with it and kept apart from the marker so that
 editing them never conflicts with it. Today it holds `chatHistory`
-(`storage`: `off` or `disk`, `retentionDays`, `isQuickRequestSavingEnabled`); each field is optional and a
+(`storage`: `session` or `disk`, `retentionDays`, `isQuickRequestSavingEnabled`); each field is optional and a
 missing one takes its default: chats saved forever with their quick requests
 (`ChatHistoryPolicy::for_vault`; the chat settings of the app govern "Ask AI"
 only). Unknown fields are kept on write; a newer `formatVersion` or

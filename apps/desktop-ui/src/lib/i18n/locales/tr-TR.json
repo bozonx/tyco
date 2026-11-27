@@ -487,7 +487,6 @@
     "unknownCaller": "Tyco hangi uygulamanın istediğini bilemez: oturumunuzdaki herhangi bir program bunu yapabilir."
   },
   "history": {
-    "chatsDisabled": "Geçmiş diske kaydedilmiyor",
     "clear": "Geçmişi temizle",
     "clearConfirm": "Tüm kayıtlar ({count}) silinsin mi?",
     "clearConfirmButton": "Tümünü sil",
@@ -531,7 +530,6 @@
     "requestFailed": "istek hatası",
     "requestTimedOut": "yanıt yok",
     "retry": "Yeniden dene",
-    "textsDisabled": "Metinlerin kaydedilmesi ayarlarda kapalı.",
     "today": "Bugün",
     "undo": "Geri al",
     "yesterday": "Dün",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "kayıt eksik",
     "recordings": "Kayıtlar",
     "stopRecording": "Oynatmayı durdur",
-    "playbackSpeed": "Oynatma hızı"
+    "playbackSpeed": "Oynatma hızı",
+    "sessionOnly": "Yeni olanlar yalnızca TyCo kapanana kadar tutulur."
   },
   "input": {
     "historySearchPlaceholder": "Geçmişte ara...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "“{name}” profilinin bir kopyası oluşturulsun mu?",
     "editorHistoryRetentionForever": "Süresiz",
     "editorHistoryStorage": "Geçmişi sakla",
-    "editorHistoryStorageHint": "Diskte — geçmiş yeniden başlatmalar arasında şifrelenmemiş bir dosyada kalır; seçilen süreden eski kayıtlar silinir. Tyco çalışırken — yeni kayıtlar yalnızca bellekte tutulur ve çıkışta kaybolur. Kaydetme — yeni metinler kaydedilmez. Bu ayarı değiştirmek kayıtlı girdileri asla silmez: siz temizleyene kadar kalırlar.",
-    "editorHistoryStorageOff": "Kaydetme",
+    "editorHistoryStorageHint": "Diskte — geçmiş yeniden başlatmalar arasında şifrelenmemiş bir dosyada kalır; seçilen süreden eski kayıtlar silinir. Tyco çalışırken — yeni kayıtlar yalnızca bellekte tutulur ve çıkışta kaybolur. Bu ayarı değiştirmek kayıtlı girdileri asla silmez: siz silene kadar kalırlar.",
     "editorHistoryStorageSession": "Tyco açıkken",
     "editorHotkeyHint": "Düzenleyiciyi kontrol etme kısayollarını {tab} sekmesinden görüntüleyebilir ve ayarlayabilirsiniz.",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "Çalışma alanının sohbet geçmişi",
       "hint": "Bu çalışma alanındaki profillerin sohbetlerinin, hızlı istekler dahil, nasıl saklandığı. Buna yalnızca çalışma alanı karar verir.",
       "syncedHint": "Çalışma alanı klasöründe saklanır ve onu eşitleyen her bilgisayarda geçerlidir.",
-      "notSaved": "Kaydetme",
       "clearConfirm": "Bu çalışma alanındaki tüm profillerin kayıtlı sohbetleri silinsin mi? Bu işlem geri alınamaz."
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "Diyalog geçmişi",
     "dialogHistoryHint": "Kaydedilen görüşme dökümleri ve ses kayıtları.",
     "dialogHistoryRetentionDays": "Diyalogları sakla",
-    "dialogHistoryRetentionDaysHint": "Seçilen süreden eski diyaloglar ve kayıtları otomatik olarak silinir. Kaydetme — yeni diyaloglar kaydedilmez; kaydedilenler siz temizleyene kadar kalır.",
+    "dialogHistoryRetentionDaysHint": "Seçilen süreden eski diyaloglar ve kayıtları otomatik olarak silinir. Tyco çalışırken — yeni diyaloglar yalnızca bellekte tutulur ve çıkışta kaybolur, aramalar kaydedilmez; kaydedilen diyaloglar kalır.",
     "clearDialogsConfirmDialog": "Kaydedilen tüm diyaloglar ve ses kayıtları kalıcı olarak silinecek.",
     "dialogHistoryLink": "Diyalog geçmişi ve saklama ayarları şurada bulunur:",
     "chatHistoryKeeping": "Sohbetleri sakla",
-    "chatHistoryKeepingHint": "Sohbetler yerel olarak şifrelenmeden saklanır; içlerindeki parolalar ve anahtarlar gizlenmez. Seçilen süreden uzun süre yeni mesaj almayan sohbet silinir. Kaydetme — yeni sohbetler kaydedilmez; kaydedilenler siz temizleyene kadar kalır.",
+    "chatHistoryKeepingHint": "Sohbetler yerel olarak şifrelenmeden saklanır; içlerindeki parolalar ve anahtarlar gizlenmez. Seçilen süreden uzun süre yeni mesaj almayan sohbet silinir. Tyco çalışırken — yeni sohbetler yalnızca bellekte tutulur ve çıkışta kaybolur; kaydedilenler kalır.",
     "deleteAllEntries": {
       "one": "{count} kaydı sil",
       "few": "{count} kaydın tümünü sil",
@@ -1759,9 +1756,6 @@
     "listen": "Dinle",
     "resume": "Devam et",
     "clear": "Temizle",
-    "clearTitle": "Döküm temizlensin mi?",
-    "clearMessage": "Geçmiş ayarlarda kapalı. Geçerli döküm kaybolacak.",
-    "clearConfirm": "Temizle",
     "sessionResumed": "Oturum devam ettirildi",
     "sessionResumedRecording": "Kayıt devam ettirildi",
     "record": "Kayıt",
@@ -1779,7 +1773,6 @@
     "resumeTooltipWithRecord": "Konuşma tanımaya ve ses dosyasına kaydetmeye devam et",
     "recordToggleEnableHint": "Başlatıldığında sesin dosyaya kaydedilmesini ve geçmişe eklenmesini etkinleştir",
     "recordToggleDisableHint": "Ses kaydını devre dışı bırak (yalnızca konuşma tanıma)",
-    "clearMessageSaved": "Geçerli döküm pencereden temizlenecek. Konuşma geçmişte kayıtlı kalır.",
     "history": "Geçmiş",
     "newDialog": "Yeni diyalog",
     "searchHistory": "Diyaloglarda ara",

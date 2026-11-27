@@ -29,7 +29,6 @@ function setup(deleteChat: (id: string) => Promise<Chat | null>) {
         return true
       }),
     },
-    isHistoryEnabled: vi.fn(() => true),
     releaseImages: vi.fn(async () => {}),
     reportError: vi.fn(),
   }
@@ -70,18 +69,5 @@ describe('createChatRemoval', () => {
     expect(deps.chat.abandonChat).not.toHaveBeenCalled()
     await removal.dispose()
     expect(deps.releaseImages).toHaveBeenCalledWith('other')
-  })
-
-  it('keeps the removed chat when the history is off', async () => {
-    const { removal, deps } = setup(async () => chat)
-    await removal.remove('open')
-    deps.isHistoryEnabled.mockReturnValue(false)
-
-    await removal.undo()
-
-    expect(deps.history.restoreChatItem).not.toHaveBeenCalled()
-    expect(removal.removed.value).toEqual(chat)
-    expect(deps.reportError).toHaveBeenCalled()
-    await removal.dispose()
   })
 })

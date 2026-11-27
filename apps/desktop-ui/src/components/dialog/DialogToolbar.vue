@@ -119,12 +119,12 @@
       class="dialog-toolbar-new"
       variant="neutral"
       size="sm"
-      :icon="canRecord ? 'mdi:plus' : 'mdi:eraser'"
+      icon="mdi:plus"
       :disabled="dialog.isActive || isNewDialogDisabled"
-      :title="newDialogTitle"
-      @click="handleClear"
+      :title="t('dialog.newDialog')"
+      @click="void dialog.clear()"
     >
-      {{ newDialogLabel }}
+      {{ t('dialog.newDialog') }}
     </Button>
     <IconButton
       class="dialog-toolbar-search"
@@ -145,14 +145,6 @@
       :label="t('dialog.history')"
       :title="t('dialog.history')"
       @click="dialog.isHistoryOpen = !dialog.isHistoryOpen"
-    />
-    <ConfirmModal
-      :open="isClearConfirmOpen"
-      :title="t('dialog.clearTitle')"
-      :message="clearModalMessage"
-      :confirm-text="t('dialog.clearConfirm')"
-      @confirm="confirmClear"
-      @cancel="isClearConfirmOpen = false"
     />
     <Teleport to="body">
       <Transition name="notice-fade">
@@ -203,7 +195,6 @@ import type { DialogSide } from '../../lib/dialog/dialog-transcript'
 import { useDialogStore } from '../../stores/dialog'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
-import ConfirmModal from '../common/ConfirmModal.vue'
 import IconButton from '../common/IconButton.vue'
 import DialogLanguageRoute from './DialogLanguageRoute.vue'
 import DialogLevel from './DialogLevel.vue'
@@ -219,7 +210,6 @@ const isEmpty = computed(() => !dialog.hasContent)
 const isNewDialogDisabled = computed(
   () => isEmpty.value && !dialog.currentDialogId
 )
-const isClearConfirmOpen = ref(false)
 const isRecordingNoticeOpen = ref(false)
 const recordContainerRef = ref<HTMLElement | null>(null)
 const recordingNoticePanelRef = ref<HTMLElement | null>(null)
@@ -269,14 +259,6 @@ useDismissibleLayer({
 
 // a recording belongs to its dialog history entry: nothing would keep it otherwise
 const canRecord = computed(() => dialog.isHistoryEnabled)
-
-const newDialogLabel = computed(() =>
-  canRecord.value ? t('dialog.newDialog') : t('dialog.clear')
-)
-
-const newDialogTitle = computed(() =>
-  canRecord.value ? t('dialog.newDialog') : t('dialog.clear')
-)
 
 const isRecordToggleDisabled = computed(() => !canRecord.value || !isIdle.value)
 
@@ -362,23 +344,6 @@ async function confirmRecordingNotice() {
 
 function handleRun() {
   void dialog.start({ isRecording: dialog.isRecordEnabled && canRecord.value })
-}
-
-const clearModalMessage = computed(() =>
-  canRecord.value ? t('dialog.clearMessageSaved') : t('dialog.clearMessage')
-)
-
-function handleClear() {
-  if (canRecord.value) {
-    void dialog.clear()
-    return
-  }
-  isClearConfirmOpen.value = true
-}
-
-function confirmClear() {
-  isClearConfirmOpen.value = false
-  void dialog.clear()
 }
 
 const channelNotice = computed(() => {

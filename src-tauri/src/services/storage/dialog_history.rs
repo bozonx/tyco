@@ -244,7 +244,7 @@ pub fn open_dialog(dirs: &DialogDirs, id: &str) -> Result<Option<Dialog>, AppErr
 
 const MAX_DIALOG_TITLE_CHARS: usize = 120;
 
-fn clamp_dialog_title(title: &str) -> String {
+pub(super) fn clamp_dialog_title(title: &str) -> String {
     let title = title.trim();
     if title.chars().count() <= MAX_DIALOG_TITLE_CHARS {
         return title.to_string();
@@ -253,7 +253,7 @@ fn clamp_dialog_title(title: &str) -> String {
     format!("{}…", head.trim_end())
 }
 
-fn validate_dialog_title(title: &str) -> Result<String, AppError> {
+pub(super) fn validate_dialog_title(title: &str) -> Result<String, AppError> {
     let title = title.trim();
     if title.chars().count() > MAX_DIALOG_TITLE_CHARS {
         return Err(AppError::InvalidInput("Dialog title is too long".into()));
@@ -267,7 +267,7 @@ pub fn save_dialog(
     policy: DialogHistoryPolicy,
     mut dialog: Dialog,
 ) -> Result<Vec<String>, AppError> {
-    if !policy.is_enabled {
+    if policy.is_session {
         return Ok(Vec::new());
     }
     recordings::validate_dialog_id(&dialog.id)?;
@@ -366,8 +366,11 @@ pub fn clear_dialogs(dirs: &DialogDirs) -> Result<(), AppError> {
 /// What the settings say about the dialog history.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DialogHistoryPolicy {
-    pub is_enabled: bool,
-    /// Dialogs older than this many days are dropped; 0 keeps them forever.
+    /// New dialogs are kept in the memory of the process only and nothing is
+    /// recorded; the stored ones stay on disk as they are.
+    pub is_session: bool,
+    /// Stored dialogs older than this many days are dropped; 0 keeps them
+    /// forever, as does the session mode.
     pub retention_days: u64,
 }
 
@@ -396,8 +399,12 @@ impl DialogHistoryPolicy {
 impl From<DialogHistoryConfig> for DialogHistoryPolicy {
     fn from(config: DialogHistoryConfig) -> Self {
         Self {
-            is_enabled: config.storage != HistoryStorage::Off,
-            retention_days: config.retention_days,
+            is_session: config.storage == HistoryStorage::Session,
+            retention_days: if config.storage == HistoryStorage::Session {
+                0
+            } else {
+                config.retention_days
+            },
         }
     }
 }
@@ -554,7 +561,7 @@ impl DialogSearchCache {
     }
 }
 
-fn dialog_search_text(dialog: &Dialog) -> String {
+pub(super) fn dialog_search_text(dialog: &Dialog) -> String {
     let mut pieces = vec![dialog.title.as_str()];
     for segment in &dialog.segments {
         pieces.push(&segment.text);
@@ -648,7 +655,7 @@ mod tests {
         let root = TestDir::new("dialog-history-crud");
         let dirs = test_dirs(&root);
         let policy = DialogHistoryPolicy {
-            is_enabled: true,
+            is_session: false,
             retention_days: 0,
         };
         let id = "2026-11-25_14-03-05_a1b2c3";
@@ -716,7 +723,7 @@ mod tests {
         let old_id = "2026-10-01_10-00-00_000001";
         let fresh_id = "2026-11-25_10-00-00_000002";
         let no_limit = DialogHistoryPolicy {
-            is_enabled: true,
+            is_session: false,
             retention_days: 0,
         };
         save_dialog(
@@ -738,7 +745,7 @@ mod tests {
         }
 
         let thirty_days = DialogHistoryPolicy {
-            is_enabled: true,
+            is_session: false,
             retention_days: 30,
         };
         let removed = enforce_dialog_history_policy(&dirs, thirty_days).unwrap();
@@ -755,7 +762,7 @@ mod tests {
         save_dialog(
             &dirs,
             DialogHistoryPolicy {
-                is_enabled: true,
+                is_session: false,
                 retention_days: 0,
             },
             sample_dialog(id, now_ms(), "hello"),

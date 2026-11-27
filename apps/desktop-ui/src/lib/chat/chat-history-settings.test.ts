@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   chatHistoryRetentionChoices,
-  isChatHistoryEnabled,
+  isChatHistoryOnDisk,
   isQuickRequestSavingEnabled,
 } from './chat-history-settings'
 
@@ -11,24 +11,20 @@ const withHistory = (
   history: (typeof DEFAULT_USER_CONFIG)['chat']['history']
 ): typeof DEFAULT_USER_CONFIG => ({ ...DEFAULT_USER_CONFIG, chat: { history } })
 
-describe('isChatHistoryEnabled', () => {
-  it('is on unless the settings turn it off', () => {
-    expect(isChatHistoryEnabled(DEFAULT_USER_CONFIG)).toBe(true)
-    expect(isChatHistoryEnabled(withHistory({ storage: 'disk' }))).toBe(true)
-    expect(isChatHistoryEnabled(withHistory({ storage: 'off' }))).toBe(false)
+describe('isChatHistoryOnDisk', () => {
+  it('is on disk unless the settings keep chats in memory', () => {
+    expect(isChatHistoryOnDisk(DEFAULT_USER_CONFIG)).toBe(true)
+    expect(isChatHistoryOnDisk(withHistory({ storage: 'session' }))).toBe(false)
   })
 
   it('lets the workspace of a profile chat decide alone', () => {
-    const off = withHistory({ storage: 'off' })
-    expect(isChatHistoryEnabled(off, 'writer')).toBe(true)
-    expect(isChatHistoryEnabled(off, 'writer', {})).toBe(true)
+    const session = withHistory({ storage: 'session' })
+    expect(isChatHistoryOnDisk(session, 'writer', {})).toBe(true)
     expect(
-      isChatHistoryEnabled(withHistory({ storage: 'disk' }), 'writer', {
-        storage: 'off',
-      })
+      isChatHistoryOnDisk(DEFAULT_USER_CONFIG, 'writer', { storage: 'session' })
     ).toBe(false)
     // "Ask AI" has no workspace
-    expect(isChatHistoryEnabled(off, null, { storage: 'disk' })).toBe(false)
+    expect(isChatHistoryOnDisk(session, null, { storage: 'disk' })).toBe(false)
   })
 })
 
@@ -56,11 +52,6 @@ describe('isQuickRequestSavingEnabled', () => {
       isQuickRequestSavingEnabled(DEFAULT_USER_CONFIG, 'writer', {
         isQuickRequestSavingEnabled: false,
       })
-    ).toBe(false)
-    expect(
-      isQuickRequestSavingEnabled(
-        withHistory({ storage: 'off', isQuickRequestSavingEnabled: true })
-      )
     ).toBe(false)
   })
 })

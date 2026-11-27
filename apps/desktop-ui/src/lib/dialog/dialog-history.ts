@@ -18,16 +18,14 @@ export interface DialogHistorySnapshot {
 }
 
 export interface DialogHistoryDependencies {
-  /** Whether dialog history is saved on disk */
-  isEnabled: () => boolean
   /** Saves the structured dialog to `dialogs/<id>.json` */
   save: (dialog: Dialog) => Promise<void>
   /** Current live state of the dialog; interim segments are excluded on save */
   getSnapshot: () => DialogHistorySnapshot
   reportError: (error: unknown) => void
   /**
-   * The recording of the session got no saved dialog: the first write failed or
-   * history is off. Called once a session.
+   * The recording of the session got no saved dialog: the first write failed.
+   * Called once a session.
    */
   onRecordingUnlinked?: () => void
   now?: () => number
@@ -211,10 +209,6 @@ export function createDialogHistory(
     if (target.savedFingerprint === fingerprint) return Promise.resolve()
 
     const run = pending.then(async () => {
-      if (!deps.isEnabled()) {
-        reportUnlinked(target)
-        return
-      }
       try {
         await deps.save(payload)
         target.isSaved = true

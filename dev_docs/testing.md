@@ -338,7 +338,7 @@ protection or concurrent merges. Test those in Rust and the native desktop smoke
 use an explicit handler when a UI scenario needs a particular backend response.
 Unfinished quick input stays in the input across activations. Input recovery
 checkpoints use the configured editor history storage; disk history survives
-restart, session history does not, and off mode records nothing new.
+restart, session history does not.
 
 ## Choosing integration tests without virtual machines
 

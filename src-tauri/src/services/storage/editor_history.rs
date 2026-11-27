@@ -291,12 +291,9 @@ impl EditorHistoryTarget<'_> {
     }
 }
 
-/// Whether the entries are in the memory of the process: in the memory-only
-/// mode, and after that mode was turned off, while the memory still holds
-/// what it kept. Turning the history off records nothing new and removes
-/// nothing.
-fn is_in_memory(policy: &EditorHistoryPolicy, memory: &[EditorHistoryItem]) -> bool {
-    policy.is_memory_only || (!policy.is_recording && !memory.is_empty())
+/// Whether new entries go to the memory of the process.
+fn is_in_memory(policy: &EditorHistoryPolicy) -> bool {
+    policy.is_memory_only
 }
 
 /// The editor history as the settings let it be seen and changed.
@@ -313,7 +310,7 @@ impl<'a> EditorHistorySession<'a> {
         memory: &'a mut Vec<EditorHistoryItem>,
     ) -> Result<Self, AppError> {
         let policy = EditorHistoryPolicy::from_config(user_config);
-        let store = if is_in_memory(&policy, memory) {
+        let store = if is_in_memory(&policy) {
             let journals = location.own_path().ok().map(|own| (location, own));
             EditorHistoryTarget::Memory { memory, journals }
         } else {
@@ -379,10 +376,7 @@ fn save_editor_history_entry(
 ) -> Result<Option<String>, AppError> {
     let policy = history.policy;
 
-    // Intentional: with the history turned off the user chose not to keep
-    // their input, so nothing is stored here or anywhere else. The history is
-    // the only store of user input; there is no fallback draft storage.
-    if !policy.is_recording || entry.text.trim().is_empty() || policy.max_entries == 0 {
+    if entry.text.trim().is_empty() || policy.max_entries == 0 {
         return Ok(None);
     }
     let is_checkpoint = entry.kind.is_checkpointed();
@@ -685,9 +679,8 @@ fn commit_history_transition<T>(
     // a history that is off or kept in memory needs no journal; one that
     // cannot be reached then must not hold up the settings
     let own = location.own_path();
-    let was_in_memory = is_in_memory(before, memory);
-    // a history turned off stays where it was
-    let stays_in_memory = after.is_memory_only || (!after.is_recording && was_in_memory);
+    let was_in_memory = is_in_memory(before);
+    let stays_in_memory = after.is_memory_only;
     let to_disk = was_in_memory && !stays_in_memory;
     let own = if to_disk {
         own?

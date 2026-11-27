@@ -15,9 +15,8 @@ Press **Listen** during the call. The dialog keeps going when you switch tabs,
 hide or minimize the window, until you press **Stop** or quit TyCo.
 
 When stopped, pressing **Resume** continues the conversation in the same feed,
-preserving previous turns. To start with a clean slate, click **New dialog** (or
-**Clear** when dialog history is turned off, in which case TyCo asks for
-confirmation before clearing).
+preserving previous turns. To start with a clean slate, click **New dialog**: the
+previous conversation stays in the history.
 
 While the dialog runs it holds the sound: voice input, voice commands and
 listening do not record and say that the sound is busy with the dialog.
@@ -105,7 +104,7 @@ in the toolbar to browse, search, rename, delete (with **Undo**), or reopen past
 conversations right inside the **Dialog** tab, with their original bubbles,
 translations, session breaks, and inline audio players.
 
-With dialog history turned on (**Settings → History → Dialog history**), each
+With dialog history kept on disk (**Settings → History → Dialog history**), each
 conversation is saved as its own file in `dialogs/<dialog-id>.json` of the data
 folder. It is saved every few seconds while the conversation goes on, and when
 you stop, resume, hide the window or quit TyCo, so a crash loses little. Words
@@ -114,6 +113,12 @@ recognized leaves no entry, unless it was recorded: then the entry is there from
 the start, so the recording can always be found. Dialogs are kept according to
 the dialog retention period in **Settings → History** and are deleted together
 with their recordings.
+
+With **While TyCo is running**, new conversations are kept in memory only: they
+are in the history until you quit TyCo, however it quits, and calls are not
+recorded. Conversations saved before stay on disk and are listed as well.
+Changing the setting never deletes a saved dialog; **Delete all** in the
+settings does, after a confirmation.
 
 ## Recording the call
 

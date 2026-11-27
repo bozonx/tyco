@@ -22,10 +22,9 @@ fn dated(id: &str, last_message_at_ms: u64) -> Chat {
 
 fn enabled_policy() -> ChatHistoryPolicy {
     ChatHistoryPolicy {
-        is_enabled: true,
+        is_session: false,
         retention_days: 0,
         saves_quick_requests: true,
-        saves_chats: true,
     }
 }
 
@@ -173,10 +172,9 @@ fn a_disabled_history_stores_no_chat_in_any_folder() {
     let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
     let policy = ChatHistoryPolicy {
-        is_enabled: false,
+        is_session: true,
         retention_days: 0,
         saves_quick_requests: false,
-        saves_chats: false,
     };
 
     save_chat(&dirs, policy, &images, chat_item("chat")).unwrap();
@@ -332,21 +330,19 @@ fn chat_history_policy_reads_the_settings() {
     assert_eq!(
         ChatHistoryPolicy::from_config(&json!({})),
         ChatHistoryPolicy {
-            is_enabled: true,
+            is_session: false,
             retention_days: 0,
             saves_quick_requests: true,
-            saves_chats: true,
         }
     );
     assert_eq!(
         ChatHistoryPolicy::from_config(
-            &json!({"chat":{"history":{"storage":"off","retentionDays":30}}})
+            &json!({"chat":{"history":{"storage":"session","retentionDays":30}}})
         ),
         ChatHistoryPolicy {
-            is_enabled: false,
-            retention_days: 30,
-            saves_quick_requests: false,
-            saves_chats: false,
+            is_session: true,
+            retention_days: 0,
+            saves_quick_requests: true,
         }
     );
 }
@@ -379,10 +375,9 @@ fn chat_history_policy_disabled_does_not_clear_chats() {
     write_json(&dirs.chats.join("chat-1.json"), &chat_item("chat-1")).unwrap();
 
     let policy = ChatHistoryPolicy {
-        is_enabled: false,
+        is_session: true,
         retention_days: 0,
         saves_quick_requests: false,
-        saves_chats: false,
     };
     enforce_chat_history_policy(&dirs, policy).unwrap();
     assert_eq!(ids(&dirs), ["chat-1"]);
@@ -577,10 +572,9 @@ fn retention_applies_while_the_history_is_off() {
     let removed = enforce_chat_history_policy(
         &dirs,
         ChatHistoryPolicy {
-            is_enabled: false,
+            is_session: true,
             retention_days: 30,
             saves_quick_requests: false,
-            saves_chats: false,
         },
     )
     .unwrap();
@@ -813,10 +807,9 @@ fn unsaved_and_disabled_histories_keep_originals_off_disk() {
     let images = Mutex::new(ChatImageStore::default());
     let chat = chat_with_file("a", &images, b"draft");
     let disabled = ChatHistoryPolicy {
-        is_enabled: false,
+        is_session: true,
         retention_days: 0,
         saves_quick_requests: false,
-        saves_chats: false,
     };
 
     save_chat(&dirs, disabled, &images, chat.clone()).unwrap();
@@ -994,12 +987,12 @@ fn quick_requests_are_not_saved_when_the_policy_leaves_them_out() {
 }
 
 #[test]
-fn nothing_is_saved_when_chat_saving_is_turned_off() {
+fn nothing_reaches_the_disk_while_chats_are_kept_in_memory() {
     let dir = TestDir::new("chats-off-test");
     let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
     let policy = ChatHistoryPolicy {
-        saves_chats: false,
+        is_session: true,
         ..enabled_policy()
     };
 
@@ -1059,10 +1052,9 @@ fn a_vault_alone_decides_how_its_chats_are_kept() {
     assert_eq!(
         ChatHistoryPolicy::for_vault(&VaultChatHistory::default()),
         ChatHistoryPolicy {
-            is_enabled: true,
+            is_session: false,
             retention_days: 0,
             saves_quick_requests: true,
-            saves_chats: true,
         }
     );
     let kept = ChatHistoryPolicy::for_vault(&VaultChatHistory {
@@ -1070,12 +1062,12 @@ fn a_vault_alone_decides_how_its_chats_are_kept() {
         retention_days: Some(7),
         is_quick_request_saving_enabled: Some(false),
     });
-    assert!(kept.saves_chats && !kept.saves_quick_requests);
+    assert!(!kept.is_session && !kept.saves_quick_requests);
     assert_eq!(kept.retention_days, 7);
     let off = ChatHistoryPolicy::for_vault(&VaultChatHistory {
-        storage: Some(VaultHistoryStorage::Off),
+        storage: Some(VaultHistoryStorage::Session),
         retention_days: None,
         is_quick_request_saving_enabled: None,
     });
-    assert!(!off.is_enabled && !off.saves_chats);
+    assert!(off.is_session);
 }

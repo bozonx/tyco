@@ -1,8 +1,11 @@
 /** What the dialog listens to: both sides apart, or the computer alone */
 export type DialogSource = 'microphoneAndSystem' | 'system'
 
-/** Saved dialogs live on the disk or are not kept at all */
-export const DIALOG_HISTORY_STORAGES = ['off', 'disk'] as const
+/**
+ * Where new dialogs are kept, see `HISTORY_STORAGES`; in memory, nothing is
+ * recorded
+ */
+export const DIALOG_HISTORY_STORAGES = ['session', 'disk'] as const
 export type DialogHistoryStorage = (typeof DIALOG_HISTORY_STORAGES)[number]
 
 export interface DialogHistoryConfig {

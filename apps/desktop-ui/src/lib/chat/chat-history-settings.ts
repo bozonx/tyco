@@ -10,16 +10,17 @@ const CHAT_HISTORY_RETENTION_DAYS = [0, 7, 30, 90, 365] as const
 type ChatHistorySettingsSource = Pick<UserConfig, 'chat'>
 
 /**
- * Chats are saved unless the settings turn it off. A profile chat follows the
- * settings of its workspace, `vaultHistory`, alone; "Ask AI" the chat settings
+ * New chats are stored on disk, not only until the app quits. A profile chat
+ * follows the settings of its workspace, `vaultHistory`, alone; "Ask AI" the
+ * chat settings
  */
-export function isChatHistoryEnabled(
+export function isChatHistoryOnDisk(
   config: ChatHistorySettingsSource,
   profileId?: string | null,
   vaultHistory?: VaultChatHistory
 ): boolean {
-  if (profileId) return vaultHistory?.storage !== 'off'
-  return config.chat.history.storage !== 'off'
+  if (profileId) return vaultHistory?.storage !== 'session'
+  return config.chat.history.storage !== 'session'
 }
 
 /** The offered retention periods plus the saved one if it is not among them */
@@ -28,18 +29,15 @@ export function chatHistoryRetentionChoices(saved: unknown): number[] {
 }
 
 /**
- * Quick requests are stored with the chats when chat saving is enabled and the
- * settings of the chat, or of the workspace of a profile, do not turn quick
- * requests off; saving is the default, kept as no field
+ * Quick requests are kept with the chats unless the settings of the chat, or of
+ * the workspace of a profile, turn them off; keeping is the default, kept as no
+ * field
  */
 export function isQuickRequestSavingEnabled(
   config: ChatHistorySettingsSource,
   profileId?: string | null,
   vaultHistory?: VaultChatHistory
 ): boolean {
-  if (!isChatHistoryEnabled(config, profileId, vaultHistory)) {
-    return false
-  }
   const history = profileId ? vaultHistory : config.chat.history
   return history?.isQuickRequestSavingEnabled !== false
 }

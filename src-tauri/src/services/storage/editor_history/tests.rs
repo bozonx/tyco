@@ -9,7 +9,6 @@ const DESKTOP: &str = "9a8b7c6d-5e4f-4a3b-9c2d-1e0f9a8b7c6d";
 
 fn policy() -> EditorHistoryPolicy {
     EditorHistoryPolicy {
-        is_recording: true,
         max_entries: 100,
         is_memory_only: false,
         retention_days: 0,
@@ -182,25 +181,6 @@ fn enforcing_the_policy_masks_secrets_stored_before_and_reads_keep_them() {
 }
 
 #[test]
-fn save_editor_history_entry_stores_nothing_when_the_history_is_off() {
-    let dir = TestDir::new("save-off");
-    let location = HistoryLocation::at(&dir, LAPTOP);
-    let mut history = session(
-        &location,
-        EditorHistoryPolicy {
-            is_recording: false,
-            ..policy()
-        },
-    );
-
-    assert_eq!(
-        save_editor_history_entry(&mut history, entry("text")).unwrap(),
-        None
-    );
-    assert!(!own(&location).exists());
-}
-
-#[test]
 fn the_memory_store_never_touches_the_disk() {
     let dir = TestDir::new("memory-store");
     let mut memory = Vec::new();
@@ -332,46 +312,6 @@ fn switching_memory_only_off_adds_the_memory_to_the_journal() {
 
     assert!(memory.is_empty());
     assert_eq!(texts(&location), ["in memory", "stored"]);
-}
-
-#[test]
-fn turning_the_history_off_keeps_the_journal() {
-    let dir = TestDir::new("turn-off");
-    let location = HistoryLocation::at(&dir, LAPTOP);
-    write_items(&own(&location), &[recent("a", "a")]);
-    let original = fs::read(own(&location)).unwrap();
-    let off = EditorHistoryPolicy {
-        is_recording: false,
-        ..policy()
-    };
-
-    commit_history_transition(&location, &policy(), &off, &mut Vec::new(), || Ok(())).unwrap();
-    assert_eq!(fs::read(own(&location)).unwrap(), original);
-
-    // and turning it on again keeps it as well
-    commit_history_transition(&location, &off, &policy(), &mut Vec::new(), || Ok(())).unwrap();
-    assert_eq!(fs::read(own(&location)).unwrap(), original);
-}
-
-#[test]
-fn turning_the_memory_only_history_off_keeps_it_in_memory() {
-    let dir = TestDir::new("session-off");
-    let location = HistoryLocation::at(&dir, LAPTOP);
-    let mut memory = vec![recent("a", "in memory")];
-    let off = EditorHistoryPolicy {
-        is_recording: false,
-        ..policy()
-    };
-
-    commit_history_transition(&location, &memory_only(), &off, &mut memory, || Ok(())).unwrap();
-    assert_eq!(history_texts(&memory), ["in memory"]);
-    assert!(!own(&location).exists());
-    assert!(is_in_memory(&off, &memory));
-
-    // turned on on the disk, what the memory kept goes to the journal
-    commit_history_transition(&location, &off, &policy(), &mut memory, || Ok(())).unwrap();
-    assert!(memory.is_empty());
-    assert_eq!(texts(&location), ["in memory"]);
 }
 
 #[test]

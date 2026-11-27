@@ -487,7 +487,6 @@
     "unknownCaller": "Tyco ne peut pas savoir quelle application le demande : n’importe quel programme de votre session peut le faire."
   },
   "history": {
-    "chatsDisabled": "L’historique n’est pas enregistré sur le disque",
     "clear": "Effacer l’historique",
     "clearConfirm": "Supprimer toutes les entrées ({count}) ?",
     "clearConfirmButton": "Tout supprimer",
@@ -531,7 +530,6 @@
     "requestFailed": "erreur de requête",
     "requestTimedOut": "pas de réponse",
     "retry": "Réessayer",
-    "textsDisabled": "L’enregistrement des textes est désactivé dans les paramètres.",
     "today": "Aujourd’hui",
     "undo": "Annuler",
     "yesterday": "Hier",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "enregistrement incomplet",
     "recordings": "Enregistrements",
     "stopRecording": "Arrêter la lecture",
-    "playbackSpeed": "Vitesse de lecture"
+    "playbackSpeed": "Vitesse de lecture",
+    "sessionOnly": "Les nouveautés sont conservées seulement jusqu’à la fermeture de TyCo."
   },
   "input": {
     "historySearchPlaceholder": "Rechercher dans l’historique...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "Créer une copie du profil « {name} » ?",
     "editorHistoryRetentionForever": "Pour toujours",
     "editorHistoryStorage": "Conserver l’historique",
-    "editorHistoryStorageHint": "Sur le disque — l’historique survit aux redémarrages dans un fichier non chiffré ; les entrées plus anciennes que la durée choisie sont supprimées. Tant que Tyco est lancé — les nouvelles entrées restent en mémoire uniquement et disparaissent à la fermeture. Ne pas enregistrer — les nouveaux textes ne sont pas enregistrés. Modifier ce réglage ne supprime jamais les entrées enregistrées : elles restent jusqu’à ce que vous les effaciez.",
-    "editorHistoryStorageOff": "Ne pas enregistrer",
+    "editorHistoryStorageHint": "Sur le disque — l’historique survit aux redémarrages dans un fichier non chiffré ; les entrées plus anciennes que la durée choisie sont supprimées. Tant que Tyco est lancé — les nouvelles entrées restent en mémoire uniquement et disparaissent à la fermeture. Modifier ce réglage ne supprime jamais les entrées enregistrées : elles restent jusqu’à ce que vous les supprimiez.",
     "editorHistoryStorageSession": "Tant que Tyco est ouvert",
     "editorHotkeyHint": "Les raccourcis pour contrôler l’éditeur peuvent être consultés et modifiés dans l’onglet {tab}.",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "Historique des discussions de l’espace de travail",
       "hint": "Comment les chats des profils de cet espace de travail sont conservés, requêtes rapides comprises. Seul l’espace de travail en décide.",
       "syncedHint": "Enregistré dans le dossier de l’espace de travail et appliqué sur chaque ordinateur qui le synchronise.",
-      "notSaved": "Ne pas enregistrer",
       "clearConfirm": "Supprimer les discussions enregistrées de tous les profils de cet espace de travail ? Cette action est irréversible."
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "Historique des dialogues",
     "dialogHistoryHint": "Transcriptions d’appels enregistrées et leurs fichiers audio.",
     "dialogHistoryRetentionDays": "Conserver les dialogues",
-    "dialogHistoryRetentionDaysHint": "Les dialogues et leurs enregistrements plus anciens que la durée choisie sont supprimés automatiquement. Ne pas enregistrer — les nouveaux dialogues ne sont pas enregistrés ; ceux déjà enregistrés restent jusqu’à ce que vous les effaciez.",
+    "dialogHistoryRetentionDaysHint": "Les dialogues et leurs enregistrements plus anciens que la durée choisie sont supprimés automatiquement. Tant que Tyco est lancé — les nouveaux dialogues restent en mémoire uniquement et disparaissent à la fermeture, et les appels ne sont pas enregistrés ; les dialogues enregistrés restent.",
     "clearDialogsConfirmDialog": "Tous les dialogues enregistrés et leurs enregistrements audio seront définitivement supprimés.",
     "dialogHistoryLink": "Les paramètres d’historique et de conservation des dialogues se trouvent dans",
     "chatHistoryKeeping": "Conserver les chats",
-    "chatHistoryKeepingHint": "Les chats sont stockés localement sans chiffrement ; les mots de passe et les clés qu’ils contiennent ne sont pas masqués. Un chat est supprimé s’il n’a reçu aucun nouveau message pendant plus longtemps que la durée choisie. Ne pas enregistrer — les nouveaux chats ne sont pas enregistrés ; ceux déjà enregistrés restent jusqu’à ce que vous les effaciez.",
+    "chatHistoryKeepingHint": "Les chats sont stockés localement sans chiffrement ; les mots de passe et les clés qu’ils contiennent ne sont pas masqués. Un chat est supprimé s’il n’a reçu aucun nouveau message pendant plus longtemps que la durée choisie. Tant que Tyco est lancé — les nouveaux chats restent en mémoire uniquement et disparaissent à la fermeture ; les chats enregistrés restent.",
     "deleteAllEntries": {
       "one": "Supprimer {count} entrée",
       "few": "Supprimer les {count} entrées",
@@ -1763,9 +1760,6 @@
     "listen": "Écouter",
     "resume": "Reprendre",
     "clear": "Effacer",
-    "clearTitle": "Effacer la transcription ?",
-    "clearMessage": "L’historique est désactivé dans les paramètres. La transcription actuelle sera perdue.",
-    "clearConfirm": "Effacer",
     "sessionResumed": "Session reprise",
     "sessionResumedRecording": "Enregistrement repris",
     "record": "Enregistrement",
@@ -1783,7 +1777,6 @@
     "resumeTooltipWithRecord": "Reprendre la reconnaissance vocale et l'enregistrement audio",
     "recordToggleEnableHint": "Activer l'enregistrement audio dans un fichier et l'enregistrement dans l'historique au démarrage",
     "recordToggleDisableHint": "Désactiver l'enregistrement audio (reconnaissance vocale uniquement)",
-    "clearMessageSaved": "La transcription actuelle sera effacée de la fenêtre. La conversation reste enregistrée dans l’historique.",
     "history": "Historique",
     "newDialog": "Nouveau dialogue",
     "searchHistory": "Rechercher dans les dialogues",

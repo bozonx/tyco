@@ -53,11 +53,7 @@ afterEach(() => {
 describe('createDialogHistoryModel', () => {
   it('loads, renames, and searches dialogs', async () => {
     const storage = createStorage()
-    const model = createDialogHistoryModel({
-      storage,
-      isHistoryEnabled: () => true,
-      reportError: vi.fn(),
-    })
+    const model = createDialogHistoryModel({ storage, reportError: vi.fn() })
 
     await model.loadDialogs()
     expect(model.isLoaded.value).toBe(true)
@@ -78,7 +74,6 @@ describe('createDialogHistoryModel', () => {
     const storage = createStorage()
     const model = createDialogHistoryModel({
       storage,
-      isHistoryEnabled: () => true,
       reportError: vi.fn(),
       timeoutMs: 5_000,
     })
@@ -104,11 +99,7 @@ describe('createDialogHistoryModel', () => {
 
   it('clears dialogs from storage and in-memory state', async () => {
     const storage = createStorage()
-    const model = createDialogHistoryModel({
-      storage,
-      isHistoryEnabled: () => true,
-      reportError: vi.fn(),
-    })
+    const model = createDialogHistoryModel({ storage, reportError: vi.fn() })
 
     await model.loadDialogs()
     await model.clearDialogs()

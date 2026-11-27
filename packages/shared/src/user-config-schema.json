@@ -50,10 +50,7 @@
         "history": {
           "type": "object",
           "properties": {
-            "storage": {
-              "enum": ["off", "session", "disk"],
-              "default": "disk"
-            },
+            "storage": { "enum": ["session", "disk"], "default": "disk" },
             "retentionDays": {
               "type": "integer",
               "minimum": 1,
@@ -1265,7 +1262,7 @@
         "history": {
           "type": "object",
           "properties": {
-            "storage": { "enum": ["off", "disk"], "default": "disk" },
+            "storage": { "enum": ["session", "disk"], "default": "disk" },
             "retentionDays": {
               "type": "integer",
               "minimum": 1,
@@ -1370,7 +1367,7 @@
         "history": {
           "type": "object",
           "properties": {
-            "storage": { "enum": ["off", "disk"], "default": "disk" },
+            "storage": { "enum": ["session", "disk"], "default": "disk" },
             "retentionDays": {
               "type": "integer",
               "minimum": 1,

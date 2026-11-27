@@ -32,7 +32,7 @@ import {
 } from './chat-controller'
 import { createChatDesktopFiles } from './chat-desktop-files'
 import { conversationAttachedFiles } from './chat-attached-files'
-import { isChatHistoryEnabled } from './chat-history-settings'
+import { isChatHistoryOnDisk } from './chat-history-settings'
 import { createChatImageStorage } from './chat-image-storage'
 import {
   chatModelOptions,
@@ -328,10 +328,10 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
 
   /** The last write of the chat failed; the next failure is not told again */
   let saveFailed = false
-  const isHistoryEnabled = () => {
+  const isHistoryOnDisk = () => {
     const config = deps.getUserConfig()
     return config
-      ? isChatHistoryEnabled(
+      ? isChatHistoryOnDisk(
           config,
           profileId,
           profileId ? deps.getVaultChatHistory?.(profileId) : undefined
@@ -369,8 +369,6 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     generateChatTitle: deps.llmActions.generateChatTitle,
     saveRetryDelaysMs: deps.saveRetryDelaysMs ?? CHAT_SAVE_RETRY_DELAYS_MS,
     saveChat: async (item) => {
-      // nothing is stored while the history is off: the chat stays in memory
-      if (!isHistoryEnabled()) return
       try {
         await history.saveChat(item)
         saveFailed = false
@@ -422,8 +420,8 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     // which chat to reopen is a convenience: a failure is only logged
     saveSessionState: async (patch) => {
       if (patch.lastChatId === undefined) return
-      // a chat that is not stored cannot be reopened
-      if (patch.lastChatId !== null && !isHistoryEnabled()) return
+      // a chat kept until the app quits cannot be reopened after it
+      if (patch.lastChatId !== null && !isHistoryOnDisk()) return
       await scope.saveLastChatId(patch.lastChatId)
     },
     getLastChatId: scope.getLastChatId,
@@ -440,7 +438,6 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       const current = findCurrentChat(items)
       return current?.id ?? null
     },
-    isHistoryEnabled,
     getChatModel: () => {
       const picked = selectedModel.value
       return picked
@@ -506,7 +503,6 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   const chatRemoval = createChatRemoval({
     history,
     chat: model,
-    isHistoryEnabled,
     releaseImages: async (id) => {
       await deps.invoke('release_deleted_chat_images', { id })
     },
@@ -627,7 +623,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
         ...model.currentChatParams.value,
         toolPermissions: undefined,
       }
-      if (isHistoryEnabled()) await model.persistCurrentChat()
+      await model.persistCurrentChat()
     },
     /** The profile this chat belongs to; null for "Ask AI" */
     profileId,

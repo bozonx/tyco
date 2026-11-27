@@ -14,15 +14,6 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function turnHistoryOff() {
-  desktop.setUserConfig({
-    editor: {
-      ...desktop.backend.userConfig.editor,
-      history: { ...desktop.backend.userConfig.editor.history, storage: 'off' },
-    },
-  })
-}
-
 describe('quick input recovery', () => {
   it('checkpoints one record and retains cancelled text in history', async () => {
     const input = useQuickInputStore()
@@ -69,25 +60,6 @@ describe('quick input recovery', () => {
     await useHistoryStore().saveOutput('Translated')
     expect(input.startSession()).toBe(true)
     expect(input.value).toBe('Typed')
-  })
-
-  it('stores nothing with the history turned off', async () => {
-    turnHistoryOff()
-    const input = useQuickInputStore()
-    input.setValue('Private words')
-    await vi.advanceTimersByTimeAsync(5000)
-    // unfinished text stays in the input itself, nowhere else
-    expect(input.startSession()).toBe(true)
-    expect(input.value).toBe('Private words')
-    await input.saveSource('Private words', 'correction')
-    input.discard()
-    await useHistoryStore().saveOutput('Private words')
-    await useHistoryStore().flushInputs()
-    await vi.advanceTimersByTimeAsync(60_000)
-    expect(desktop.backend.history).toHaveLength(0)
-    expect(input.value).toBe('')
-    expect(input.startSession()).toBe(false)
-    expect(input.value).toBe('')
   })
 })
 

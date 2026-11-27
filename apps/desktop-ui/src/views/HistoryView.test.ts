@@ -181,13 +181,13 @@ describe('HistoryView.vue', () => {
     expect(mockCopyText).toHaveBeenCalledWith('Text to copy')
   })
 
-  it('shows disabled banner when history is disabled in config', async () => {
+  it('tells that new entries are kept until the app quits', async () => {
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'loadEditorHistory').mockResolvedValue()
 
     const { editor } = desktop.backend.userConfig
     desktop.setUserConfig({
-      editor: { ...editor, history: { ...editor.history, storage: 'off' } },
+      editor: { ...editor, history: { ...editor.history, storage: 'session' } },
     })
 
     const wrapper = mount(HistoryView, {
@@ -204,7 +204,7 @@ describe('HistoryView.vue', () => {
     })
 
     await flushPromises()
-    expect(wrapper.text()).toContain('history.textsDisabled')
+    expect(wrapper.text()).toContain('history.sessionOnly')
   })
 
   it('opens filtered by the origin of the activation', async () => {

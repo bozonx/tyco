@@ -487,7 +487,6 @@
     "unknownCaller": "Tyco kann nicht erkennen, welche Anwendung fragt: Jedes Programm Ihrer Sitzung kann das tun."
   },
   "history": {
-    "chatsDisabled": "Der Verlauf wird nicht auf der Festplatte gespeichert",
     "clear": "Verlauf leeren",
     "clearConfirm": "Alle Einträge ({count}) löschen?",
     "clearConfirmButton": "Alle löschen",
@@ -531,7 +530,6 @@
     "requestFailed": "Anfragefehler",
     "requestTimedOut": "keine Antwort",
     "retry": "Erneut versuchen",
-    "textsDisabled": "Das Speichern von Texten ist in den Einstellungen deaktiviert.",
     "today": "Heute",
     "undo": "Rückgängig",
     "yesterday": "Gestern",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "Aufnahme unvollständig",
     "recordings": "Aufnahmen",
     "stopRecording": "Wiedergabe stoppen",
-    "playbackSpeed": "Wiedergabegeschwindigkeit"
+    "playbackSpeed": "Wiedergabegeschwindigkeit",
+    "sessionOnly": "Neues wird nur bis zum Beenden von TyCo aufbewahrt."
   },
   "input": {
     "historySearchPlaceholder": "Verlauf durchsuchen...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "Eine Kopie des Profils „{name}“ erstellen?",
     "editorHistoryRetentionForever": "Unbegrenzt",
     "editorHistoryStorage": "Verlauf behalten",
-    "editorHistoryStorageHint": "Auf dem Datenträger — der Verlauf bleibt über Neustarts in einer unverschlüsselten Datei erhalten; Einträge, die älter als der gewählte Zeitraum sind, werden gelöscht. Solange Tyco läuft — neue Einträge liegen nur im Speicher und verschwinden beim Beenden. Nicht aufzeichnen — neue Texte werden nicht gespeichert. Eine Änderung dieser Einstellung löscht nie gespeicherte Einträge: Sie bleiben, bis Sie sie löschen.",
-    "editorHistoryStorageOff": "Nicht aufzeichnen",
+    "editorHistoryStorageHint": "Auf dem Datenträger — der Verlauf bleibt über Neustarts in einer unverschlüsselten Datei erhalten; Einträge, die älter als der gewählte Zeitraum sind, werden gelöscht. Solange Tyco läuft — neue Einträge liegen nur im Speicher und verschwinden beim Beenden. Eine Änderung dieser Einstellung löscht nie gespeicherte Einträge: Sie bleiben, bis Sie sie löschen.",
     "editorHistoryStorageSession": "Solange Tyco läuft",
     "editorHotkeyHint": "Tastenkombinationen zur Steuerung des Editors können auf dem Tab {tab} eingesehen und angepasst werden.",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "Chatverlauf des Arbeitsbereichs",
       "hint": "Wie die Chats der Profile dieses Arbeitsbereichs aufbewahrt werden, einschließlich Schnellanfragen an sie. Das entscheidet allein der Arbeitsbereich.",
       "syncedHint": "Im Ordner des Arbeitsbereichs gespeichert und auf jedem Computer angewendet, der ihn synchronisiert.",
-      "notSaved": "Nicht speichern",
       "clearConfirm": "Die gespeicherten Chats aller Profile dieses Arbeitsbereichs löschen? Das kann nicht rückgängig gemacht werden."
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "Dialogverlauf",
     "dialogHistoryHint": "Gespeicherte Gesprächstranskripte und ihre Audioaufnahmen.",
     "dialogHistoryRetentionDays": "Dialoge aufbewahren",
-    "dialogHistoryRetentionDaysHint": "Dialoge und ihre Aufnahmen, die älter als der gewählte Zeitraum sind, werden automatisch gelöscht. Nicht speichern — neue Dialoge werden nicht gespeichert; gespeicherte bleiben, bis Sie sie löschen.",
+    "dialogHistoryRetentionDaysHint": "Dialoge und ihre Aufnahmen, die älter als der gewählte Zeitraum sind, werden automatisch gelöscht. Solange Tyco läuft — neue Dialoge liegen nur im Speicher und verschwinden beim Beenden, und Anrufe werden nicht aufgenommen; gespeicherte Dialoge bleiben.",
     "clearDialogsConfirmDialog": "Alle gespeicherten Dialoge und ihre Audioaufnahmen werden dauerhaft gelöscht.",
     "dialogHistoryLink": "Einstellungen zu Dialogverlauf und Aufbewahrung finden Sie unter",
     "chatHistoryKeeping": "Chats aufbewahren",
-    "chatHistoryKeepingHint": "Chats werden lokal ohne Verschlüsselung gespeichert; Passwörter und Schlüssel darin werden nicht verborgen. Ein Chat wird gelöscht, wenn er länger als der gewählte Zeitraum keine neuen Nachrichten hatte. Nicht speichern — neue Chats werden nicht gespeichert; gespeicherte bleiben, bis Sie sie löschen.",
+    "chatHistoryKeepingHint": "Chats werden lokal ohne Verschlüsselung gespeichert; Passwörter und Schlüssel darin werden nicht verborgen. Ein Chat wird gelöscht, wenn er länger als der gewählte Zeitraum keine neuen Nachrichten hatte. Solange Tyco läuft — neue Chats liegen nur im Speicher und verschwinden beim Beenden; gespeicherte bleiben.",
     "deleteAllEntries": {
       "one": "{count} Eintrag löschen",
       "few": "Alle {count} Einträge löschen",
@@ -1763,9 +1760,6 @@
     "listen": "Anhören",
     "resume": "Fortsetzen",
     "clear": "Löschen",
-    "clearTitle": "Transkript löschen?",
-    "clearMessage": "Der Verlauf ist in den Einstellungen deaktiviert. Das aktuelle Transkript geht verloren.",
-    "clearConfirm": "Löschen",
     "sessionResumed": "Sitzung fortgesetzt",
     "sessionResumedRecording": "Aufnahme fortgesetzt",
     "record": "Aufnahme",
@@ -1783,7 +1777,6 @@
     "resumeTooltipWithRecord": "Spracherkennung und Aufnahme in Audiodatei fortsetzen",
     "recordToggleEnableHint": "Audioaufnahme in Datei und Speichern im Verlauf beim Start aktivieren",
     "recordToggleDisableHint": "Audioaufnahme deaktivieren (nur Spracherkennung)",
-    "clearMessageSaved": "Das aktuelle Transkript wird aus dem Fenster gelöscht. Das Gespräch bleibt im Verlauf gespeichert.",
     "history": "Verlauf",
     "newDialog": "Neuer Dialog",
     "searchHistory": "Dialoge durchsuchen",

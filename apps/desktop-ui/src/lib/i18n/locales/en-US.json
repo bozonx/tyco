@@ -487,7 +487,6 @@
     "unknownCaller": "Tyco cannot tell which application is asking: any program of your session can do this."
   },
   "history": {
-    "chatsDisabled": "History is not saved to disk",
     "clear": "Clear history",
     "clearConfirm": "Delete all entries ({count})?",
     "clearConfirmButton": "Delete all",
@@ -531,7 +530,6 @@
     "requestFailed": "request failed",
     "requestTimedOut": "no response",
     "retry": "Retry",
-    "textsDisabled": "Saving texts is turned off in the settings.",
     "today": "Today",
     "undo": "Undo",
     "yesterday": "Yesterday",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "recording incomplete",
     "recordings": "Recordings",
     "stopRecording": "Stop playback",
-    "playbackSpeed": "Playback speed"
+    "playbackSpeed": "Playback speed",
+    "sessionOnly": "New entries are kept only until TyCo quits."
   },
   "input": {
     "historySearchPlaceholder": "Search history...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "Create a copy of profile “{name}”?",
     "editorHistoryRetentionForever": "Forever",
     "editorHistoryStorage": "Keep the history",
-    "editorHistoryStorageHint": "On disk — the history survives restarts in an unencrypted file; entries older than the chosen period are deleted. While Tyco is running — new entries live in memory only and are gone when the app quits. Don't record — new texts are not saved. Changing this never deletes saved entries: they stay until you clear them.",
-    "editorHistoryStorageOff": "Don't record",
+    "editorHistoryStorageHint": "On disk — the history survives restarts in an unencrypted file; entries older than the chosen period are deleted. While Tyco is running — new entries live in memory only and are gone when the app quits. Changing this never deletes saved entries: they stay until you delete them.",
     "editorHistoryStorageSession": "While Tyco is running",
     "editorHotkeyHint": "Hotkeys for controlling the editor can be viewed and configured on the {tab} tab.",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "Chat history of the workspace",
       "hint": "How the chats of the profiles of this workspace are kept, including quick requests to them. The workspace decides this alone.",
       "syncedHint": "Kept in the workspace folder and applied on every computer that syncs it.",
-      "notSaved": "Do not save",
       "clearConfirm": "Delete the saved chats of all profiles of this workspace? This cannot be undone."
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "Dialog history",
     "dialogHistoryHint": "Saved call transcripts and their audio recordings.",
     "dialogHistoryRetentionDays": "Keep dialogs",
-    "dialogHistoryRetentionDaysHint": "Dialogs and their recordings older than the chosen period are deleted automatically. Don't save — new dialogs are not saved; saved ones stay until you clear them.",
+    "dialogHistoryRetentionDaysHint": "Dialogs and their recordings older than the chosen period are deleted automatically. While Tyco is running — new dialogs live in memory only and are gone when the app quits, and calls are not recorded; saved dialogs stay.",
     "clearDialogsConfirmDialog": "All saved dialogs and their audio recordings will be permanently deleted.",
     "dialogHistoryLink": "Dialog history and retention settings are in",
     "chatHistoryKeeping": "Keep chats",
-    "chatHistoryKeepingHint": "Chats are stored locally without encryption; passwords and keys in them are not hidden. A chat is deleted when it has had no new messages for longer than the chosen period. Don't save — new chats are not saved; saved chats stay until you clear them.",
+    "chatHistoryKeepingHint": "Chats are stored locally without encryption; passwords and keys in them are not hidden. A chat is deleted when it has had no new messages for longer than the chosen period. While Tyco is running — new chats live in memory only and are gone when the app quits; saved chats stay.",
     "deleteAllEntries": {
       "one": "Delete {count} entry",
       "few": "Delete all {count} entries",
@@ -1763,9 +1760,6 @@
     "listen": "Listen",
     "resume": "Resume",
     "clear": "Clear",
-    "clearTitle": "Clear transcript?",
-    "clearMessage": "History is turned off in settings. The current transcript will be lost.",
-    "clearConfirm": "Clear",
     "sessionResumed": "Session resumed",
     "sessionResumedRecording": "Recording resumed",
     "record": "Record",
@@ -1783,7 +1777,6 @@
     "resumeTooltipWithRecord": "Resume speech recognition and record to audio file",
     "recordToggleEnableHint": "Enable audio recording to file and saving to history on start",
     "recordToggleDisableHint": "Disable audio recording (speech recognition only)",
-    "clearMessageSaved": "The current transcript will be cleared from the window. The conversation remains saved in history.",
     "history": "History",
     "newDialog": "New dialog",
     "searchHistory": "Search dialogs",

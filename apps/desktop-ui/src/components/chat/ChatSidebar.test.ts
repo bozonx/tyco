@@ -73,7 +73,6 @@ function createChatMock() {
       whenSaved: vi.fn().mockResolvedValue(undefined),
       openChat: mocks.openChat,
     },
-    isHistoryEnabled: () => true,
     releaseImages: mocks.releaseUndo,
     reportError: vi.fn(),
   })
@@ -93,7 +92,7 @@ mocks.chat = createChatMock()
 
 describe('ChatSidebar.vue', () => {
   let desktop: TestDesktop
-  const setHistoryStorage = (storage: 'disk' | 'off') => {
+  const setHistoryStorage = (storage: 'disk' | 'session') => {
     const { chat } = desktop.backend.userConfig
     desktop.setUserConfig({
       chat: { ...chat, history: { ...chat.history, storage } },
@@ -132,7 +131,7 @@ describe('ChatSidebar.vue', () => {
   })
 
   it('renders subtle hint under chats when history is disabled, without warning banner', () => {
-    setHistoryStorage('off')
+    setHistoryStorage('session')
 
     const wrapper = mount(ChatSidebar, {
       global: {
@@ -152,7 +151,7 @@ describe('ChatSidebar.vue', () => {
     // Subtle hint exists in footer under chat list
     const hint = wrapper.find('.sidebar-footer .history-disabled-hint')
     expect(hint.exists()).toBe(true)
-    expect(hint.text()).toBe('history.chatsDisabled')
+    expect(hint.text()).toBe('history.sessionOnly')
   })
 
   it('hides search input by default and toggles on magnifying glass click', async () => {

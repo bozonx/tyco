@@ -337,7 +337,8 @@ pub fn save_chat(
     images: &Mutex<ChatImageStore>,
     mut chat: Chat,
 ) -> Result<Vec<String>, AppError> {
-    if !policy.saves(&chat) {
+    // the session mode keeps new chats in memory, see `session_history`
+    if policy.is_session || !policy.saves(&chat) {
         return Ok(Vec::new());
     }
     // a title made from another one, e.g. of a branch, may outgrow the limit
@@ -478,7 +479,7 @@ pub fn rename_chat(dirs: &ChatDirs, id: String, title: String) -> Result<(), App
 const MAX_CHAT_TITLE_CHARS: usize = 120;
 
 /// A title as a rename stores it: trimmed, neither empty nor too long.
-fn validate_chat_title(title: &str) -> Result<String, AppError> {
+pub(super) fn validate_chat_title(title: &str) -> Result<String, AppError> {
     let title = title.trim();
     if title.is_empty() {
         return Err(AppError::InvalidInput("Chat title is empty".into()));
@@ -491,7 +492,7 @@ fn validate_chat_title(title: &str) -> Result<String, AppError> {
 
 /// The title cut to `MAX_CHAT_TITLE_CHARS` characters, ending with an ellipsis
 /// when cut.
-fn clamp_chat_title(title: &str) -> String {
+pub(super) fn clamp_chat_title(title: &str) -> String {
     if title.chars().count() <= MAX_CHAT_TITLE_CHARS {
         return title.to_string();
     }
@@ -692,7 +693,7 @@ pub(super) fn search_chats(
 /// Everything a search looks in, lowercase: the title, the messages, the text
 /// and names of their attachments and the names of their images. Pieces are
 /// split by a line break so a query does not match across two of them.
-fn chat_search_text(chat: &Chat) -> String {
+pub(super) fn chat_search_text(chat: &Chat) -> String {
     let mut pieces = vec![chat.title.as_str()];
     for message in &chat.messages {
         pieces.push(&message.content);
@@ -721,14 +722,13 @@ pub fn delete_chat(dirs: &ChatDirs, id: String) -> Result<(), AppError> {
 /// What the settings say about the chat history.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ChatHistoryPolicy {
-    /// Chats are saved at all.
-    pub is_enabled: bool,
-    /// Chats without a message for this many days are dropped; 0 keeps them
-    /// forever.
+    /// New and changed chats are kept in the memory of the process only; the
+    /// stored ones stay on disk as they are.
+    pub is_session: bool,
+    /// Stored chats without a message for this many days are dropped; 0 keeps
+    /// them forever, as does the session mode.
     pub retention_days: u64,
-    /// Regular chats are saved.
-    pub saves_chats: bool,
-    /// Quick requests are saved. Only possible when regular chats are saved.
+    /// Quick requests are kept along with the chats.
     pub saves_quick_requests: bool,
 }
 
@@ -743,7 +743,7 @@ impl ChatHistoryPolicy {
     pub fn for_vault(vault: &VaultChatHistory) -> Self {
         ChatHistoryConfig {
             storage: match vault.storage {
-                Some(VaultHistoryStorage::Off) => HistoryStorage::Off,
+                Some(VaultHistoryStorage::Session) => HistoryStorage::Session,
                 Some(VaultHistoryStorage::Disk) | None => HistoryStorage::Disk,
             },
             retention_days: vault.retention_days.unwrap_or(0),
@@ -752,13 +752,8 @@ impl ChatHistoryPolicy {
         .into()
     }
 
-    /// The chat is to be stored: regular chats follow `saves_chats`, and
-    /// quick requests follow `saves_quick_requests` only when regular chats are
-    /// saved.
+    /// The chat is to be kept: a quick request only when they are.
     pub fn saves(&self, chat: &Chat) -> bool {
-        if !self.saves_chats {
-            return false;
-        }
         if chat.is_quick_request == Some(true) {
             self.saves_quick_requests
         } else {
@@ -787,14 +782,11 @@ impl ChatHistoryPolicy {
 
 impl From<ChatHistoryConfig> for ChatHistoryPolicy {
     fn from(config: ChatHistoryConfig) -> Self {
-        let saves_chats = config.storage != HistoryStorage::Off;
-        let saves_quick_requests =
-            saves_chats && config.is_quick_request_saving_enabled.unwrap_or(true);
+        let is_session = config.storage == HistoryStorage::Session;
         Self {
-            is_enabled: saves_chats,
-            retention_days: config.retention_days,
-            saves_chats,
-            saves_quick_requests,
+            is_session,
+            retention_days: if is_session { 0 } else { config.retention_days },
+            saves_quick_requests: config.is_quick_request_saving_enabled.unwrap_or(true),
         }
     }
 }

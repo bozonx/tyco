@@ -487,7 +487,6 @@
     "unknownCaller": "A Tyco nem tudja megállapítani, melyik alkalmazás kéri: a munkamenet bármely programja megteheti."
   },
   "history": {
-    "chatsDisabled": "Az előzmények nem kerülnek lemezre",
     "clear": "Előzmények törlése",
     "clearConfirm": "Törli az összes bejegyzést ({count})?",
     "clearConfirmButton": "Összes törlése",
@@ -531,7 +530,6 @@
     "requestFailed": "kérési hiba",
     "requestTimedOut": "nincs válasz",
     "retry": "Újra",
-    "textsDisabled": "A szövegek mentése ki van kapcsolva a beállításokban.",
     "today": "Ma",
     "undo": "Visszavonás",
     "yesterday": "Tegnap",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "a felvétel hiányos",
     "recordings": "Felvételek",
     "stopRecording": "Lejátszás leállítása",
-    "playbackSpeed": "Lejátszási sebesség"
+    "playbackSpeed": "Lejátszási sebesség",
+    "sessionOnly": "Az újdonságok csak a TyCo bezárásáig maradnak meg."
   },
   "input": {
     "historySearchPlaceholder": "Keresés az előzményekben...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "Létrehozza a(z) „{name}” profil másolatát?",
     "editorHistoryRetentionForever": "Örökre",
     "editorHistoryStorage": "Előzmények megőrzése",
-    "editorHistoryStorageHint": "Lemezen — az előzmények titkosítatlan fájlban megmaradnak az újraindítások között; a választott időszaknál régebbi bejegyzések törlődnek. Amíg a Tyco fut — az új bejegyzések csak a memóriában vannak, és kilépéskor elvesznek. Nincs rögzítés — az új szövegek nem mentődnek. A beállítás módosítása soha nem törli a mentett bejegyzéseket: megmaradnak, amíg nem törli őket.",
-    "editorHistoryStorageOff": "Nincs rögzítés",
+    "editorHistoryStorageHint": "Lemezen — az előzmények titkosítatlan fájlban megmaradnak az újraindítások között; a választott időszaknál régebbi bejegyzések törlődnek. Amíg a Tyco fut — az új bejegyzések csak a memóriában vannak, és kilépéskor elvesznek. A beállítás módosítása soha nem törli a mentett bejegyzéseket: megmaradnak, amíg nem törli őket.",
     "editorHistoryStorageSession": "Amíg a Tyco fut",
     "editorHotkeyHint": "A szerkesztő vezérlésére szolgáló billentyűparancsok a(z) {tab} fülön tekinthetők meg és módosíthatók.",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "A munkaterület csevegési előzményei",
       "hint": "Hogyan tárolódnak a munkaterület profiljainak csevegései, a gyorskérésekkel együtt. Erről csak a munkaterület dönt.",
       "syncedHint": "A munkaterület mappájában tárolódik, és minden olyan számítógépen érvényes, amely szinkronizálja.",
-      "notSaved": "Nincs mentés",
       "clearConfirm": "Törli e munkaterület összes profiljának mentett csevegéseit? Ez nem vonható vissza."
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "Párbeszéd-előzmények",
     "dialogHistoryHint": "Mentett hívásleiratok és hangfelvételeik.",
     "dialogHistoryRetentionDays": "Párbeszédek megőrzése",
-    "dialogHistoryRetentionDaysHint": "A választott időszaknál régebbi párbeszédek és felvételeik automatikusan törlődnek. Ne mentse — az új párbeszédek nem mentődnek; a mentettek megmaradnak, amíg nem törli őket.",
+    "dialogHistoryRetentionDaysHint": "A választott időszaknál régebbi párbeszédek és felvételeik automatikusan törlődnek. Amíg a Tyco fut — az új párbeszédek csak a memóriában vannak, kilépéskor elvesznek, és a hívások nem rögzítődnek; a mentett párbeszédek megmaradnak.",
     "clearDialogsConfirmDialog": "Minden mentett párbeszéd és hangfelvétel véglegesen törlődik.",
     "dialogHistoryLink": "A párbeszédek előzményeinek és megőrzésének beállításai itt találhatók:",
     "chatHistoryKeeping": "Csevegések megőrzése",
-    "chatHistoryKeepingHint": "A csevegések helyben, titkosítás nélkül tárolódnak; a bennük lévő jelszavak és kulcsok nincsenek elrejtve. Egy csevegés törlődik, ha a választott időszaknál tovább nem érkezett bele új üzenet. Ne mentse — az új csevegések nem mentődnek; a mentettek megmaradnak, amíg nem törli őket.",
+    "chatHistoryKeepingHint": "A csevegések helyben, titkosítás nélkül tárolódnak; a bennük lévő jelszavak és kulcsok nincsenek elrejtve. Egy csevegés törlődik, ha a választott időszaknál tovább nem érkezett bele új üzenet. Amíg a Tyco fut — az új csevegések csak a memóriában vannak, és kilépéskor elvesznek; a mentettek megmaradnak.",
     "deleteAllEntries": {
       "one": "{count} bejegyzés törlése",
       "few": "Mind a(z) {count} bejegyzés törlése",
@@ -1763,9 +1760,6 @@
     "listen": "Hallgatás",
     "resume": "Folytatás",
     "clear": "Törlés",
-    "clearTitle": "Törli az átiratot?",
-    "clearMessage": "Az előzmények ki vannak kapcsolva a beállításokban. Az aktuális átirat elvész.",
-    "clearConfirm": "Törlés",
     "sessionResumed": "Munkamenet folytatva",
     "sessionResumedRecording": "Rögzítés folytatva",
     "record": "Felvétel",
@@ -1783,7 +1777,6 @@
     "resumeTooltipWithRecord": "Beszédfelismerés és hangfájlba rögzítés folytatása",
     "recordToggleEnableHint": "Hangfájlba rögzítés és előzményekbe mentés bekapcsolása indításkor",
     "recordToggleDisableHint": "Hangfelvétel kikapcsolása (csak beszédfelismerés)",
-    "clearMessageSaved": "Az aktuális átirat törlődik az ablakból. A beszélgetés elmentve marad az előzményekben.",
     "history": "Előzmények",
     "newDialog": "Új párbeszéd",
     "searchHistory": "Párbeszédek keresése",

@@ -487,7 +487,6 @@
     "unknownCaller": "Tyco 無法判斷是哪個應用程式提出請求：您登入工作階段中的任何程式都可以進行此操作。"
   },
   "history": {
-    "chatsDisabled": "歷史記錄未儲存至磁碟",
     "clear": "清除歷史記錄",
     "clearConfirm": "要刪除所有項目（{count} 個）嗎？",
     "clearConfirmButton": "全部刪除",
@@ -531,7 +530,6 @@
     "requestFailed": "請求失敗",
     "requestTimedOut": "無回應",
     "retry": "重試",
-    "textsDisabled": "已在設定中關閉文字儲存。",
     "today": "今天",
     "undo": "復原",
     "yesterday": "昨天",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "錄音不完整",
     "recordings": "錄音",
     "stopRecording": "停止播放",
-    "playbackSpeed": "播放速度"
+    "playbackSpeed": "播放速度",
+    "sessionOnly": "新內容只保留到 TyCo 結束為止。"
   },
   "input": {
     "historySearchPlaceholder": "搜尋歷史記錄...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "建立設定檔「{name}」的副本？",
     "editorHistoryRetentionForever": "永久",
     "editorHistoryStorage": "保留歷史",
-    "editorHistoryStorageHint": "磁碟 — 歷史紀錄儲存在未加密的檔案中，重新啟動後仍保留；早於所選期限的紀錄會被刪除。Tyco 執行期間 — 新紀錄只保存在記憶體中，結束後消失。不記錄 — 新文字不會儲存。變更此設定絕不會刪除已儲存的紀錄：它們會保留，直到你清除。",
-    "editorHistoryStorageOff": "不記錄",
+    "editorHistoryStorageHint": "磁碟 — 歷史紀錄儲存在未加密的檔案中，重新啟動後仍保留；早於所選期限的紀錄會被刪除。Tyco 執行期間 — 新紀錄只保存在記憶體中，結束後消失。變更此設定絕不會刪除已儲存的紀錄：它們會保留，直到你刪除。",
     "editorHistoryStorageSession": "僅在 Tyco 執行期間",
     "editorHotkeyHint": "可以在 {tab} 分頁中檢視和設定用於控制編輯器的快捷鍵。",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "工作區的聊天歷史",
       "hint": "此工作區設定檔的聊天（包括快速請求）的保存方式。僅由工作區自行決定。",
       "syncedHint": "保存在工作區資料夾中，並在同步它的每台電腦上生效。",
-      "notSaved": "不儲存",
       "clearConfirm": "要刪除此工作區中所有設定檔的已儲存聊天嗎？此操作無法復原。"
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "對話歷史紀錄",
     "dialogHistoryHint": "已儲存的通話逐字稿及其音訊錄音。",
     "dialogHistoryRetentionDays": "保存對話",
-    "dialogHistoryRetentionDaysHint": "早於所選期限的對話及其錄音會自動刪除。不儲存 — 新對話不會儲存，已儲存的對話會保留，直到你清除。",
+    "dialogHistoryRetentionDaysHint": "早於所選期限的對話及其錄音會自動刪除。Tyco 執行期間 — 新對話只保存在記憶體中，結束後消失，且不錄製通話；已儲存的對話會保留。",
     "clearDialogsConfirmDialog": "所有已儲存的對話及其音訊錄音將被永久刪除。",
     "dialogHistoryLink": "對話歷史紀錄與保留期間設定位於",
     "chatHistoryKeeping": "保存聊天",
-    "chatHistoryKeepingHint": "聊天以未加密方式儲存在本機，其中的密碼與金鑰不會被隱藏。超過所選期限沒有新訊息的聊天會被刪除。不儲存 — 新聊天不會儲存，已儲存的聊天會保留，直到你清除。",
+    "chatHistoryKeepingHint": "聊天以未加密方式儲存在本機，其中的密碼與金鑰不會被隱藏。超過所選期限沒有新訊息的聊天會被刪除。Tyco 執行期間 — 新聊天只保存在記憶體中，結束後消失；已儲存的聊天會保留。",
     "deleteAllEntries": {
       "one": "刪除 {count} 筆紀錄",
       "few": "刪除全部 {count} 筆紀錄",
@@ -1759,9 +1756,6 @@
     "listen": "聆聽",
     "resume": "繼續",
     "clear": "清除",
-    "clearTitle": "清除逐字稿？",
-    "clearMessage": "歷史記錄已在設定中關閉。目前的逐字稿將會遺失。",
-    "clearConfirm": "清除",
     "sessionResumed": "工作階段已恢復",
     "sessionResumedRecording": "已恢復錄音",
     "record": "錄音",
@@ -1779,7 +1773,6 @@
     "resumeTooltipWithRecord": "繼續語音辨識並錄製為音訊檔案",
     "recordToggleEnableHint": "在啟動時啟用錄製為音訊檔案並儲存至歷史紀錄",
     "recordToggleDisableHint": "停用音訊錄製（僅語音辨識）",
-    "clearMessageSaved": "目前的逐字稿將從視窗中清除。對話仍會保留在歷史記錄中。",
     "history": "歷史紀錄",
     "newDialog": "新對話",
     "searchHistory": "搜尋對話",

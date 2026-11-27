@@ -6,7 +6,6 @@ import type { DialogStorageDriver } from './dialog-history-storage'
 
 export interface DialogHistoryModelDependencies {
   storage: DialogStorageDriver
-  isHistoryEnabled: () => boolean
   reportError: (error: unknown) => void
   timeoutMs?: number
 }
@@ -64,9 +63,6 @@ export function createDialogHistoryModel(deps: DialogHistoryModelDependencies) {
       return removed
     },
     restore: async (dialog) => {
-      if (!deps.isHistoryEnabled()) {
-        throw new Error('Dialog history is off; the dialog was not restored')
-      }
       await track(deps.storage.saveDialog(dialog))
       restoredIds.add(dialog.id)
       await loadDialogs()

@@ -487,7 +487,6 @@
     "unknownCaller": "Tyco는 어떤 애플리케이션이 요청했는지 확인할 수 없습니다. 세션의 모든 프로그램이 이 작업을 수행할 수 있습니다."
   },
   "history": {
-    "chatsDisabled": "기록이 디스크에 저장되지 않습니다",
     "clear": "기록 지우기",
     "clearConfirm": "모든 항목({count}개)을 삭제하시겠습니까?",
     "clearConfirmButton": "모두 삭제",
@@ -531,7 +530,6 @@
     "requestFailed": "요청 실패",
     "requestTimedOut": "응답 없음",
     "retry": "다시 시도",
-    "textsDisabled": "텍스트 저장이 설정에서 꺼져 있습니다.",
     "today": "오늘",
     "undo": "실행 취소",
     "yesterday": "어제",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "녹음이 완전하지 않음",
     "recordings": "녹음",
     "stopRecording": "재생 중지",
-    "playbackSpeed": "재생 속도"
+    "playbackSpeed": "재생 속도",
+    "sessionOnly": "새 항목은 TyCo를 종료할 때까지만 보관됩니다."
   },
   "input": {
     "historySearchPlaceholder": "기록 검색...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "“{name}” 프로필의 사본을 만드시겠습니까?",
     "editorHistoryRetentionForever": "영구 보관",
     "editorHistoryStorage": "기록 보관",
-    "editorHistoryStorageHint": "디스크 — 기록이 암호화되지 않은 파일에 저장되어 재시작 후에도 유지되며, 선택한 기간보다 오래된 항목은 삭제됩니다. Tyco 실행 중에만 — 새 항목은 메모리에만 있고 종료하면 사라집니다. 기록 안 함 — 새 텍스트는 저장되지 않습니다. 이 설정을 바꿔도 저장된 항목은 삭제되지 않으며 지울 때까지 남습니다.",
-    "editorHistoryStorageOff": "기록 안 함",
+    "editorHistoryStorageHint": "디스크 — 기록이 암호화되지 않은 파일에 저장되어 재시작 후에도 유지되며, 선택한 기간보다 오래된 항목은 삭제됩니다. Tyco 실행 중에만 — 새 항목은 메모리에만 있고 종료하면 사라집니다. 이 설정을 바꿔도 저장된 항목은 삭제되지 않으며 직접 삭제할 때까지 남습니다.",
     "editorHistoryStorageSession": "Tyco 실행 중에만 유지",
     "editorHotkeyHint": "편집기를 제어하는 단축키는 {tab} 탭에서 확인하고 설정할 수 있습니다.",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "작업 공간의 채팅 기록",
       "hint": "이 작업 공간 프로필의 채팅(빠른 요청 포함)을 보관하는 방식입니다. 작업 공간만 정합니다.",
       "syncedHint": "작업 공간 폴더에 저장되며 이를 동기화하는 모든 컴퓨터에 적용됩니다.",
-      "notSaved": "저장 안 함",
       "clearConfirm": "이 작업 공간에 있는 모든 프로필의 저장된 채팅을 삭제할까요? 이 작업은 되돌릴 수 없습니다."
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "대화 기록",
     "dialogHistoryHint": "저장된 통화 전사와 오디오 녹음 파일입니다.",
     "dialogHistoryRetentionDays": "대화 보관",
-    "dialogHistoryRetentionDaysHint": "선택한 기간보다 오래된 대화와 녹음은 자동으로 삭제됩니다. 저장 안 함 — 새 대화는 저장되지 않으며, 저장된 대화는 지울 때까지 남습니다.",
+    "dialogHistoryRetentionDaysHint": "선택한 기간보다 오래된 대화와 녹음은 자동으로 삭제됩니다. Tyco 실행 중에만 — 새 대화는 메모리에만 있고 종료하면 사라지며 통화는 녹음되지 않습니다. 저장된 대화는 남습니다.",
     "clearDialogsConfirmDialog": "저장된 모든 대화와 오디오 녹음이 영구적으로 삭제됩니다.",
     "dialogHistoryLink": "대화 기록 및 보관 설정은 다음 위치에 있습니다:",
     "chatHistoryKeeping": "채팅 보관",
-    "chatHistoryKeepingHint": "채팅은 암호화 없이 로컬에 저장되며, 그 안의 비밀번호와 키는 숨겨지지 않습니다. 선택한 기간보다 오래 새 메시지가 없는 채팅은 삭제됩니다. 저장 안 함 — 새 채팅은 저장되지 않으며, 저장된 채팅은 지울 때까지 남습니다.",
+    "chatHistoryKeepingHint": "채팅은 암호화 없이 로컬에 저장되며, 그 안의 비밀번호와 키는 숨겨지지 않습니다. 선택한 기간보다 오래 새 메시지가 없는 채팅은 삭제됩니다. Tyco 실행 중에만 — 새 채팅은 메모리에만 있고 종료하면 사라지며, 저장된 채팅은 남습니다.",
     "deleteAllEntries": {
       "one": "항목 {count}개 삭제",
       "few": "항목 {count}개 모두 삭제",
@@ -1763,9 +1760,6 @@
     "listen": "듣기",
     "resume": "계속",
     "clear": "지우기",
-    "clearTitle": "스크립트를 지우시겠습니까?",
-    "clearMessage": "설정에서 기록이 꺼져 있습니다. 현재 스크립트가 손실됩니다.",
-    "clearConfirm": "지우기",
     "sessionResumed": "세션 다시 시작됨",
     "sessionResumedRecording": "녹음 다시 시작됨",
     "record": "녹음",
@@ -1783,7 +1777,6 @@
     "resumeTooltipWithRecord": "음성 인식 및 오디오 파일 녹음 계속",
     "recordToggleEnableHint": "시작 시 오디오 파일 녹음 및 기록 저장 활성화",
     "recordToggleDisableHint": "오디오 녹음 비활성화 (음성 인식만 수행)",
-    "clearMessageSaved": "현재 스크립트가 창에서 지워집니다. 대화는 기록에 저장된 상태로 유지됩니다.",
     "history": "기록",
     "newDialog": "새 대화",
     "searchHistory": "대화 검색",

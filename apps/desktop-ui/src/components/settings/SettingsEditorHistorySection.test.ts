@@ -111,7 +111,7 @@ describe('SettingsEditorHistorySection.vue', () => {
     expect(select.props('modelValue')).toBe(30)
     expect(
       (select.props('options') as { id: unknown }[]).map(({ id }) => id)
-    ).toEqual(['off', 'session', 1, 7, 30, 90, 365, 0])
+    ).toEqual(['session', 1, 7, 30, 90, 365, 0])
     expect(
       wrapper
         .find('[data-label="settings.sanitizeSecretsInEditorHistory"]')
@@ -119,7 +119,7 @@ describe('SettingsEditorHistorySection.vue', () => {
     ).toBe(true)
   })
 
-  it.each(['session', 'off'] as const)(
+  it.each(['session'] as const)(
     'hides secret masking when the history is %s',
     (storage) => {
       const wrapper = mountTab(createConfig({ storage }))
@@ -161,9 +161,9 @@ describe('SettingsEditorHistorySection.vue', () => {
     expect(mockToast).not.toHaveBeenCalledWith('history.cleared', 'info')
   })
 
-  it('names how many entries the delete button deletes, also while the history is off', async () => {
+  it('names how many entries the delete button deletes, also in memory', async () => {
     mockHistory.editorHistory = [{ id: 'a' }, { id: 'b' }]
-    const wrapper = mountTab(createConfig({ storage: 'off' }))
+    const wrapper = mountTab(createConfig({ storage: 'session' }))
     await flushPromises()
 
     expect(mockHistory.loadEditorHistory).toHaveBeenCalled()
@@ -175,7 +175,7 @@ describe('SettingsEditorHistorySection.vue', () => {
     )
   })
 
-  it.each(['off', 'session'] as const)(
+  it.each(['session'] as const)(
     'turns the history to %s without deleting anything or asking',
     async (choice) => {
       const config = createConfig({ storage: 'disk' })

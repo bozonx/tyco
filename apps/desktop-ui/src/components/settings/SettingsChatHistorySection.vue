@@ -32,7 +32,6 @@
     </FieldRow>
 
     <FieldRow
-      v-if="history.storage !== 'off'"
       :label="t('settings.chatQuickRequestsSaved')"
       :info="t('settings.chatQuickRequestsSavedInfo')"
       inline
@@ -98,7 +97,7 @@ const keepingOptions = computed(() =>
   historyKeepingOptions(
     chatHistoryRetentionChoices(history.value.retentionDays),
     {
-      off: t('settings.workspaceHistory.notSaved'),
+      session: t('settings.editorHistoryStorageSession'),
       forever: t('settings.editorHistoryRetentionForever'),
       period: periodName,
     }

@@ -487,7 +487,6 @@
     "unknownCaller": "Tyco nie może ustalić, która aplikacja pyta: może to zrobić dowolny program Twojej sesji."
   },
   "history": {
-    "chatsDisabled": "Historia nie jest zapisywana na dysku",
     "clear": "Wyczyść historię",
     "clearConfirm": "Usunąć wszystkie wpisy ({count})?",
     "clearConfirmButton": "Usuń wszystko",
@@ -531,7 +530,6 @@
     "requestFailed": "błąd żądania",
     "requestTimedOut": "brak odpowiedzi",
     "retry": "Ponów",
-    "textsDisabled": "Zapisywanie tekstów jest wyłączone w ustawieniach.",
     "today": "Dzisiaj",
     "undo": "Cofnij",
     "yesterday": "Wczoraj",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "nagranie niepełne",
     "recordings": "Nagrania",
     "stopRecording": "Zatrzymaj odtwarzanie",
-    "playbackSpeed": "Szybkość odtwarzania"
+    "playbackSpeed": "Szybkość odtwarzania",
+    "sessionOnly": "Nowe rzeczy są przechowywane tylko do zamknięcia TyCo."
   },
   "input": {
     "historySearchPlaceholder": "Szukaj w historii...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "Utworzyć kopię profilu „{name}”?",
     "editorHistoryRetentionForever": "Zawsze",
     "editorHistoryStorage": "Przechowuj historię",
-    "editorHistoryStorageHint": "Na dysku — historia przetrwa ponowne uruchomienia w niezaszyfrowanym pliku; wpisy starsze niż wybrany okres są usuwane. Dopóki Tyco działa — nowe wpisy są tylko w pamięci i znikają po zamknięciu. Nie zapisuj — nowe teksty nie są zapisywane. Zmiana tego ustawienia nigdy nie usuwa zapisanych wpisów: zostają, dopóki ich nie wyczyścisz.",
-    "editorHistoryStorageOff": "Nie zapisuj",
+    "editorHistoryStorageHint": "Na dysku — historia przetrwa ponowne uruchomienia w niezaszyfrowanym pliku; wpisy starsze niż wybrany okres są usuwane. Dopóki Tyco działa — nowe wpisy są tylko w pamięci i znikają po zamknięciu. Zmiana tego ustawienia nigdy nie usuwa zapisanych wpisów: zostają, dopóki ich nie usuniesz.",
     "editorHistoryStorageSession": "Póki działa Tyco",
     "editorHotkeyHint": "Skróty do obsługi edytora można sprawdzić i dostosować na karcie {tab}.",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "Historia czatów przestrzeni roboczej",
       "hint": "Jak przechowywane są czaty profili tej przestrzeni roboczej, łącznie z szybkimi zapytaniami. Decyduje o tym tylko sama przestrzeń.",
       "syncedHint": "Zapisane w folderze przestrzeni roboczej i stosowane na każdym komputerze, który ją synchronizuje.",
-      "notSaved": "Nie zapisuj",
       "clearConfirm": "Usunąć zapisane czaty wszystkich profili tej przestrzeni roboczej? Tej operacji nie można cofnąć."
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "Historia dialogów",
     "dialogHistoryHint": "Zapisane transkrypcje rozmów i ich nagrania audio.",
     "dialogHistoryRetentionDays": "Przechowuj dialogi",
-    "dialogHistoryRetentionDaysHint": "Dialogi i ich nagrania starsze niż wybrany okres są usuwane automatycznie. Nie zapisuj — nowe dialogi nie są zapisywane; zapisane zostają, dopóki ich nie wyczyścisz.",
+    "dialogHistoryRetentionDaysHint": "Dialogi i ich nagrania starsze niż wybrany okres są usuwane automatycznie. Dopóki Tyco działa — nowe dialogi są tylko w pamięci i znikają po zamknięciu, a rozmowy nie są nagrywane; zapisane dialogi zostają.",
     "clearDialogsConfirmDialog": "Wszystkie zapisane dialogi i ich nagrania audio zostaną trwale usunięte.",
     "dialogHistoryLink": "Ustawienia historii i przechowywania dialogów znajdują się w",
     "chatHistoryKeeping": "Przechowuj czaty",
-    "chatHistoryKeepingHint": "Czaty są przechowywane lokalnie bez szyfrowania; hasła i klucze w nich nie są ukrywane. Czat jest usuwany, gdy nie było w nim nowych wiadomości dłużej niż wybrany okres. Nie zapisuj — nowe czaty nie są zapisywane; zapisane zostają, dopóki ich nie wyczyścisz.",
+    "chatHistoryKeepingHint": "Czaty są przechowywane lokalnie bez szyfrowania; hasła i klucze w nich nie są ukrywane. Czat jest usuwany, gdy nie było w nim nowych wiadomości dłużej niż wybrany okres. Dopóki Tyco działa — nowe czaty są tylko w pamięci i znikają po zamknięciu; zapisane zostają.",
     "deleteAllEntries": {
       "one": "Usuń {count} wpis",
       "few": "Usuń wszystkie {count} wpisy",
@@ -1763,9 +1760,6 @@
     "listen": "Słuchaj",
     "resume": "Wznów",
     "clear": "Wyczyść",
-    "clearTitle": "Wyczyścić transkrypcję?",
-    "clearMessage": "Historia jest wyłączona w ustawieniach. Bieżąca transkrypcja zostanie utracona.",
-    "clearConfirm": "Wyczyść",
     "sessionResumed": "Wznowiono sesję",
     "sessionResumedRecording": "Wznowiono nagrywanie",
     "record": "Nagrywanie",
@@ -1783,7 +1777,6 @@
     "resumeTooltipWithRecord": "Wznów rozpoznawanie mowy i nagrywanie do pliku audio",
     "recordToggleEnableHint": "Włącz nagrywanie dźwięku do pliku i zapisywanie w historii przy uruchomieniu",
     "recordToggleDisableHint": "Wyłącz nagrywanie dźwięku (tylko rozpoznawanie mowy)",
-    "clearMessageSaved": "Bieżąca transkrypcja zostanie usunięta z okna. Rozmowa pozostanie zapisana w historii.",
     "history": "Historia",
     "newDialog": "Nowy dialog",
     "searchHistory": "Szukaj w dialogach",

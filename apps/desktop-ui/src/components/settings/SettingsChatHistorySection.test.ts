@@ -111,31 +111,25 @@ describe('SettingsChatHistorySection.vue', () => {
     expect(select.props('modelValue')).toBe(30)
     expect(
       (select.props('options') as { id: unknown }[]).map(({ id }) => id)
-    ).toEqual(['off', 7, 30, 90, 365, 0])
+    ).toEqual(['session', 7, 30, 90, 365, 0])
     expect(
       wrapper.find('[data-label="settings.chatQuickRequestsSaved"]').exists()
     ).toBe(true)
   })
 
-  it('hides the quick request switch while chats are not saved', () => {
-    const wrapper = mountTab(createConfig({ storage: 'off' }))
-
-    expect(keepingSelect(wrapper).props('modelValue')).toBe('off')
-    expect(
-      wrapper.find('[data-label="settings.chatQuickRequestsSaved"]').exists()
-    ).toBe(false)
-  })
-
-  it('turns saving off without deleting anything or asking', async () => {
+  it('keeps chats in memory without deleting anything or asking', async () => {
     const config = createConfig({ retentionDays: 30 })
     const wrapper = mountTab(config)
 
-    keepingSelect(wrapper).vm.$emit('update:modelValue', 'off')
+    keepingSelect(wrapper).vm.$emit('update:modelValue', 'session')
     await flushPromises()
 
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
     expect(mockClearChatHistory).not.toHaveBeenCalled()
-    expect(config.chat.history).toEqual({ storage: 'off', retentionDays: 30 })
+    expect(config.chat.history).toEqual({
+      storage: 'session',
+      retentionDays: 30,
+    })
   })
 
   it('applies a shorter retention period at once, without asking', async () => {

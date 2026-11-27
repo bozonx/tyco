@@ -18,11 +18,12 @@ pub const VAULT_SETTINGS_FILE: &str = "tyco-vault-settings.json";
 /// The layout of the settings file this build writes.
 pub const VAULT_SETTINGS_FORMAT_VERSION: u64 = 1;
 
-/// Whether the chats of a vault's profiles are saved.
+/// Where new chats of a vault's profiles are kept.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub enum VaultHistoryStorage {
-    Off,
+    /// While TyCo is running: new chats live in memory only.
+    Session,
     Disk,
 }
 
@@ -156,7 +157,7 @@ mod tests {
         )
         .unwrap();
         let history = VaultChatHistory {
-            storage: Some(VaultHistoryStorage::Off),
+            storage: Some(VaultHistoryStorage::Session),
             retention_days: Some(30),
             is_quick_request_saving_enabled: Some(false),
         };

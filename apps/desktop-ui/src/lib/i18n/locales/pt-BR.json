@@ -487,7 +487,6 @@
     "unknownCaller": "O Tyco não consegue saber qual aplicativo está pedindo: qualquer programa da sua sessão pode fazer isso."
   },
   "history": {
-    "chatsDisabled": "O histórico não é salvo no disco",
     "clear": "Limpar histórico",
     "clearConfirm": "Excluir todas as entradas ({count})?",
     "clearConfirmButton": "Excluir tudo",
@@ -531,7 +530,6 @@
     "requestFailed": "falha na solicitação",
     "requestTimedOut": "sem resposta",
     "retry": "Tentar de novo",
-    "textsDisabled": "O salvamento de textos está desativado nas configurações.",
     "today": "Hoje",
     "undo": "Desfazer",
     "yesterday": "Ontem",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "gravação incompleta",
     "recordings": "Gravações",
     "stopRecording": "Parar a reprodução",
-    "playbackSpeed": "Velocidade de reprodução"
+    "playbackSpeed": "Velocidade de reprodução",
+    "sessionOnly": "O que é novo fica guardado só até o TyCo ser fechado."
   },
   "input": {
     "historySearchPlaceholder": "Pesquisar no histórico...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "Criar uma cópia do perfil “{name}”?",
     "editorHistoryRetentionForever": "Para sempre",
     "editorHistoryStorage": "Manter o histórico",
-    "editorHistoryStorageHint": "No disco — o histórico persiste entre reinicializações em um arquivo não criptografado; entradas mais antigas que o período escolhido são excluídas. Enquanto o Tyco estiver aberto — novas entradas ficam só na memória e somem ao sair. Não registrar — novos textos não são salvos. Mudar esta configuração nunca exclui entradas salvas: elas permanecem até você limpá-las.",
-    "editorHistoryStorageOff": "Não registrar",
+    "editorHistoryStorageHint": "No disco — o histórico persiste entre reinicializações em um arquivo não criptografado; entradas mais antigas que o período escolhido são excluídas. Enquanto o Tyco estiver aberto — novas entradas ficam só na memória e somem ao sair. Mudar esta configuração nunca exclui entradas salvas: elas permanecem até você excluí-las.",
     "editorHistoryStorageSession": "Enquanto o Tyco estiver aberto",
     "editorHotkeyHint": "Os atalhos para controlar o editor podem ser visualizados e personalizados na aba {tab}.",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "Histórico de chats do espaço de trabalho",
       "hint": "Como os chats dos perfis deste espaço de trabalho são mantidos, incluindo solicitações rápidas. Só o espaço de trabalho decide.",
       "syncedHint": "Guardado na pasta do espaço de trabalho e aplicado em todo computador que o sincroniza.",
-      "notSaved": "Não salvar",
       "clearConfirm": "Excluir os chats salvos de todos os perfis deste espaço de trabalho? Isso não pode ser desfeito."
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "Histórico de diálogos",
     "dialogHistoryHint": "Transcrições de chamadas salvas e suas gravações de áudio.",
     "dialogHistoryRetentionDays": "Manter diálogos",
-    "dialogHistoryRetentionDaysHint": "Diálogos e suas gravações mais antigos que o período escolhido são excluídos automaticamente. Não salvar — novos diálogos não são salvos; os salvos permanecem até você limpá-los.",
+    "dialogHistoryRetentionDaysHint": "Diálogos e suas gravações mais antigos que o período escolhido são excluídos automaticamente. Enquanto o Tyco estiver aberto — novos diálogos ficam só na memória e somem ao sair, e as chamadas não são gravadas; os diálogos salvos permanecem.",
     "clearDialogsConfirmDialog": "Todos os diálogos salvos e suas gravações de áudio serão excluídos permanentemente.",
     "dialogHistoryLink": "As configurações de histórico e retenção de diálogos estão em",
     "chatHistoryKeeping": "Manter chats",
-    "chatHistoryKeepingHint": "Os chats ficam armazenados localmente sem criptografia; senhas e chaves neles não são ocultadas. Um chat é excluído quando fica sem mensagens novas por mais tempo que o período escolhido. Não salvar — novos chats não são salvos; os salvos permanecem até você limpá-los.",
+    "chatHistoryKeepingHint": "Os chats ficam armazenados localmente sem criptografia; senhas e chaves neles não são ocultadas. Um chat é excluído quando fica sem mensagens novas por mais tempo que o período escolhido. Enquanto o Tyco estiver aberto — novos chats ficam só na memória e somem ao sair; os salvos permanecem.",
     "deleteAllEntries": {
       "one": "Excluir {count} entrada",
       "few": "Excluir todas as {count} entradas",
@@ -1763,9 +1760,6 @@
     "listen": "Ouvir",
     "resume": "Continuar",
     "clear": "Limpar",
-    "clearTitle": "Limpar transcrição?",
-    "clearMessage": "O histórico está desativado nas configurações. A transcrição atual será perdida.",
-    "clearConfirm": "Limpiar",
     "sessionResumed": "Sessão retomada",
     "sessionResumedRecording": "Gravação retomada",
     "record": "Gravação",
@@ -1783,7 +1777,6 @@
     "resumeTooltipWithRecord": "Continuar reconhecimento de fala e gravação em arquivo de áudio",
     "recordToggleEnableHint": "Ativar gravação de áudio em arquivo e salvamento no histórico ao iniciar",
     "recordToggleDisableHint": "Desativar gravação de áudio (apenas reconhecimento de fala)",
-    "clearMessageSaved": "A transcrição atual será limpa da janela. A conversa continuará salva no histórico.",
     "history": "Histórico",
     "newDialog": "Novo diálogo",
     "searchHistory": "Pesquisar diálogos",

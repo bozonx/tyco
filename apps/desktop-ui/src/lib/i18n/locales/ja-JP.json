@@ -487,7 +487,6 @@
     "unknownCaller": "Tycoはどのアプリケーションが要求しているかを判別できません。セッション内の任意のプログラムがこれを実行できます。"
   },
   "history": {
-    "chatsDisabled": "履歴はディスクに保存されません",
     "clear": "履歴をクリア",
     "clearConfirm": "すべての履歴（{count}件）を削除しますか？",
     "clearConfirmButton": "すべて削除",
@@ -531,7 +530,6 @@
     "requestFailed": "リクエスト失敗",
     "requestTimedOut": "応答なし",
     "retry": "再試行",
-    "textsDisabled": "テキストの保存は設定でオフになっています。",
     "today": "今日",
     "undo": "元に戻す",
     "yesterday": "昨日",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "録音は不完全です",
     "recordings": "録音",
     "stopRecording": "再生を停止",
-    "playbackSpeed": "再生速度"
+    "playbackSpeed": "再生速度",
+    "sessionOnly": "新しい内容は TyCo を終了するまでだけ保持されます。"
   },
   "input": {
     "historySearchPlaceholder": "履歴を検索...",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "プロファイル「{name}」のコピーを作成しますか？",
     "editorHistoryRetentionForever": "無制限",
     "editorHistoryStorage": "履歴を保存",
-    "editorHistoryStorageHint": "ディスク — 履歴は暗号化されていないファイルに保存され、再起動後も残ります。選択した期間より古い項目は削除されます。Tyco の実行中のみ — 新しい項目はメモリにのみ保持され、終了すると消えます。記録しない — 新しいテキストは保存されません。この設定を変更しても保存済みの項目は削除されず、消去するまで残ります。",
-    "editorHistoryStorageOff": "記録しない",
+    "editorHistoryStorageHint": "ディスク — 履歴は暗号化されていないファイルに保存され、再起動後も残ります。選択した期間より古い項目は削除されます。Tyco の実行中のみ — 新しい項目はメモリにのみ保持され、終了すると消えます。この設定を変更しても保存済みの項目は削除されず、削除するまで残ります。",
     "editorHistoryStorageSession": "Tycoの実行中のみ",
     "editorHotkeyHint": "エディターを操作するショートカットは{tab}タブで確認および設定できます。",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "ワークスペースのチャット履歴",
       "hint": "このワークスペースのプロファイルのチャット（クイックリクエストを含む）の保存方法。ワークスペースだけが決めます。",
       "syncedHint": "ワークスペースのフォルダーに保存され、同期するすべてのコンピューターで適用されます。",
-      "notSaved": "保存しない",
       "clearConfirm": "このワークスペースの全プロファイルの保存済みチャットを削除しますか？この操作は元に戻せません。"
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "ダイアログ履歴",
     "dialogHistoryHint": "保存された通話の文字起こしと音声録音です。",
     "dialogHistoryRetentionDays": "ダイアログを保存",
-    "dialogHistoryRetentionDaysHint": "選択した期間より古いダイアログとその録音は自動的に削除されます。保存しない — 新しいダイアログは保存されず、保存済みのものは消去するまで残ります。",
+    "dialogHistoryRetentionDaysHint": "選択した期間より古いダイアログとその録音は自動的に削除されます。Tyco の実行中のみ — 新しいダイアログはメモリにのみ保持され、終了すると消え、通話は録音されません。保存済みのダイアログは残ります。",
     "clearDialogsConfirmDialog": "保存されているすべてのダイアログと音声録音が完全に削除されます。",
     "dialogHistoryLink": "ダイアログの履歴と保存期間の設定は次にあります:",
     "chatHistoryKeeping": "チャットを保存",
-    "chatHistoryKeepingHint": "チャットは暗号化されずにローカルに保存され、含まれるパスワードやキーは隠されません。選択した期間より長く新しいメッセージがないチャットは削除されます。保存しない — 新しいチャットは保存されず、保存済みのものは消去するまで残ります。",
+    "chatHistoryKeepingHint": "チャットは暗号化されずにローカルに保存され、含まれるパスワードやキーは隠されません。選択した期間より長く新しいメッセージがないチャットは削除されます。Tyco の実行中のみ — 新しいチャットはメモリにのみ保持され、終了すると消えます。保存済みのチャットは残ります。",
     "deleteAllEntries": {
       "one": "{count} 件の項目を削除",
       "few": "{count} 件の項目をすべて削除",
@@ -1759,9 +1756,6 @@
     "listen": "聞き取る",
     "resume": "再開",
     "clear": "クリア",
-    "clearTitle": "文字起こしをクリアしますか？",
-    "clearMessage": "設定で履歴が無効になっています。現在の文字起こしは失われます。",
-    "clearConfirm": "クリア",
     "sessionResumed": "セッションを再開しました",
     "sessionResumedRecording": "録音を再開しました",
     "record": "録音",
@@ -1779,7 +1773,6 @@
     "resumeTooltipWithRecord": "音声認識と音声ファイルへの録音を再開",
     "recordToggleEnableHint": "開始時に音声ファイルへの録音と履歴への保存を有効にする",
     "recordToggleDisableHint": "音声録音を無効にする（音声認識のみ）",
-    "clearMessageSaved": "現在の文字起こしはウィンドウから消去されます。会話は履歴に保存されたままになります。",
     "history": "履歴",
     "newDialog": "新しいダイアログ",
     "searchHistory": "ダイアログを検索",

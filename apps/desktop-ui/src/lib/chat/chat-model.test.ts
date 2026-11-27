@@ -826,19 +826,6 @@ describe('file and image context policies', () => {
     expect(store.messages.value).toHaveLength(2)
   })
 
-  it('generates no title while the chat history is off', async () => {
-    const deps = createDeps({
-      generateChatTitle: vi.fn(async () => 'Generated'),
-      isHistoryEnabled: () => false,
-    })
-    const store = createChatModel(deps)
-
-    await store.sendMessage('First question')
-
-    expect(deps.generateChatTitle).not.toHaveBeenCalled()
-    expect(deps.renameChat).not.toHaveBeenCalled()
-  })
-
   it('reports a chat that cannot be loaded and opens a new one instead of the last', async () => {
     const deps = createDeps({
       loadChat: vi.fn(async () => {

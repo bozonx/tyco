@@ -202,7 +202,7 @@ fn new_recording(app: &AppHandle, dialog_id: &str) -> Result<RecordingRequest, A
     use tauri::Manager;
     let config = app.state::<crate::state::AppState>().user_config();
     let policy = super::storage::HistorySettings::from_config(&config).dialog;
-    if !policy.is_enabled {
+    if policy.is_session {
         return Err(AppError::InvalidInput(
             "A call is recorded only while dialog history is saved on disk".into(),
         ));

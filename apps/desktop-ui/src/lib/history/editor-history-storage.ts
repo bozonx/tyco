@@ -7,12 +7,11 @@ import { historyRetentionChoices } from './history-retention'
  */
 const EDITOR_HISTORY_RETENTION_DAYS = [0, 1, 7, 30, 90, 365] as const
 
-/** The editor history keeps nothing */
-export function isEditorHistoryOff(
+/** New entries are kept until the app quits only */
+export function isEditorHistoryInSession(
   config: Pick<UserConfig, 'editor'>
 ): boolean {
-  const { history } = config.editor
-  return history.storage === 'off'
+  return config.editor.history.storage === 'session'
 }
 
 /** The offered retention periods plus the saved one if it is not among them */

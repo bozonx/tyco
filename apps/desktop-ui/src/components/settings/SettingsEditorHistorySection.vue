@@ -104,7 +104,6 @@ const keepingOptions = computed(() =>
   historyKeepingOptions(
     editorHistoryRetentionChoices(history.value.retentionDays),
     {
-      off: t('settings.editorHistoryStorageOff'),
       session: t('settings.editorHistoryStorageSession'),
       forever: t('settings.editorHistoryRetentionForever'),
       period: periodName,

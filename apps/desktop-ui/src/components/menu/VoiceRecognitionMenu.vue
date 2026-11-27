@@ -93,7 +93,6 @@ import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
 import { hasSeparateQuickWindow, isQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
-import { isEditorHistoryOff } from '../../lib/history/editor-history-storage'
 import { clientLogger } from '../../lib/logger'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import { isModeOfWindow } from '../../lib/navigation/routes'
@@ -277,15 +276,11 @@ const ORPHANED_RESULT_TOAST_MS = 30_000
  * A dictation nobody cancelled, whose screen has moved on (another activation,
  * another mode): it cannot be dictated the same way twice, so it is offered for
  * copying instead of dropped. Only the toast holds it, and only for a while: no
- * other store of the input is added, and with the history turned off nothing is
- * kept once the toast is gone
+ * other store of the input is added
  */
 function offerOrphanedResult(text: string) {
-  const isInHistory = !isEditorHistoryOff(desktopStore.userConfig)
   toastText(
-    isInHistory
-      ? `${t('toast.dictationResultReady')}\n${t('toast.dictationResultInHistory')}`
-      : t('toast.dictationResultReady'),
+    `${t('toast.dictationResultReady')}\n${t('toast.dictationResultInHistory')}`,
     'info',
     {
       durationMs: ORPHANED_RESULT_TOAST_MS,

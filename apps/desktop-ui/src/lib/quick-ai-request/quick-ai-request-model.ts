@@ -214,7 +214,7 @@ export function createQuickAiRequestModel(
       renameChat: persistence.renameChat,
       // a request kept in memory only is not named: nobody sees its title,
       // and one moved to the main chat takes the draft title
-      isHistoryEnabled: isStored,
+      isStored,
       imageTitle: deps.imageTitle,
     },
     state

@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: c6b6e8e4e46bee213fa0b2b9c30883f65e0c8e4f6d9162fa094837417d15debf
+// Source hash: c099c006fc809abdfa74e75a9055ba7007aefc7025a08f85d03ea66dd641e78f
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -1246,8 +1246,8 @@ export type VaultFolderKind =
   | { kind: 'duplicate' }
   | { kind: 'nested'; message: string }
 
-/** Whether the chats of a vault's profiles are saved. */
-export type VaultHistoryStorage = 'off' | 'disk'
+/** Where new chats of a vault's profiles are kept. */
+export type VaultHistoryStorage = 'session' | 'disk'
 
 /** A vault as the settings show it. */
 export type VaultInfo = {

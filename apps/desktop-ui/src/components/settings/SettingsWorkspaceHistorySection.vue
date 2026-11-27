@@ -33,7 +33,6 @@
     </FieldRow>
 
     <FieldRow
-      v-if="kept.storage !== 'off'"
       :label="t('settings.chatQuickRequestsSaved')"
       :info="t('settings.chatQuickRequestsSavedInfo')"
       inline
@@ -97,7 +96,7 @@ const keepingOptions = computed(() =>
   historyKeepingOptions(
     chatHistoryRetentionChoices(props.vault.chatHistory.retentionDays),
     {
-      off: t('settings.workspaceHistory.notSaved'),
+      session: t('settings.editorHistoryStorageSession'),
       forever: t('settings.editorHistoryRetentionForever'),
       period: periodName,
     }
@@ -114,7 +113,7 @@ async function save(history: VaultChatHistory) {
 
 function setKeeping(value: string | number | undefined) {
   const next = { ...kept.value }
-  if (!applyHistoryKeeping(next, value) || next.storage === 'session') return
+  if (!applyHistoryKeeping(next, value)) return
   const { retentionDays: _days, ...rest } = props.vault.chatHistory
   void save({
     ...rest,

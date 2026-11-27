@@ -288,7 +288,7 @@ describe('DialogToolbar.vue', () => {
       dialog: {
         ...DEFAULT_USER_CONFIG.dialog,
         isEnabled: true,
-        history: { ...DEFAULT_USER_CONFIG.dialog.history, storage: 'off' },
+        history: { ...DEFAULT_USER_CONFIG.dialog.history, storage: 'session' },
       },
     })
     const wrapper = mount(DialogToolbar, {
@@ -302,7 +302,7 @@ describe('DialogToolbar.vue', () => {
     )
   })
 
-  it('clears transcript immediately when dialog history is saved to disk', async () => {
+  it('starts a new dialog at once, without asking', async () => {
     const dialog = useDialogStore()
     const clearSpy = vi.spyOn(dialog, 'clear').mockImplementation(async () => {
       dialog.isRecordEnabled = false
@@ -330,49 +330,7 @@ describe('DialogToolbar.vue', () => {
     await clearButton.trigger('click')
     await flushPromises()
 
-    const confirmModal = wrapper.findComponent(ConfirmModal)
-    expect(confirmModal.props('open')).toBe(false)
-    expect(clearSpy).toHaveBeenCalledTimes(1)
-  })
-
-  it('asks for confirmation before clearing when dialog history is off', async () => {
-    desktop.setUserConfig({
-      dialog: {
-        ...DEFAULT_USER_CONFIG.dialog,
-        isEnabled: true,
-        history: { ...DEFAULT_USER_CONFIG.dialog.history, storage: 'off' },
-      },
-    })
-    const dialog = useDialogStore()
-    const clearSpy = vi.spyOn(dialog, 'clear').mockImplementation(async () => {
-      dialog.isRecordEnabled = false
-      dialog.segments = []
-    })
-    dialog.segments = [
-      {
-        id: '1',
-        side: 'remote',
-        startMs: 0,
-        endMs: 100,
-        text: 'Existing phrase',
-        isFinal: true,
-        translationState: 'idle',
-      },
-    ]
-
-    const wrapper = mount(DialogToolbar, {
-      global: { plugins: [i18n, desktop.pinia] },
-    })
-
-    const clearButton = wrapper.find('.dialog-toolbar-new')
-    await clearButton.trigger('click')
-    await flushPromises()
-
-    const confirmModal = wrapper.findComponent(ConfirmModal)
-    expect(confirmModal.props('open')).toBe(true)
-    await confirmModal.vm.$emit('confirm')
-    await flushPromises()
-
+    expect(wrapper.findComponent(ConfirmModal).exists()).toBe(false)
     expect(clearSpy).toHaveBeenCalledTimes(1)
   })
 

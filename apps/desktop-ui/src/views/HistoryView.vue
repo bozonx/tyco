@@ -65,12 +65,12 @@
           </Button>
         </InlineNotice>
         <InlineNotice
-          v-if="isEditorHistoryDisabled"
+          v-if="isEditorHistoryInSessionMode"
           class="history-notice"
           kind="info"
           announcement="polite"
           icon="mdi:information-outline"
-          :message="t('history.textsDisabled')"
+          :message="t('history.sessionOnly')"
           appearance="sunken"
           density="compact"
         />
@@ -99,7 +99,7 @@ import {
   getEditorHistoryNote,
   getEditorHistoryView,
 } from '../lib/history/editor-history-meta'
-import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
+import { isEditorHistoryInSession } from '../lib/history/editor-history-storage'
 import {
   DEFAULT_HISTORY_FILTER,
   HISTORY_FILTERS,
@@ -139,8 +139,8 @@ const isEditorHistoryLoading = computed(
   () => !historyStore.isEditorHistoryLoaded && !hasEditorLoadError.value
 )
 
-const isEditorHistoryDisabled = computed(() =>
-  isEditorHistoryOff(desktopStore.userConfig)
+const isEditorHistoryInSessionMode = computed(() =>
+  isEditorHistoryInSession(desktopStore.userConfig)
 )
 
 const searchQuery = ref<string>('')

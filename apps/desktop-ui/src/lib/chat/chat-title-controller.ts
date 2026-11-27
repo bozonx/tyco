@@ -4,8 +4,11 @@ import type { ChatState } from './chat-state'
 export function createChatTitleController(
   deps: Pick<
     ChatModelDependencies,
-    'generateChatTitle' | 'renameChat' | 'isHistoryEnabled' | 'imageTitle'
-  >,
+    'generateChatTitle' | 'renameChat' | 'imageTitle'
+  > & {
+    /** False: the chat is not kept, so it is not named */
+    isStored?: () => boolean
+  },
   state: Pick<ChatState, 'messages' | 'currentChatParams'>
 ) {
   const { messages, currentChatParams } = state
@@ -18,8 +21,8 @@ export function createChatTitleController(
   const maybeGenerateTitle = async (modelId: string) => {
     const id = currentChatParams.value.id
     const title = currentTitle()
-    if (deps.isHistoryEnabled?.() === false) return
     const fallbackTitle = deps.imageTitle?.() || 'Image'
+    if (deps.isStored?.() === false) return
     if (!id || !needsGeneratedTitle(messages.value, title, fallbackTitle))
       return
 

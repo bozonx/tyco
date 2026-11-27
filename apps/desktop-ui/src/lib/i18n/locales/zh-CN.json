@@ -487,7 +487,6 @@
     "unknownCaller": "Tyco 无法识别发起请求的应用程序：当前会话中的任何程序都可以发起此请求。"
   },
   "history": {
-    "chatsDisabled": "历史记录未保存到磁盘",
     "clear": "清空历史记录",
     "clearConfirm": "删除所有记录（{count} 条）？",
     "clearConfirmButton": "全部删除",
@@ -531,7 +530,6 @@
     "requestFailed": "请求失败",
     "requestTimedOut": "无响应",
     "retry": "重试",
-    "textsDisabled": "已在设置中关闭文本保存。",
     "today": "今天",
     "undo": "撤消",
     "yesterday": "昨天",
@@ -543,7 +541,8 @@
     "recordingIncomplete": "录音不完整",
     "recordings": "录音",
     "stopRecording": "停止播放",
-    "playbackSpeed": "播放速度"
+    "playbackSpeed": "播放速度",
+    "sessionOnly": "新内容只保留到 TyCo 退出为止。"
   },
   "input": {
     "historySearchPlaceholder": "搜索历史记录…",
@@ -836,8 +835,7 @@
     "duplicateProfileConfirm": "创建配置文件“{name}”的副本？",
     "editorHistoryRetentionForever": "永久保留",
     "editorHistoryStorage": "保存历史",
-    "editorHistoryStorageHint": "磁盘 — 历史记录保存在未加密的文件中，重启后仍保留；早于所选期限的记录会被删除。Tyco 运行期间 — 新记录只保存在内存中，退出后消失。不记录 — 新文本不会保存。更改此设置绝不会删除已保存的记录：它们会保留，直到你清除。",
-    "editorHistoryStorageOff": "不记录",
+    "editorHistoryStorageHint": "磁盘 — 历史记录保存在未加密的文件中，重启后仍保留；早于所选期限的记录会被删除。Tyco 运行期间 — 新记录只保存在内存中，退出后消失。更改此设置绝不会删除已保存的记录：它们会保留，直到你删除。",
     "editorHistoryStorageSession": "仅在 Tyco 运行时",
     "editorHotkeyHint": "可以在 {tab} 标签页中查看和配置用于控制编辑器的快捷键。",
     "editorShortcuts": {
@@ -1328,7 +1326,6 @@
       "title": "工作区的聊天历史",
       "hint": "此工作区配置文件的聊天（包括快速请求）的保存方式。仅由工作区自身决定。",
       "syncedHint": "保存在工作区文件夹中，并在同步它的每台电脑上生效。",
-      "notSaved": "不保存",
       "clearConfirm": "删除此工作区中所有配置文件的已保存聊天？此操作无法撤销。"
     },
     "moveToWorkspace": {
@@ -1360,11 +1357,11 @@
     "sectionDialogHistory": "对话历史记录",
     "dialogHistoryHint": "已保存的通话转写记录及其音频录音。",
     "dialogHistoryRetentionDays": "保存对话",
-    "dialogHistoryRetentionDaysHint": "早于所选期限的对话及其录音会自动删除。不保存 — 新对话不会保存，已保存的对话会保留，直到你清除。",
+    "dialogHistoryRetentionDaysHint": "早于所选期限的对话及其录音会自动删除。Tyco 运行期间 — 新对话只保存在内存中，退出后消失，且不录制通话；已保存的对话会保留。",
     "clearDialogsConfirmDialog": "所有已保存的对话及其音频录音将被永久删除。",
     "dialogHistoryLink": "对话历史记录和保留期限设置位于",
     "chatHistoryKeeping": "保存聊天",
-    "chatHistoryKeepingHint": "聊天以未加密方式保存在本地，其中的密码和密钥不会被隐藏。超过所选期限没有新消息的聊天会被删除。不保存 — 新聊天不会保存，已保存的聊天会保留，直到你清除。",
+    "chatHistoryKeepingHint": "聊天以未加密方式保存在本地，其中的密码和密钥不会被隐藏。超过所选期限没有新消息的聊天会被删除。Tyco 运行期间 — 新聊天只保存在内存中，退出后消失；已保存的聊天会保留。",
     "deleteAllEntries": {
       "one": "删除 {count} 条记录",
       "few": "删除全部 {count} 条记录",
@@ -1759,9 +1756,6 @@
     "listen": "聆听",
     "resume": "继续",
     "clear": "清空",
-    "clearTitle": "清空转录？",
-    "clearMessage": "历史记录已在设置中关闭。当前转录内容将丢失。",
-    "clearConfirm": "清空",
     "sessionResumed": "会话已恢复",
     "sessionResumedRecording": "已恢复录音",
     "record": "录音",
@@ -1779,7 +1773,6 @@
     "resumeTooltipWithRecord": "继续语音识别并录制到音频文件",
     "recordToggleEnableHint": "在启动时启用录制到音频文件并保存到历史记录",
     "recordToggleDisableHint": "禁用音频录制（仅语音识别）",
-    "clearMessageSaved": "当前转录内容将从窗口中清除。对话仍将保存在历史记录中。",
     "history": "历史记录",
     "newDialog": "新建对话",
     "searchHistory": "搜索对话",

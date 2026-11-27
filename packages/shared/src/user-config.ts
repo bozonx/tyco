@@ -44,10 +44,14 @@ export const PASTE_SHORTCUTS = [
 export type PasteShortcut = (typeof PASTE_SHORTCUTS)[number]
 
 /**
- * Where the editor history lives: nowhere, in the memory of the running app
- * only, or on the disk
+ * Where a history keeps what is new: in the memory of the running app only,
+ * gone when it quits, or on the disk. The entries already on the disk stay
+ * there either way
  */
-export const EDITOR_HISTORY_STORAGES = ['off', 'session', 'disk'] as const
+export const HISTORY_STORAGES = ['session', 'disk'] as const
+export type HistoryStorage = (typeof HISTORY_STORAGES)[number]
+
+export const EDITOR_HISTORY_STORAGES = HISTORY_STORAGES
 export type EditorHistoryStorage = (typeof EDITOR_HISTORY_STORAGES)[number]
 
 /**
@@ -78,8 +82,7 @@ export interface EditorHistoryConfig {
   isSecretSanitizingEnabled: boolean
 }
 
-/** Chats live on the disk or are not kept at all */
-export const CHAT_HISTORY_STORAGES = ['off', 'disk'] as const
+export const CHAT_HISTORY_STORAGES = HISTORY_STORAGES
 export type ChatHistoryStorage = (typeof CHAT_HISTORY_STORAGES)[number]
 
 export interface ChatHistoryConfig {
@@ -92,10 +95,7 @@ export interface ChatHistoryConfig {
 
 /** The settings of the chats */
 export interface ChatConfig {
-  /**
-   * The history of the chats of "Ask AI" and of every profile whose workspace
-   * sets nothing of its own
-   */
+  /** The history of the chats of "Ask AI"; a workspace sets its own */
   history: ChatHistoryConfig
 }
 

@@ -3,30 +3,19 @@ import { describe, expect, it } from 'vitest'
 
 import {
   editorHistoryRetentionChoices,
-  isEditorHistoryOff,
+  isEditorHistoryInSession,
 } from './editor-history-storage'
 
-describe('isEditorHistoryOff', () => {
-  it('is off by the storage', () => {
-    expect(
-      isEditorHistoryOff({
-        editor: {
-          ...DEFAULT_USER_CONFIG.editor,
-          history: { ...DEFAULT_USER_CONFIG.editor.history, storage: 'off' },
-        },
-      })
-    ).toBe(true)
-    expect(
-      isEditorHistoryOff({
-        editor: {
-          ...DEFAULT_USER_CONFIG.editor,
-          history: {
-            ...DEFAULT_USER_CONFIG.editor.history,
-            storage: 'session',
-          },
-        },
-      })
-    ).toBe(false)
+describe('isEditorHistoryInSession', () => {
+  it('tells the memory-only storage', () => {
+    const withStorage = (storage: 'session' | 'disk') => ({
+      editor: {
+        ...DEFAULT_USER_CONFIG.editor,
+        history: { ...DEFAULT_USER_CONFIG.editor.history, storage },
+      },
+    })
+    expect(isEditorHistoryInSession(withStorage('session'))).toBe(true)
+    expect(isEditorHistoryInSession(withStorage('disk'))).toBe(false)
   })
 })
 

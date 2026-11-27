@@ -12,6 +12,7 @@ mod json_files;
 pub mod orphan_files;
 mod paths;
 pub mod recordings;
+mod session_history;
 pub mod sync_roots;
 pub mod user_data;
 pub mod user_data_relocation;

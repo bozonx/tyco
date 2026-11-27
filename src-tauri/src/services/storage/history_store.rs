@@ -7,6 +7,7 @@ use std::time::Duration;
 
 use tauri::{AppHandle, Manager};
 
+use super::session_history::{self as session, SessionChats, SessionDialogs};
 use super::{chat_history as chats, dialog_history as dialogs, editor_history as editor};
 use crate::errors::AppError;
 use crate::models::{
@@ -41,6 +42,10 @@ pub struct HistoryStorageCoordinator {
     dialog_search: dialogs::DialogSearchCache,
     chat_history_lock: Mutex<()>,
     chat_search: chats::ChatSearchCache,
+    /// The chats of the scopes kept in memory only, by scope key.
+    session_chats: Mutex<SessionChats>,
+    /// The dialogs kept in memory only.
+    session_dialogs: Mutex<SessionDialogs>,
     /// The editor history file still holds what the committed policy drops.
     editor_cleanup_pending: AtomicBool,
     /// The dialog history still holds what the committed policy drops.
@@ -278,6 +283,7 @@ fn enforce_chat_history_policies(
     settings: &HistorySettings,
 ) -> Result<(), AppError> {
     super::user_data::user_dir(app)?;
+    let stored = store_session_chats(app);
     let ask_ai = chats::app_chat_dirs(app)
         .and_then(|dirs| chats::enforce_chat_history_policy(&dirs, settings.chat))
         .map(|removed| notify_chats_removed(app, &ChatScope::AskAi, removed));
@@ -292,7 +298,45 @@ fn enforce_chat_history_policies(
             app, &vault_ref, &vault, policy,
         ));
     }
-    ask_ai.and(profiles)
+    stored.and(ask_ai).and(profiles)
+}
+
+/// Stores on disk the session chats of the scopes that keep their chats there
+/// now; a chat that cannot be stored stays in memory.
+fn store_session_chats(app: &AppHandle) -> Result<(), AppError> {
+    let state = app.state::<AppState>();
+    let config = state.user_config();
+    let mut session = state.history.session_chats.locked();
+    let mut result = Ok(());
+    for key in session.scopes() {
+        let scope = ChatScope::from_key(&key);
+        let stored = scope_policy(app, &scope, &config).and_then(|policy| {
+            if policy.is_session {
+                return Ok(false);
+            }
+            let dirs = scope_chat_dirs(app, &scope, ChatAccess::Write)?;
+            for chat in session.take(&key) {
+                let saved = chats::save_chat(
+                    &dirs,
+                    policy,
+                    app.state::<ChatImages>().store(),
+                    chat.clone(),
+                );
+                if let Err(error) = saved {
+                    session.save(&key, chat);
+                    return Err(error);
+                }
+            }
+            Ok(true)
+        });
+        match stored {
+            Ok(true) => notify_chats_changed(app, &scope, Vec::new(), false),
+            Ok(false) => {}
+            Err(error) => result = result.and(Err(error)),
+        }
+    }
+    hold_session_files(app, &session);
+    result
 }
 
 /// Applies the policy of a vault to the chats of each of its profiles.
@@ -360,6 +404,17 @@ fn enforce_dialog_history_policy(
 ) -> Result<(), AppError> {
     super::user_data::user_dir(app)?;
     let dirs = dialogs::app_dialog_dirs(app)?;
+    if !policy.is_session {
+        // kept on disk from now on: the dialogs of this run go there too
+        let state = app.state::<AppState>();
+        let mut session = state.history.session_dialogs.locked();
+        for dialog in session.take() {
+            if let Err(error) = dialogs::save_dialog(&dirs, policy, dialog.clone()) {
+                session.save(dialog);
+                return Err(error);
+            }
+        }
+    }
     let removed = dialogs::enforce_dialog_history_policy(&dirs, policy)?;
     if !removed.is_empty() {
         notify_dialogs_changed(app, removed, false);
@@ -422,6 +477,36 @@ pub enum ChatScope {
 impl ChatScope {
     pub fn from_profile_id(profile_id: Option<String>) -> Self {
         profile_id.map_or(Self::AskAi, Self::Profile)
+    }
+
+    /// The key of the scope among the session chats.
+    fn key(&self) -> &str {
+        match self {
+            Self::AskAi => "",
+            Self::Profile(key) => key,
+        }
+    }
+
+    fn from_key(key: &str) -> Self {
+        if key.is_empty() {
+            Self::AskAi
+        } else {
+            Self::Profile(key.to_string())
+        }
+    }
+}
+
+/// Lets the image store keep what the session chats refer to: no file holds
+/// it.
+const SESSION_CHATS_OWNER: &str = "session-history";
+
+fn hold_session_files(app: &AppHandle, session: &SessionChats) {
+    if let Err(error) = app
+        .state::<ChatImages>()
+        .lock()
+        .sync(SESSION_CHATS_OWNER, &session.file_ids())
+    {
+        log::warn!("Could not keep the files of the session chats: {error}");
     }
 }
 
@@ -591,11 +676,18 @@ fn with_dialogs<T>(
 }
 
 pub fn list_dialogs(app: &AppHandle) -> Result<Vec<DialogSummary>, AppError> {
-    with_dialogs(app, ChatAccess::Read, |_, dirs| dialogs::list_dialogs(dirs))
+    with_dialogs(app, ChatAccess::Read, |state, dirs| {
+        let stored = dialogs::list_dialogs(dirs)?;
+        let session = state.history.session_dialogs.locked();
+        Ok(session::merge_dialog_summaries(stored, session.list()))
+    })
 }
 
 pub fn read_dialog(app: &AppHandle, id: String) -> Result<Option<Dialog>, AppError> {
-    with_dialogs(app, ChatAccess::Read, |_, dirs| {
+    with_dialogs(app, ChatAccess::Read, |state, dirs| {
+        if let Some(dialog) = state.history.session_dialogs.locked().get(&id) {
+            return Ok(Some(dialog.clone()));
+        }
         dialogs::open_dialog(dirs, &id)
     })
 }
@@ -604,19 +696,29 @@ pub fn save_dialog(app: &AppHandle, dialog: Dialog) -> Result<(), AppError> {
     let removed = with_dialogs(app, ChatAccess::Write, |state, dirs| {
         let config = state.user_config();
         let policy = dialogs::DialogHistoryPolicy::from_config(&config);
-        if !policy.is_enabled {
-            return Ok(None);
+        let mut session = state.history.session_dialogs.locked();
+        if policy.is_session {
+            session.save(dialog);
+            return Ok(Vec::new());
         }
-        dialogs::save_dialog(dirs, policy, dialog).map(Some)
+        session.remove(&dialog.id);
+        dialogs::save_dialog(dirs, policy, dialog)
     })?;
-    if let Some(removed) = removed {
-        notify_dialogs_changed(app, removed, false);
-    }
+    notify_dialogs_changed(app, removed, false);
     Ok(())
 }
 
 pub fn rename_dialog(app: &AppHandle, id: String, title: String) -> Result<(), AppError> {
-    with_dialogs(app, ChatAccess::Write, |_, dirs| {
+    with_dialogs(app, ChatAccess::Write, |state, dirs| {
+        let title = dialogs::validate_dialog_title(&title)?;
+        if state
+            .history
+            .session_dialogs
+            .locked()
+            .rename(&id, title.clone())
+        {
+            return Ok(());
+        }
         dialogs::rename_dialog(dirs, &id, &title)
     })?;
     notify_dialogs_changed(app, Vec::new(), false);
@@ -625,16 +727,38 @@ pub fn rename_dialog(app: &AppHandle, id: String, title: String) -> Result<(), A
 
 pub fn search_dialogs(app: &AppHandle, query: String) -> Result<Vec<String>, AppError> {
     let state = app.state::<AppState>();
-    let (dialogs_dir, history) = with_dialogs(app, ChatAccess::Read, |_, dirs| {
-        Ok((dirs.dialogs.clone(), dialogs::list_dialogs(dirs)?))
-    })?;
-    dialogs::search_dialogs(&dialogs_dir, history, query, &state.history.dialog_search)
+    let (dialogs_dir, stored, session_found, merged) =
+        with_dialogs(app, ChatAccess::Read, |state, dirs| {
+            let stored = dialogs::list_dialogs(dirs)?;
+            let session = state.history.session_dialogs.locked();
+            let found =
+                session::search_session_dialogs(session.list(), &query.trim().to_lowercase());
+            let merged = session::merge_dialog_summaries(stored.clone(), session.list());
+            Ok((dirs.dialogs.clone(), stored, found, merged))
+        })?;
+    let stored_found: std::collections::HashSet<String> = dialogs::search_dialogs(
+        &dialogs_dir,
+        stored,
+        query.clone(),
+        &state.history.dialog_search,
+    )?
+    .into_iter()
+    .collect();
+    let is_blank = query.trim().is_empty();
+    Ok(merged
+        .into_iter()
+        .map(|item| item.id)
+        .filter(|id| is_blank || session_found.contains(id) || stored_found.contains(id))
+        .collect())
 }
 
 pub fn delete_dialog(app: &AppHandle, id: String) -> Result<Option<Dialog>, AppError> {
     let id_for_event = id.clone();
-    with_dialogs(app, ChatAccess::Write, |_, dirs| {
-        dialogs::delete_dialog(dirs, &id)
+    with_dialogs(app, ChatAccess::Write, |state, dirs| {
+        let in_session = state.history.session_dialogs.locked().remove(&id);
+        // a stored copy the session one hid goes too
+        let stored = dialogs::delete_dialog(dirs, &id)?;
+        Ok(in_session.or(stored))
     })
     .inspect(|_| notify_dialogs_changed(app, vec![id_for_event], false))
 }
@@ -646,7 +770,8 @@ pub fn release_dialog_recordings(app: &AppHandle, id: String) -> Result<(), AppE
 }
 
 pub fn clear_dialogs(app: &AppHandle) -> Result<(), AppError> {
-    with_dialogs(app, ChatAccess::Write, |_, dirs| {
+    with_dialogs(app, ChatAccess::Write, |state, dirs| {
+        state.history.session_dialogs.locked().take();
         dialogs::clear_dialogs(dirs)
     })?;
     notify_dialogs_changed(app, Vec::new(), true);
@@ -660,8 +785,13 @@ pub fn clear_editor_history(app: &AppHandle) -> Result<(), AppError> {
 }
 
 pub fn list_chats(app: &AppHandle, scope: &ChatScope) -> Result<Vec<ChatSummary>, AppError> {
-    with_chats(app, scope, ChatAccess::Read, |_, dirs| {
-        chats::list_chats(dirs)
+    with_chats(app, scope, ChatAccess::Read, |state, dirs| {
+        let stored = chats::list_chats(dirs)?;
+        let session = state.history.session_chats.locked();
+        Ok(session::merge_chat_summaries(
+            stored,
+            session.list(scope.key()),
+        ))
     })
 }
 
@@ -673,7 +803,23 @@ pub fn list_recent_quick_request_prompts(
     with_chats(app, scope, ChatAccess::Read, |state, dirs| {
         let config = state.user_config();
         let policy = scope_policy(app, scope, &config)?;
-        chats::list_recent_quick_request_prompts(dirs, policy, limit)
+        let mut prompts = session::recent_session_prompts(
+            state.history.session_chats.locked().list(scope.key()),
+            if policy.saves_quick_requests {
+                limit
+            } else {
+                0
+            },
+        );
+        for prompt in chats::list_recent_quick_request_prompts(dirs, policy, limit)? {
+            if prompts.len() >= limit {
+                break;
+            }
+            if !prompts.contains(&prompt) {
+                prompts.push(prompt);
+            }
+        }
+        Ok(prompts)
     })
 }
 
@@ -684,8 +830,17 @@ pub fn read_chat(
     id: String,
     owner: Option<String>,
 ) -> Result<Option<Chat>, AppError> {
-    with_chats(app, scope, ChatAccess::Read, |_, dirs| {
-        let chat = chats::open_chat(dirs, id)?;
+    with_chats(app, scope, ChatAccess::Read, |state, dirs| {
+        let in_session = state
+            .history
+            .session_chats
+            .locked()
+            .get(scope.key(), &id)
+            .cloned();
+        let chat = match in_session {
+            Some(chat) => Some(chat),
+            None => chats::open_chat(dirs, id)?,
+        };
         // without an import lease nothing holds the images: they are read
         // when shown, e.g. not at all for a Markdown copy
         if let (Some(chat), Some(_)) = (&chat, &owner) {
@@ -704,14 +859,26 @@ pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), A
     let removed = with_chats(app, scope, ChatAccess::Write, |state, dirs| {
         let config = state.user_config();
         let policy = scope_policy(app, scope, &config)?;
-        if !policy.is_enabled {
-            return Ok(None);
+        let mut session = state.history.session_chats.locked();
+        if policy.is_session {
+            if policy.saves(&item) {
+                session.save(scope.key(), item);
+                hold_session_files(app, &session);
+            }
+            return Ok(Vec::new());
         }
-        chats::save_chat(dirs, policy, app.state::<ChatImages>().store(), item).map(Some)
+        let removed = chats::save_chat(
+            dirs,
+            policy,
+            app.state::<ChatImages>().store(),
+            item.clone(),
+        )?;
+        if session.remove(scope.key(), &item.id).is_some() {
+            hold_session_files(app, &session);
+        }
+        Ok(removed)
     })?;
-    if let Some(removed) = removed {
-        notify_chats_changed(app, scope, removed, false);
-    }
+    notify_chats_changed(app, scope, removed, false);
     Ok(())
 }
 
@@ -721,7 +888,16 @@ pub fn rename_chat(
     id: String,
     title: String,
 ) -> Result<(), AppError> {
-    with_chats(app, scope, ChatAccess::Write, |_, dirs| {
+    with_chats(app, scope, ChatAccess::Write, |state, dirs| {
+        let checked = chats::validate_chat_title(&title)?;
+        if state
+            .history
+            .session_chats
+            .locked()
+            .rename(scope.key(), &id, checked)
+        {
+            return Ok(());
+        }
         chats::rename_chat(dirs, id, title)
     })?;
     notify_chats_changed(app, scope, Vec::new(), false);
@@ -737,10 +913,29 @@ pub fn search_chats(
     // chat without holding up unrelated saves or editor history operations.
     let state = app.state::<AppState>();
     let _vault = state.read_vault();
-    let (chats_dir, history) = with_chats_in_vault(app, scope, ChatAccess::Read, |_, dirs| {
-        Ok((dirs.chats.clone(), chats::list_chats(dirs)?))
-    })?;
-    chats::search_chats(&chats_dir, history, query, &state.history.chat_search)
+    let (chats_dir, stored, session_found, merged) =
+        with_chats_in_vault(app, scope, ChatAccess::Read, |state, dirs| {
+            let stored = chats::list_chats(dirs)?;
+            let session = state.history.session_chats.locked();
+            let list = session.list(scope.key());
+            let found = session::search_session_chats(list, &query.trim().to_lowercase());
+            let merged = session::merge_chat_summaries(stored.clone(), list);
+            Ok((dirs.chats.clone(), stored, found, merged))
+        })?;
+    let stored_found: std::collections::HashSet<String> = chats::search_chats(
+        &chats_dir,
+        stored,
+        query.clone(),
+        &state.history.chat_search,
+    )?
+    .into_iter()
+    .collect();
+    let is_blank = query.trim().is_empty();
+    Ok(merged
+        .into_iter()
+        .map(|item| item.id)
+        .filter(|id| is_blank || session_found.contains(id) || stored_found.contains(id))
+        .collect())
 }
 
 pub fn delete_chat(
@@ -750,23 +945,30 @@ pub fn delete_chat(
     owner: String,
 ) -> Result<Option<Chat>, AppError> {
     let id_for_event = id.clone();
-    with_chats(app, scope, ChatAccess::Write, |_, dirs| {
-        let removed = match chats::read_chat(&dirs.chats, id.clone()) {
-            Ok(Some(chat)) => {
-                load_chat_images(
-                    &app.state::<ChatImages>(),
-                    &dirs.chats,
-                    &chat,
-                    ImageRetention::Undo(&owner),
-                )?;
-                Some(chat)
-            }
-            Ok(None) => None,
+    with_chats(app, scope, ChatAccess::Write, |state, dirs| {
+        let in_session = state
+            .history
+            .session_chats
+            .locked()
+            .remove(scope.key(), &id);
+        let stored = match chats::read_chat(&dirs.chats, id.clone()) {
+            Ok(chat) => chat,
             Err(error) => {
                 log::warn!("Removing chat {id}, which cannot be read: {error}");
                 None
             }
         };
+        let removed = in_session.or(stored);
+        if let Some(chat) = &removed {
+            load_chat_images(
+                &app.state::<ChatImages>(),
+                &dirs.chats,
+                chat,
+                ImageRetention::Undo(&owner),
+            )?;
+        }
+        hold_session_files(app, &state.history.session_chats.locked());
+        // a stored copy the session one hid goes too
         chats::delete_chat(dirs, id.clone())?;
         Ok(removed)
     })
@@ -774,7 +976,11 @@ pub fn delete_chat(
 }
 
 pub fn clear_chats(app: &AppHandle, scope: &ChatScope) -> Result<(), AppError> {
-    with_chats(app, scope, ChatAccess::Write, |_, dirs| {
+    with_chats(app, scope, ChatAccess::Write, |state, dirs| {
+        let mut session = state.history.session_chats.locked();
+        session.take(scope.key());
+        hold_session_files(app, &session);
+        drop(session);
         chats::clear_chats(dirs)
     })?;
     notify_chats_changed(app, scope, Vec::new(), true);

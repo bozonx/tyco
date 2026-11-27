@@ -63,12 +63,13 @@ Run the desktop app with `pnpm tauri:dev`, not `pnpm tauri dev`.
   or confirmation toasts when saving succeeds normally. Show nothing on
   normal saves; only when a save fails (or conflicts), show a toast (and any
   applicable error/conflict recovery banner).
-- **Turning a history off never deletes it.** Configuring a history (on, off,
-  where it is kept) and clearing it are separate actions: a settings change
-  must not delete stored history or ask whether to delete it. Deleting is the
-  delete button in the header of the history section, with its own
-  confirmation (`lib/history/history-settings-model.ts`). The memory-only
-  editor history shows the stored entries and leaves them on disk.
+- **Changing a history setting never deletes it.** Configuring a history
+  (where it is kept, for how long) and deleting it are separate actions: a
+  settings change must not delete stored history or ask whether to delete it.
+  Deleting is the delete button in the header of the history section, with
+  its own confirmation (`lib/history/history-settings-model.ts`). There is no
+  "off": the private choice is "While TyCo is running", which keeps what is
+  new in memory and shows the stored history untouched.
 - **No red delete or clear buttons.** Delete, remove, and clear buttons and
   menu items ("Delete", "Remove", "Clear") must be ordinary controls (`neutral`
   or `ghost`, or `primary` in confirmation dialogs) — never style them red

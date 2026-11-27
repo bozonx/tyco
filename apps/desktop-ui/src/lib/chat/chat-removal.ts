@@ -15,7 +15,6 @@ export interface ChatRemovalDependencies {
     whenSaved: () => Promise<void>
     openChat: (id: string, options?: { silent?: boolean }) => Promise<boolean>
   }
-  isHistoryEnabled: () => boolean
   /** Lets go of the images an undo kept for the removed chat */
   releaseImages: (chatId: string) => Promise<void>
   reportError: (error: unknown) => void
@@ -47,9 +46,6 @@ export function createChatRemoval(deps: ChatRemovalDependencies) {
       }
     },
     restore: async (item) => {
-      // a chat is not stored while the history is off: the undo keeps it
-      if (!deps.isHistoryEnabled())
-        throw new Error('Chat history is off; the chat was not restored')
       await history.restoreChatItem(item)
     },
     release: (item) => deps.releaseImages(item.id),

@@ -38,8 +38,8 @@ where
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum HistoryStorage {
-    Off,
-    /// The memory of the process only.
+    /// New entries live in the memory of the process only; the stored ones
+    /// stay on disk as they are.
     Session,
     #[default]
     #[serde(other)]
@@ -628,14 +628,14 @@ mod tests {
     #[test]
     fn history_sections_read_each_field_on_its_own() {
         let config = json!({
-            "chat": {"history": {"storage": "off", "retentionDays": "x"}},
+            "chat": {"history": {"storage": "session", "retentionDays": "x"}},
             "editor": {"history": {"storage": "session",
                                    "retentionDays": 3, "isSecretSanitizingEnabled": true}},
         });
         assert_eq!(
             chat_history(&config),
             ChatHistoryConfig {
-                storage: HistoryStorage::Off,
+                storage: HistoryStorage::Session,
                 retention_days: 0,
                 is_quick_request_saving_enabled: None,
             }

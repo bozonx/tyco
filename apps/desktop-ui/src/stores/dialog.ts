@@ -881,7 +881,6 @@ export const useDialogStore = defineStore('dialog', () => {
   }
 
   const dialogHistory = createDialogHistory({
-    isEnabled: () => isHistoryEnabled.value,
     save: dialogHistoryStore.saveDialog,
     getSnapshot: () => ({
       title: currentDialogTitle.value,

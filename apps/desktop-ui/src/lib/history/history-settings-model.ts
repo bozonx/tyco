@@ -1,13 +1,13 @@
 /**
- * How long a history is kept, as one choice of the settings: not at all, while
- * the app runs (the editor history only) or on the disk for a number of days, 0
- * for forever
+ * How long a history keeps what is new, as one choice of the settings: while
+ * the app runs, in memory only, or on the disk for a number of days, 0 for
+ * forever
  */
-export type HistoryKeepingChoice = 'off' | 'session' | number
+export type HistoryKeepingChoice = 'session' | number
 
 /** A history section of the config, as its settings edit it */
 export interface KeptHistoryConfig {
-  storage: 'off' | 'session' | 'disk'
+  storage: 'session' | 'disk'
   /** Absent: kept forever */
   retentionDays?: number
 }
@@ -16,30 +16,20 @@ export interface KeptHistoryConfig {
 export function historyKeepingChoice(
   history: KeptHistoryConfig
 ): HistoryKeepingChoice {
-  if (history.storage === 'off' || history.storage === 'session') {
-    return history.storage
-  }
+  if (history.storage === 'session') return 'session'
   return history.retentionDays ?? 0
 }
 
 /**
- * The select options: off, while the app runs when `canKeepInSession`, the
- * periods of `days` from the shortest, and forever last
+ * The select options: while the app runs, the periods of `days` from the
+ * shortest, and forever last
  */
 export function historyKeepingOptions(
   days: readonly number[],
-  labels: {
-    off: string
-    session?: string
-    forever: string
-    period: (days: number) => string
-  }
+  labels: { session: string; forever: string; period: (days: number) => string }
 ): { id: HistoryKeepingChoice; name: string }[] {
   return [
-    { id: 'off' as const, name: labels.off },
-    ...(labels.session
-      ? [{ id: 'session' as const, name: labels.session }]
-      : []),
+    { id: 'session' as const, name: labels.session },
     ...days
       .filter((day) => day > 0)
       .map((day) => ({ id: day, name: labels.period(day) })),
@@ -59,8 +49,8 @@ export function applyHistoryKeeping(
   history: KeptHistoryConfig,
   value: string | number | undefined
 ): boolean {
-  if (value === 'off' || value === 'session') {
-    history.storage = value
+  if (value === 'session') {
+    history.storage = 'session'
     return true
   }
   if (value === undefined || value === '') return false

@@ -110,7 +110,7 @@
 
     <div v-if="!dialog.isHistoryEnabled" class="panel-footer">
       <p class="history-disabled-hint">
-        {{ t('history.chatsDisabled') }}
+        {{ t('history.sessionOnly') }}
       </p>
     </div>
 

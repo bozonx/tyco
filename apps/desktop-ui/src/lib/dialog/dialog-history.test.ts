@@ -27,7 +27,6 @@ function finalSegment(id: string, text: string): DialogSegment {
 
 function setup(
   options: {
-    isEnabled?: () => boolean
     save?: (dialog: Dialog) => Promise<void>
     onRecordingUnlinked?: () => void
   } = {}
@@ -42,7 +41,6 @@ function setup(
   const saved: Dialog[] = []
   const reportError = vi.fn()
   const history = createDialogHistory({
-    isEnabled: options.isEnabled ?? (() => true),
     save:
       options.save ??
       (async (dialog) => {

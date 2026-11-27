@@ -6,32 +6,9 @@ use crate::services::secrets::detector::redact_secrets;
 use crate::services::storage::DAY_MS;
 use serde_json::Value;
 
-/// Where the editor history lives.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EditorHistoryStorageMode {
-    /// Nothing is kept.
-    Off,
-    /// The memory of the process only: nothing outlives the app.
-    Session,
-    Disk,
-}
-
-impl From<HistoryStorage> for EditorHistoryStorageMode {
-    fn from(storage: HistoryStorage) -> Self {
-        match storage {
-            HistoryStorage::Off => Self::Off,
-            HistoryStorage::Session => Self::Session,
-            HistoryStorage::Disk => Self::Disk,
-        }
-    }
-}
-
 /// What the settings say about the editor history.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EditorHistoryPolicy {
-    /// New texts are added. A history turned off records nothing new but
-    /// keeps what it has: the user clears it on purpose.
-    pub is_recording: bool,
     /// How many entries to keep; 0 keeps none.
     pub max_entries: usize,
     /// The entries live in the memory of the process only and never reach the
@@ -47,14 +24,11 @@ pub struct EditorHistoryPolicy {
 impl EditorHistoryPolicy {
     pub fn from_config(user_config: &Value) -> Self {
         let history = user_config::editor_history(user_config);
-        let storage = EditorHistoryStorageMode::from(history.storage);
-        // a history turned off keeps its file, under the same rules
-        let on_disk = storage != EditorHistoryStorageMode::Session;
+        let on_disk = history.storage == HistoryStorage::Disk;
 
         Self {
-            is_recording: storage != EditorHistoryStorageMode::Off,
             max_entries: DEFAULT_EDITOR_HISTORY_LIMIT,
-            is_memory_only: storage == EditorHistoryStorageMode::Session,
+            is_memory_only: !on_disk,
             retention_days: if on_disk { history.retention_days } else { 0 },
             should_redact_secrets: on_disk && history.is_secret_sanitizing_enabled,
         }
@@ -140,7 +114,6 @@ mod tests {
 
     fn policy() -> EditorHistoryPolicy {
         EditorHistoryPolicy {
-            is_recording: true,
             max_entries: 100,
             is_memory_only: false,
             retention_days: 0,
@@ -155,7 +128,6 @@ mod tests {
         assert_eq!(
             EditorHistoryPolicy::from_config(&config),
             EditorHistoryPolicy {
-                is_recording: true,
                 max_entries: DEFAULT_EDITOR_HISTORY_LIMIT,
                 is_memory_only: false,
                 retention_days: 7,
@@ -169,17 +141,6 @@ mod tests {
             EditorHistoryPolicy {
                 max_entries: DEFAULT_EDITOR_HISTORY_LIMIT,
                 is_memory_only: true,
-                ..policy()
-            }
-        );
-        assert_eq!(
-            EditorHistoryPolicy::from_config(
-                &json!({"editor":{"history":{"storage":"off","retentionDays":7}}})
-            ),
-            EditorHistoryPolicy {
-                is_recording: false,
-                max_entries: DEFAULT_EDITOR_HISTORY_LIMIT,
-                retention_days: 7,
                 ..policy()
             }
         );
