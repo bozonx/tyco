@@ -1,7 +1,6 @@
 import { computed, type Ref } from 'vue'
 
 import {
-  type CommandConfig,
   DEFAULT_ACTION_PAGES,
   type MainActionConfig,
   PROFILE_ACTION_KINDS,
@@ -14,7 +13,6 @@ import {
   type MainActionGroup,
   buildMainActionOptions,
   commandGroup,
-  duplicatesDirectChoice,
   mainActionOptionId,
   pluginActionGroup,
   standardActionGroup,
@@ -26,6 +24,7 @@ import {
 } from '../lib/chat-prompts/chat-prompts'
 import { normalizeCommands } from '../lib/commands/command-config'
 import { commandLabel, isMenuCommand } from '../lib/commands/command-runtime'
+import { isPluginVisible } from '../lib/plugins/development-plugins'
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
 import { slotList } from '../lib/shortcut-slots/shortcut-slots'
 import { translationLanguageLabel } from '../lib/translation/translation-languages'
@@ -79,8 +78,6 @@ export function useMainActionChoices(
     ]),
   ])
 
-  const slotIds = computed(() => new Set(slots.value.map(optionId)))
-
   const transformations = computed(() =>
     userConfig.value.transformations.items.filter((item) => item.name.trim())
   )
@@ -102,13 +99,9 @@ export function useMainActionChoices(
     return pages && pages.length > 0 ? pages : DEFAULT_ACTION_PAGES
   })
 
-  const isOffered = (command: CommandConfig) =>
-    slotIds.value.has(optionId({ type: 'command', commandId: command.id })) ||
-    !duplicatesDirectChoice(command, {
-      languages: languages.value,
-      transformations: transformations.value.map((item) => item.rule),
-      styling: styling.value.map((item) => item.rule),
-    })
+  const canOfferGroup = (group: MainActionGroup) =>
+    group.kind !== 'plugin' ||
+    isPluginVisible(group.plugin, userConfig.value.isInDevelopment)
 
   const availableActions = computed((): MainActionChoice[] => [
     ...aiProfilesStore.profiles.flatMap((entry) => {
@@ -142,7 +135,9 @@ export function useMainActionChoices(
         ? { kind: 'profile' as const, profileId: view.runProfileId }
         : { kind: 'chatPrompts' as const },
     })),
-    ...STANDARD_ACTION_IDS.map((actionId) => ({
+    ...STANDARD_ACTION_IDS.filter(
+      (id) => id !== 'openDialog' || userConfig.value.dialog.isEnabled
+    ).map((actionId) => ({
       config: { type: 'standard' as const, actionId },
       name:
         actionId === 'directCorrection'
@@ -184,6 +179,9 @@ export function useMainActionChoices(
     })),
     ...actionMenuStore
       .getRegisteredActions()
+      .filter((action) =>
+        canOfferGroup(pluginActionGroup(action.id ?? '', action.ownerPluginId))
+      )
       .flatMap((action) =>
         action.id
           ? [
@@ -200,7 +198,8 @@ export function useMainActionChoices(
     ...commands.value
       .filter(
         (command) =>
-          isMenuCommand(command, operationsStore) && isOffered(command)
+          canOfferGroup(commandGroup(command, operationsStore)) &&
+          isMenuCommand(command, operationsStore)
       )
       .map((command) => ({
         config: { type: 'command' as const, commandId: command.id },
@@ -290,6 +289,8 @@ export function useMainActionChoices(
         : t('settings.mainActionPromptRemoved')
     }
     if (slot.type === 'translation') return slot.language
+    if (slot.type === 'standard' && slot.actionId === 'openDialog')
+      return t('nav.dialog')
     if (slot.type !== 'command') return slot.actionId
     const command = commands.value.find((item) => item.id === slot.commandId)
     return t('commands.unavailableInMenu', {

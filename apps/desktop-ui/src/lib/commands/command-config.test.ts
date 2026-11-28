@@ -6,7 +6,7 @@ import {
   COMMAND_RUN_TIMEOUT_DEFAULT_SEC,
 } from '@tyco/shared'
 
-import { testOperations } from '../operations/testing'
+import { testOperations, testTranslateOperation } from '../operations/testing'
 
 import {
   commandAfterRun,
@@ -14,6 +14,7 @@ import {
   commandTakesText,
   commandTarget,
   isMenuCommand,
+  menuCommandUnavailableReason,
   suggestCommandName,
   validateCommand,
 } from './command-runtime'
@@ -207,7 +208,7 @@ describe('createCommand', () => {
 
 describe('menu commands', () => {
   it('admits enabled commands, with or without text', () => {
-    const script = createCommand('script', 'a')
+    const script = withConfig(createCommand('script', 'a'), { command: 'ls' })
     expect(isMenuCommand(script, tools)).toBe(true)
     expect(isMenuCommand({ ...script, isEnabled: false }, tools)).toBe(false)
     expect(commandTakesText(script, tools)).toBe(false)
@@ -215,6 +216,20 @@ describe('menu commands', () => {
     expect(
       commandTakesText({ ...script, operationId: 'notes.write' }, tools)
     ).toBe(false)
+  })
+
+  it('requires runnable settings and values for parameters the menu cannot supply', () => {
+    const operations = testOperations({}, [testTranslateOperation()])
+    const translation = createCommand('core.translate', 'translate')
+    expect(menuCommandUnavailableReason(translation, operations)).toBe(
+      'commands.errorNoLanguage'
+    )
+    expect(
+      isMenuCommand(withConfig(translation, { language: 'en-US' }), operations)
+    ).toBe(true)
+    expect(
+      menuCommandUnavailableReason(createCommand('script', 'empty'), operations)
+    ).toBe('commands.errorNoCommand')
   })
 
   it('takes the text a script mentions', () => {

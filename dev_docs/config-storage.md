@@ -91,17 +91,27 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 The hotkeys of `hotkeys` are named as the activation modes they open
 (`quickInput`, `selectionActions`, `selectionActionsPage2`..`selectionActionsPage5`,
 `translation`, …); the name is also the hotkey id the UI and the system portal use.
-`selectionCorrection` corrects the selection in place. The six primary entry
-points are `voice`, `quickInput`, `history`, `selectionActions`,
+`selectionCorrection` corrects the selection in place. The seven primary entry
+points are `voice`, `quickInput`, `history`, `dialog`, `selectionActions`,
 `selectionCorrection` and `voiceCommands`. Their defaults are Ctrl+Alt+Shift
-with V, W, H, S, F and X respectively. The portal advertises these six even
+with V, W, H, D, S, F and X respectively. The portal advertises these even
 when unassigned, plus the five initially unassigned `customAction1`..`customAction5`
 slots. Secondary targets are advertised and shown in hotkey settings only while
 assigned, preserving saved custom bindings without filling the system dialog
 with unused entries. New assignments use the five custom slots instead.
 Portable and Rust defaults must agree on supported platforms.
 
-Custom slots and action pages share the action picker. The standard `openEditor`
+Custom slots and action pages share the action picker. Disabled or unavailable
+commands cannot be assigned. A saved assignment remains visible in the settings
+when its action is unavailable. A configured command with its own output
+behavior remains assignable alongside a direct action for the same rule. Translation
+is assigned through a target language or the translation menu. The command
+library omits `core.translate` entries, and the voice catalog supplies its
+own translation command. The optional Dialog is available for new assignments
+when enabled. Development-only plugin actions follow the device's development
+setting and the plugin's enabled state.
+
+The standard `openEditor`
 action opens the existing editor without capturing or importing the selection;
 it uses the localized `nav.editor` label. `voiceQuickAiRequest` is the quick
 voice AI composer. The removed development-only `voiceChat` mode is no longer
@@ -240,20 +250,20 @@ in provider base URLs.
 Voice invocation is opt-in per command: `isVoiceEnabled` defaults to `false`.
 Whether a recognized command runs at once is a choice of the voice overlay, not
 of the command. `phrases` are literal strings, one synonym per entry.
-`hotkeys.voiceCommands` opens the separate voice command overlay and is
-unassigned by default. The voice catalog is independent of `actionPages` and
-`isAvailableExternally`; it lists only the commands of the library, there are
-no voice functions apart from them.
+`hotkeys.voiceCommands` opens the separate voice command overlay. The voice
+catalog is independent of `actionPages` and `isAvailableExternally`. It offers
+commands with voice enabled and the built-in translation command when
+`translation.isVoiceCommandEnabled` is on.
 
 An operation may leave a setting to the caller of its command (`commandParameters`
-of the operation definition): a command without a value for it, such as a
-`core.translate` command without `language`, gets it from the call. A voice
+of the operation definition): a command without a value for it, such as the
+voice translation command without `language`, gets it from the call. A voice
 phrase names it: `{language}` in a phrase marks where, otherwise it follows the
 phrase, and a command without phrases uses those of its operation
 (`voiceGrammar.translate` of every locale). An AI command, a chat and an
 external caller give it in the input, whose schema then requires it. The
-action menu does not offer such a command: the translation menu is that
-choice already.
+action menu and custom hotkeys require those parameters to be set in the
+command. The translation menu lets the user choose a target language at launch.
 
 The voice resolver knows nothing of languages: the parameter describes itself.
 `voiceVariants` adds spoken variants beyond those of the locale (a language is

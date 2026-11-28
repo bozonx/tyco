@@ -89,7 +89,7 @@ export function invocationUnavailableReason(
   if (options.hasExplicitInput) return undefined
   const kind = operationInputKind(
     tool,
-    invocation.operationConfig,
+    operationCallConfig(tool, invocation.operationConfig),
     invocation.isLlmArgumentParsingEnabled ?? false
   )
   return kind === null ? 'commands.inputUnsupported' : undefined

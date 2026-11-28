@@ -446,7 +446,8 @@ function updateCustomAction(
     const selected = availableActions.value.find(
       ({ config }) => optionId(config) === optionValue
     )
-    newAction = selected ? selected.config : null
+    if (!selected) return
+    newAction = selected.config
   }
   const behavior = resolveActionSelectionBehavior(
     newAction,

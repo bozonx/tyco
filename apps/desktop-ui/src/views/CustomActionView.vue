@@ -68,22 +68,29 @@ onMounted(async () => {
     return
   }
 
-  const actionItem = actionMenuStore.resolveActionItem(slot.action)
-  if (!actionItem) {
-    await ipcStore.call('hide_window')
-    return
+  const unavailable = await actionMenuStore.runConfiguredAction(
+    slot.action,
+    text
+  )
+  if (unavailable) {
+    void ipcStore.call('show_desktop_notification', {
+      summary: 'TyCo',
+      body: unavailable,
+    })
   }
 
-  await actionItem.action(text)
-
-  if (unmounted) return
+  if (
+    unmounted ||
+    desktopStore.desktopState.activationId !== initialActivationId
+  )
+    return
 
   const isModeSwitching = isQuickWindowModeSwitchingAction(slot.action)
 
   if (
     !menuModalsStore.hasOpenModal &&
     !menuModalsStore.pendingModal &&
-    !isModeSwitching &&
+    (unavailable || !isModeSwitching) &&
     desktopStore.desktopState.mode === 'customAction'
   ) {
     await ipcStore.call('hide_window')

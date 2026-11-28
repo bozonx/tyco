@@ -58,17 +58,40 @@ describe('CustomActionView', () => {
 
     const actionMenu = useActionMenuStore()
     const mockAction = vi.fn().mockResolvedValue(undefined)
-    vi.spyOn(actionMenu, 'resolveActionItem').mockReturnValue({
-      id: 'copyToClipboard',
-      name: 'Copy',
-      action: mockAction,
-    })
+    vi.spyOn(actionMenu, 'runConfiguredAction').mockImplementation(
+      async (_config, text) => {
+        await mockAction(text)
+      }
+    )
 
     mountView()
     await flushPromises()
 
     expect(mockAction).toHaveBeenCalledWith('Custom selected text')
     expect(hideWindowSpy).toHaveBeenCalled()
+  })
+
+  it('does not activate listening when the desktop cannot listen', async () => {
+    desktop.setState({ canListen: false })
+    desktop.setUserConfig({
+      customActionSlots: [
+        {
+          action: { type: 'standard', actionId: 'listen' },
+          takesSelection: false,
+        },
+      ],
+    })
+    desktop.backend.handle('hide_window', () => undefined)
+    desktop.backend.handle('show_desktop_notification', () => undefined)
+
+    mountView()
+    await flushPromises()
+
+    expect(desktop.backend.callsOf('activate_mode')).toEqual([])
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+    expect(desktop.backend.callsOf('show_desktop_notification')).toEqual([
+      { summary: 'TyCo', body: expect.stringContaining('PipeWire') },
+    ])
   })
 
   it('opens the editor from a custom slot without exporting selected text', async () => {
@@ -106,13 +129,11 @@ describe('CustomActionView', () => {
 
     const actionMenu = useActionMenuStore()
     const modals = useMenuModalsStore()
-    vi.spyOn(actionMenu, 'resolveActionItem').mockReturnValue({
-      id: 'translationMenu',
-      name: 'Translate',
-      action: vi.fn().mockImplementation(async () => {
-        modals.nextModal(MenuModals.TRANSLATE, { text: 'Custom selected text' })
-      }),
-    })
+    vi.spyOn(actionMenu, 'runConfiguredAction').mockImplementation(
+      async (_config, text) => {
+        modals.nextModal(MenuModals.TRANSLATE, { text })
+      }
+    )
 
     mountView()
     await flushPromises()
@@ -132,11 +153,11 @@ describe('CustomActionView', () => {
 
     const actionMenu = useActionMenuStore()
     const mockAction = vi.fn().mockResolvedValue(undefined)
-    vi.spyOn(actionMenu, 'resolveActionItem').mockReturnValue({
-      id: 'actionPage:1',
-      name: 'Page 2',
-      action: mockAction,
-    })
+    vi.spyOn(actionMenu, 'runConfiguredAction').mockImplementation(
+      async (_config, text) => {
+        await mockAction(text)
+      }
+    )
 
     mountView()
     await flushPromises()
@@ -160,11 +181,11 @@ describe('CustomActionView', () => {
 
     const actionMenu = useActionMenuStore()
     const mockAction = vi.fn().mockResolvedValue(undefined)
-    vi.spyOn(actionMenu, 'resolveActionItem').mockReturnValue({
-      id: 'copyToClipboard',
-      name: 'Copy',
-      action: mockAction,
-    })
+    vi.spyOn(actionMenu, 'runConfiguredAction').mockImplementation(
+      async (_config, text) => {
+        await mockAction(text)
+      }
+    )
 
     mountView()
     await flushPromises()
@@ -195,11 +216,11 @@ describe('CustomActionView', () => {
     const mockAction = vi.fn().mockImplementation(async () => {
       desktop.setState({ mode: 'voice' })
     })
-    vi.spyOn(actionMenu, 'resolveActionItem').mockReturnValue({
-      id: 'voiceInput',
-      name: 'Voice',
-      action: mockAction,
-    })
+    vi.spyOn(actionMenu, 'runConfiguredAction').mockImplementation(
+      async (_config, text) => {
+        await mockAction(text)
+      }
+    )
 
     mountView()
     await flushPromises()

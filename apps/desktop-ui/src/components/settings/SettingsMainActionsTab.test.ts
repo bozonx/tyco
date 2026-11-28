@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createCommand } from '../../lib/commands/command-config'
 import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsMainActionsTab from './SettingsMainActionsTab.vue'
 
@@ -17,6 +18,11 @@ vi.mock('../../stores/action-menu', () => ({
     getRegisteredActions: () => [
       { id: 'Sample:shout', label: 'Shout', ownerPluginId: 'Sample' },
       { label: 'Without id' },
+      {
+        id: 'Diacritics:sample',
+        label: 'Development contribution',
+        ownerPluginId: 'Diacritics',
+      },
     ],
   }),
 }))
@@ -32,7 +38,14 @@ vi.mock('../../stores/ai-profiles', () => ({
 }))
 vi.mock('../../stores/operations', async () => {
   const { testOperations } = await import('../../lib/operations/testing')
-  const tools = testOperations()
+  const tools = testOperations({}, [
+    {
+      id: 'core.transformation',
+      description: '',
+      inputSchema: { type: 'object', properties: { text: { type: 'string' } } },
+      run: async () => ({ ok: true }),
+    },
+  ])
   return { useOperationsStore: () => tools }
 })
 
@@ -112,6 +125,33 @@ describe('SettingsMainActionsTab.vue', () => {
     expect(texts).toContain('Shout')
     expect(texts).not.toContain('Without id')
     expect(texts.join()).not.toContain('Hidden')
+  })
+
+  it('updates development contributions and dialog eligibility from the settings draft', async () => {
+    const wrapper = mountTab()
+    expect(optionTexts(wrapper)).toContain('Development contribution')
+    expect(optionTexts(wrapper)).not.toContain('nav.dialog')
+
+    delete context.draft.value.isInDevelopment
+    context.draft.value.dialog.isEnabled = true
+    await wrapper.vm.$nextTick()
+    expect(optionTexts(wrapper)).not.toContain('Development contribution')
+    expect(optionTexts(wrapper)).toContain('nav.dialog')
+  })
+
+  it('offers a configured command alongside a preset with the same rule', () => {
+    context.draft.value.commands = [
+      {
+        ...createCommand('core.transformation', 'shorten-and-insert'),
+        name: 'Shorten and insert',
+        operationConfig: { prompt: 'Make it short' },
+        outputAction: 'insertIntoWindow',
+        isEnabled: true,
+      },
+    ]
+    const texts = optionTexts(mountTab())
+    expect(texts).toContain('Shorten')
+    expect(texts).toContain('Shorten and insert')
   })
 
   it('offers each prompt in the group of its profile and runs it from a slot', async () => {

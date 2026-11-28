@@ -54,6 +54,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
         useVoiceReferenceStore().offer(text, nextActivationId)
       }
     },
+    canOpenDialog: () => desktopStore.userConfig.dialog.isEnabled,
     canListen: () => Boolean(desktopStore.desktopState.canListen),
     saveOutput: async (text: string) => {
       await historyStore.saveOutput(text)

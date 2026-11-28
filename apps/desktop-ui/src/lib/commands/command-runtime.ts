@@ -10,7 +10,11 @@ import { translate } from '../i18n'
 import type { Invocation, ResultSink } from '../invocation/invocation-types'
 import { invocationUnavailableReason } from '../invocation/invoke-operation'
 import { resolveSink } from '../invocation/result-sinks'
-import { operationInputKind } from '../operations/operation-input'
+import { openCommandParameters } from '../operations/command-parameters'
+import {
+  operationCallConfig,
+  operationInputKind,
+} from '../operations/operation-input'
 import type {
   RegisteredOperation,
   OperationInputKind,
@@ -55,7 +59,7 @@ function commandInputKind(
   return tool
     ? operationInputKind(
         tool,
-        command.operationConfig,
+        operationCallConfig(tool, command.operationConfig),
         command.isLlmArgumentParsingEnabled
       )
     : null
@@ -91,7 +95,31 @@ export function isMenuCommand(
   command: CommandConfig,
   operations: OperationLookup
 ): boolean {
-  return command.isEnabled && isCommandAvailable(command, operations)
+  return !menuCommandUnavailableReason(command, operations)
+}
+
+export function menuCommandUnavailableReason(
+  command: CommandConfig,
+  operations: OperationLookup
+): string | undefined {
+  if (!command.isEnabled) return 'toast.commandDisabled'
+  const unavailable = commandUnavailableReason(command, operations)
+  if (unavailable) return unavailable
+  const tool = commandOperation(command, operations)
+  if (
+    tool &&
+    openCommandParameters(
+      tool,
+      operationCallConfig(tool, command.operationConfig)
+    ).length
+  ) {
+    return command.operationId === 'core.translate'
+      ? 'commands.errorNoLanguage'
+      : 'commands.inputUnsupported'
+  }
+  return validateCommand(command, operations).find(
+    (issue) => issue.field !== 'name' && !issue.isWarning
+  )?.messageKey
 }
 
 export function commandIcon(
@@ -214,6 +242,7 @@ export function validateCommand(
   if (
     command.operationId !== 'core.aiTask' &&
     command.isLlmPreTransformEnabled &&
+    commandTakesText(command, operations) &&
     !stringOr(command.llmPreTransformPrompt).trim()
   ) {
     issues.push({

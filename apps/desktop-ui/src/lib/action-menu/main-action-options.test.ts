@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createCommand } from '../commands/command-config'
+
 import type {
   RegisteredOperation,
   OperationLookup,
@@ -8,7 +9,6 @@ import type {
 import {
   buildMainActionOptions,
   commandGroup,
-  duplicatesDirectChoice,
   type MainActionChoice,
   type MainActionGroup,
   mainActionOptionId,
@@ -120,7 +120,12 @@ describe('buildMainActionOptions', () => {
 
     expect(options).toEqual([
       { id: 'command:on', name: 'on', group: 'commands' },
-      { id: 'command:off', name: 'missing command:off', group: 'unavailable' },
+      {
+        id: 'command:off',
+        name: 'missing command:off',
+        group: 'unavailable',
+        disabled: true,
+      },
     ])
   })
 })
@@ -139,73 +144,5 @@ describe('mainActionOptionId', () => {
     expect(mainActionOptionId({ type: 'actionPage', pageIndex: 2 })).toBe(
       'actionPage:2'
     )
-  })
-})
-
-describe('duplicatesDirectChoice', () => {
-  const direct = {
-    languages: ['en-US'],
-    transformations: [' Rewrite clearly '],
-    styling: [' Formal tone '],
-  }
-  const command = (
-    operationId: string,
-    operationConfig: Record<string, unknown>
-  ) => ({ ...createCommand(operationId), operationConfig })
-
-  it('treats a translation without a language as the translation menu', () => {
-    expect(duplicatesDirectChoice(command('core.translate', {}), direct)).toBe(
-      true
-    )
-  })
-
-  it('finds commands that do what a language, transformation or style does', () => {
-    expect(
-      duplicatesDirectChoice(
-        command('core.translate', { language: 'en-US' }),
-        direct
-      )
-    ).toBe(true)
-    expect(
-      duplicatesDirectChoice(
-        command('core.transformation', { prompt: 'Rewrite clearly' }),
-        direct
-      )
-    ).toBe(true)
-    expect(
-      duplicatesDirectChoice(
-        command('core.styling', { prompt: 'Formal tone' }),
-        direct
-      )
-    ).toBe(true)
-  })
-
-  it('keeps the commands that do something else', () => {
-    expect(
-      duplicatesDirectChoice(
-        command('core.translate', { language: 'de-DE' }),
-        direct
-      )
-    ).toBe(false)
-    // an AI command may run other commands: it is never a plain rule
-    expect(
-      duplicatesDirectChoice(
-        command('core.aiTask', { prompt: 'Rewrite clearly' }),
-        direct
-      )
-    ).toBe(false)
-    expect(
-      duplicatesDirectChoice(
-        command('core.transformation', { prompt: 'Other' }),
-        direct
-      )
-    ).toBe(false)
-    expect(
-      duplicatesDirectChoice(
-        command('core.styling', { prompt: 'Other' }),
-        direct
-      )
-    ).toBe(false)
-    expect(duplicatesDirectChoice(command('script', {}), direct)).toBe(false)
   })
 })

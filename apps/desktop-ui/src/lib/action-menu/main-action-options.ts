@@ -42,6 +42,7 @@ export interface MainActionOption {
   id: string
   name: string
   group: string
+  disabled?: boolean
 }
 
 const GROUP_ORDER: MainActionGroup['kind'][] = [
@@ -125,40 +126,6 @@ export function commandGroup(
 }
 
 /**
- * Whether the command does just what an item of the picker does already: a
- * translation into one of the translation languages or into the language the
- * caller names, or the rule of a transformation or a style
- */
-export function duplicatesDirectChoice(
-  command: CommandConfig,
-  direct: {
-    languages: readonly string[]
-    transformations?: readonly string[]
-    styling?: readonly string[]
-  }
-): boolean {
-  const value = (key: string) => {
-    const field = command.operationConfig[key]
-    return typeof field === 'string' ? field.trim() : ''
-  }
-  if (command.operationId === 'core.translate') {
-    // without a language of its own it is the translation menu itself
-    return !value('language') || direct.languages.includes(value('language'))
-  }
-  if (command.operationId === 'core.transformation') {
-    return (direct.transformations ?? []).some(
-      (rule) => rule.trim() === value('prompt')
-    )
-  }
-  if (command.operationId === 'core.styling') {
-    return (direct.styling ?? []).some(
-      (rule) => rule.trim() === value('prompt')
-    )
-  }
-  return false
-}
-
-/**
  * The options of the picker, group by group: the choices on offer, then the
  * actions of the slots that are not on offer, e.g. a disabled command, so a
  * slot always shows what it holds. Plugin groups are sorted by their label; the
@@ -190,6 +157,7 @@ export function buildMainActionOptions(deps: {
     id: entry.id,
     name: entry.name,
     group: deps.groupLabel(entry.group),
+    ...(entry.group.kind === 'unavailable' ? { disabled: true } : {}),
     rank: GROUP_ORDER.indexOf(entry.group.kind),
     index,
   }))
@@ -202,5 +170,5 @@ export function buildMainActionOptions(deps: {
         : 0) ||
       a.index - b.index
   )
-  return labeled.map(({ id, name, group }) => ({ id, name, group }))
+  return labeled.map(({ rank: _rank, index: _index, ...option }) => option)
 }

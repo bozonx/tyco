@@ -21,6 +21,7 @@ import {
   commandLabel,
   commandTakesText,
   isMenuCommand,
+  menuCommandUnavailableReason,
 } from '../commands/command-runtime'
 import { i18n, translate } from '../i18n'
 import { messages } from '../i18n/messages'
@@ -76,6 +77,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   ) => Promise<void>
   openVoiceInput?: (text: string) => Promise<void>
   canListen?: () => boolean
+  canOpenDialog?: () => boolean
   /** With `language` the dialog translates into it at once */
   openTranslateModal: (text: string, language?: string) => void
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
@@ -475,6 +477,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           id: 'openDialog',
           labelKey: 'nav.dialog',
           icon: 'mdi:account-voice',
+          disabled: deps.canOpenDialog?.() === false,
           action: async () => {
             await deps.activateMode?.('dialog')
           },
@@ -718,6 +721,27 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     return undefined
   }
 
+  const runConfiguredAction = async (
+    config: MainActionConfig,
+    text: string
+  ): Promise<string | undefined> => {
+    const item = resolveActionItem(config)
+    if (!item || item.disabled) {
+      const command =
+        config.type === 'command'
+          ? deps.commands?.()?.find(({ id }) => id === config.commandId)
+          : undefined
+      const reason = command
+        ? menuCommandUnavailableReason(command, deps.operations)
+        : undefined
+      return (
+        item?.hint ?? translate(reason ?? 'desktopErrors.serviceUnavailable')
+      )
+    }
+    await item.action(text)
+    return undefined
+  }
+
   const getShortcutActions = (
     targetPageIndex = pageIndex.value
   ): (ActionItem | undefined)[] => {
@@ -767,6 +791,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     getActionsMenu,
     getShortcutActions,
     resolveActionItem,
+    runConfiguredAction,
     registerActionsItems,
     pageIndex,
     pageCount,
