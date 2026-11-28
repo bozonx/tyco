@@ -4,7 +4,7 @@
       :title="t('settings.sttTab')"
       :info="t('settings.sttTabInfo')"
     >
-      <FieldRow :label="t('settings.sttProvider')">
+      <FieldRow :label="t('settings.sttProvider')" :hint="sttProviderHint">
         <FieldSelect
           :model-value="userConfig.stt.provider"
           :options="sttProviderOptions"
@@ -14,7 +14,6 @@
       <FieldRow
         v-if="!sttNeedsKey"
         :label="t('settings.sttServerUrl')"
-        :hint="t('settings.sttServerUrlHint')"
         :error="sttServerUrlError"
         device-scoped
       >
@@ -37,7 +36,6 @@
       <FieldRow
         v-if="userConfig.stt.provider === 'deepgram'"
         :label="t('settings.sttLanguage')"
-        :info="t('settings.sttLanguageHint')"
       >
         <FieldSelect
           :model-value="
@@ -188,6 +186,7 @@ import {
   listInputDevices,
 } from '../../lib/stt/input-devices'
 import {
+  isDeepgramMultilingualModel,
   isKeyRequiredForSttProvider,
   isSttServerUrlValid,
   secretId,
@@ -332,6 +331,20 @@ const sttProviderOptions = computed(() => [
   { id: 'geminiLive', name: t('settings.sttProviderGeminiLive') },
   { id: 'sherpaOnnx', name: t('settings.sttProviderSherpaOnnx') },
 ])
+
+const sttProviderHint = computed(() => {
+  const model = currentSttModel.value
+  switch (model.provider) {
+    case 'deepgram':
+      return isDeepgramMultilingualModel(model.modelId)
+        ? t('settings.sttLanguageHint')
+        : t('settings.sttLanguageExplicitHint')
+    case 'geminiLive':
+      return t('settings.sttGeminiLiveHint')
+    case 'sherpaOnnx':
+      return t('settings.sttServerUrlHint')
+  }
+})
 
 const setSttProvider = (value: string | number | undefined) => {
   if (STT_PROVIDERS.includes(value as SttProvider))

@@ -1,7 +1,13 @@
 <template>
   <SettingsSection
     :title="t('settings.workspaceHistory.title')"
-    :info="t('settings.workspaceHistory.hint')"
+    :info="
+      [
+        t('settings.workspaceHistory.hint'),
+        t('settings.workspaceHistory.syncedHint'),
+        t('settings.chatQuickRequestsSavedInfo'),
+      ].join('\n\n')
+    "
   >
     <template #actions>
       <SettingsHistoryClear
@@ -17,11 +23,7 @@
         :clear="clearChats"
       />
     </template>
-    <FieldRow
-      :label="t('settings.chatHistoryKeeping')"
-      :info="t('settings.workspaceHistory.syncedHint')"
-      inline
-    >
+    <FieldRow :label="t('settings.chatHistoryKeeping')" inline>
       <FieldSelect
         size="sm"
         class="w-44 shrink-0"
@@ -32,11 +34,7 @@
       />
     </FieldRow>
 
-    <FieldRow
-      :label="t('settings.chatQuickRequestsSaved')"
-      :info="t('settings.chatQuickRequestsSavedInfo')"
-      inline
-    >
+    <FieldRow :label="t('settings.chatQuickRequestsSaved')" inline>
       <FieldSwitch
         :model-value="
           workspace.chatHistory.isQuickRequestSavingEnabled !== false

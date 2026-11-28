@@ -29,6 +29,36 @@ test('navigates between the main pages', async ({ page }) => {
   await expect(page.getByRole('textbox', { name: 'Text editor' })).toBeVisible()
 })
 
+test('keeps top-bar actions visible when navigation tabs overflow', async ({
+  page,
+  desktop,
+}) => {
+  desktop.userConfig.appearance.uiScalePercent = 150
+  desktop.userConfig.dialog.isEnabled = true
+  await page.setViewportSize({ width: 320, height: 600 })
+  await page.goto('/')
+
+  const banner = page.getByRole('banner')
+  const navigation = banner.getByRole('navigation', { name: 'TyCo' })
+  const settings = banner.getByRole('button', { name: 'Settings' })
+  await expect(settings).toBeInViewport({ ratio: 1 })
+  await expect(banner.getByRole('button', { name: 'History' })).toBeInViewport({
+    ratio: 1,
+  })
+  await expect(
+    banner.getByRole('button', { name: 'Actions (Esc)' })
+  ).toBeInViewport({ ratio: 1 })
+  await expect(navigation).toHaveClass(/has-hidden-end/)
+
+  const dialog = navigation.getByRole('button', { name: 'Dialog' })
+  await dialog.focus()
+  await expect(dialog).toBeFocused()
+  await expect(navigation).toHaveClass(/has-hidden-start/)
+  await expect(dialog).toBeInViewport({ ratio: 0.75 })
+  await settings.click()
+  await expect(page.getByRole('heading', { name: 'Appearance' })).toBeVisible()
+})
+
 // WebKit cannot grant clipboard-write; verify the real clipboard in Chromium.
 test.describe('copying', { tag: '@chromium' }, () => {
   test.use({ permissions: ['clipboard-read', 'clipboard-write'] })

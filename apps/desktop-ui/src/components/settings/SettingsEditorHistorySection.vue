@@ -1,5 +1,13 @@
 <template>
-  <SettingsSection :title="t('settings.sectionEditorHistory')">
+  <SettingsSection
+    :title="t('settings.sectionEditorHistory')"
+    :info="
+      [
+        t('settings.editorHistoryStorageHint'),
+        t('settings.sanitizeSecretsInEditorHistoryHint'),
+      ].join('\n\n')
+    "
+  >
     <template #actions>
       <SettingsHistoryClear
         :count="entryCount"
@@ -14,11 +22,7 @@
         :clear="() => historyStore.clearEditorHistory()"
       />
     </template>
-    <FieldRow
-      :label="t('settings.editorHistoryStorage')"
-      :info="t('settings.editorHistoryStorageHint')"
-      inline
-    >
+    <FieldRow :label="t('settings.editorHistoryStorage')" inline>
       <FieldSelect
         size="sm"
         class="w-44 shrink-0"
@@ -30,7 +34,6 @@
     <FieldRow
       v-if="history.storage === 'disk'"
       :label="t('settings.sanitizeSecretsInEditorHistory')"
-      :info="t('settings.sanitizeSecretsInEditorHistoryHint')"
       inline
     >
       <FieldSwitch

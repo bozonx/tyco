@@ -1,6 +1,16 @@
 <template>
   <header class="app-topbar">
-    <nav class="topbar-nav" :aria-label="t('app.title')">
+    <nav
+      ref="tabsRef"
+      class="topbar-nav no-scrollbar"
+      :aria-label="t('app.title')"
+      :class="{
+        'has-hidden-start': hasHiddenTabs.start,
+        'has-hidden-end': hasHiddenTabs.end,
+      }"
+      @wheel.passive="handleTabsWheel"
+      @scroll.passive="updateHiddenTabs"
+    >
       <button
         type="button"
         class="topbar-tab"
@@ -47,45 +57,34 @@
         {{ t('nav.aiChat') }}
       </button>
       <div v-if="isInDevelopment" class="topbar-divider" aria-hidden="true" />
-      <template v-if="profiles.length > 0">
-        <div
-          ref="profilesContainerRef"
-          class="profiles-tabs-container overflow-x-auto overscroll-contain no-scrollbar flex items-center gap-1 min-w-0"
-          :class="{
-            'has-hidden-start': hasHiddenTabs.start,
-            'has-hidden-end': hasHiddenTabs.end,
-          }"
-          @wheel.passive="handleProfilesWheel"
-          @scroll.passive="updateHiddenTabs"
-        >
-          <button
-            v-for="profile in profiles"
-            :key="profile.id"
-            type="button"
-            class="topbar-tab shrink-0"
-            :aria-current="isProfileActive(profile.id) ? 'page' : undefined"
-            :class="{ 'is-active': isProfileActive(profile.id) }"
-            :title="profile.name"
-            @pointerdown="preventMouseFocus"
-            @click="openProfileChat(profile.id)"
-          >
-            <span class="truncate max-w-[120px]">{{ profile.name }}</span>
-          </button>
-        </div>
-      </template>
+      <button
+        v-for="profile in profiles"
+        :key="profile.id"
+        type="button"
+        class="topbar-tab"
+        :aria-current="isProfileActive(profile.id) ? 'page' : undefined"
+        :class="{ 'is-active': isProfileActive(profile.id) }"
+        :title="profile.name"
+        @pointerdown="preventMouseFocus"
+        @click="openProfileChat(profile.id)"
+      >
+        <span class="truncate max-w-[120px]">{{ profile.name }}</span>
+      </button>
     </nav>
-    <div class="flex-1" />
-    <div class="flex flex-row gap-1 items-center">
+    <div class="topbar-actions flex flex-row gap-1 items-center">
       <QuietRunChip @open-history="openExternalHistory" />
       <Button
         v-if="navPanelStore.navPanelState.onEscape"
         size="sm"
         variant="neutral"
         icon="mdi:lightning-bolt-outline"
-        class="mr-1"
+        class="topbar-escape mr-1"
+        :aria-label="escapeButtonText"
+        :title="escapeButtonText"
         @click="navPanelStore.navPanelState.onEscape"
-        >{{ escapeButtonText }}</Button
       >
+        <span class="truncate">{{ escapeButtonText }}</span>
+      </Button>
       <IconButton
         size="sm"
         variant="ghost"
@@ -139,7 +138,7 @@ const chatStore = useChatStore()
 const aiProfilesStore = useAiProfilesStore()
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const desktopStore = useDesktopStore()
 // the status alone: the dialog itself loads with its view
@@ -155,12 +154,12 @@ const profiles = computed(() =>
   isInDevelopment.value ? aiProfilesStore.profiles : []
 )
 
-const profilesContainerRef = ref<HTMLElement | null>(null)
-/** Which edges of the profile tabs hide tabs behind them */
+const tabsRef = ref<HTMLElement | null>(null)
+/** Which edges of the navigation tabs hide tabs behind them */
 const hasHiddenTabs = reactive({ start: false, end: false })
 
 function updateHiddenTabs() {
-  const element = profilesContainerRef.value
+  const element = tabsRef.value
   if (!element) return
   hasHiddenTabs.start = element.scrollLeft > 0
   hasHiddenTabs.end =
@@ -171,12 +170,12 @@ const resizeObserver =
   typeof ResizeObserver === 'undefined'
     ? null
     : new ResizeObserver(updateHiddenTabs)
-watch(profilesContainerRef, (element, previous) => {
+watch(tabsRef, (element, previous) => {
   if (previous) resizeObserver?.unobserve(previous)
   if (element) resizeObserver?.observe(element)
 })
 watch(
-  () => profiles.value.length,
+  [isDialogEnabled, isInDevelopment, profiles, locale],
   () => void nextTick(updateHiddenTabs)
 )
 
@@ -208,10 +207,10 @@ function isProfileActive(profileId: string) {
   )
 }
 
-function handleProfilesWheel(event: WheelEvent) {
-  if (!profilesContainerRef.value) return
+function handleTabsWheel(event: WheelEvent) {
+  if (!tabsRef.value) return
   if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
-    profilesContainerRef.value.scrollLeft += event.deltaY
+    tabsRef.value.scrollLeft += event.deltaY
     updateHiddenTabs()
   }
 }
@@ -256,7 +255,7 @@ function openHistory() {
 }
 
 .topbar-divider {
-  width: 1px;
+  flex: 0 0 1px;
   height: 1rem;
   margin-inline: var(--space-xs);
   background-color: var(--app-border);
@@ -267,7 +266,8 @@ function openHistory() {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  height: 48px;
+  height: max(48px, calc(var(--control-size-sm) + 2 * var(--space-2xs) + 1px));
+  container-type: inline-size;
   flex-shrink: 0;
   padding: 0 var(--space-md);
   border-bottom: 1px solid var(--app-border-subtle);
@@ -275,10 +275,44 @@ function openHistory() {
 }
 
 .topbar-nav {
+  --fade-start: 0px;
+  --fade-end: 0px;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--fade-start),
+    #000 calc(100% - var(--fade-end)),
+    transparent
+  );
   display: flex;
   align-items: center;
   gap: 2px;
+  flex: 1 1 0;
+  align-self: stretch;
+  min-width: min(40%, 8rem);
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.topbar-actions {
   min-width: 0;
+}
+
+.topbar-actions .topbar-escape {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+@container (max-width: 26rem) {
+  .topbar-actions .topbar-escape {
+    width: var(--control-size-sm);
+    flex-shrink: 0;
+    padding-inline: 0;
+  }
+
+  .topbar-escape > span {
+    display: none;
+  }
 }
 
 .topbar-tab {
@@ -310,23 +344,11 @@ function openHistory() {
   box-shadow: var(--app-shadow-segment);
 }
 
-.profiles-tabs-container {
-  --fade-start: 0px;
-  --fade-end: 0px;
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 var(--fade-start),
-    #000 calc(100% - var(--fade-end)),
-    transparent
-  );
-}
-
-.profiles-tabs-container.has-hidden-start {
+.topbar-nav.has-hidden-start {
   --fade-start: 1.5rem;
 }
 
-.profiles-tabs-container.has-hidden-end {
+.topbar-nav.has-hidden-end {
   --fade-end: 1.5rem;
 }
 

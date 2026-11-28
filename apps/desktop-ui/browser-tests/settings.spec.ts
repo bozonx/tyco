@@ -18,6 +18,50 @@ test.beforeEach(async ({ page }) => {
     .click()
 })
 
+test('describes the selected transcription provider and model', async ({
+  page,
+}) => {
+  await page.getByRole('button', { name: 'Transcription', exact: true }).click()
+
+  const provider = page.getByRole('combobox', { name: 'STT provider' })
+  await expect(provider).toHaveAccessibleDescription(/supports Auto/)
+  await page
+    .getByRole('textbox', { name: 'Model', exact: true })
+    .fill('nova-2-phonecall')
+  await expect(provider).toHaveAccessibleDescription(/Deepgram uses English/)
+
+  await provider.click()
+  await page.getByRole('option', { name: 'Google Gemini Live' }).click()
+  await expect(provider).toHaveAccessibleDescription(
+    /automatically.*Google API key/
+  )
+
+  await provider.click()
+  await page.getByRole('option', { name: 'sherpa-onnx (self-hosted)' }).click()
+  await expect(provider).toHaveAccessibleDescription(
+    /model is the one the server runs/
+  )
+})
+
+test('groups history help at the section headings', async ({ page }) => {
+  await page
+    .getByRole('button', { name: 'History', exact: true })
+    .last()
+    .click()
+
+  for (const name of ['Action and input history', 'Dialog history', 'Chats']) {
+    const heading = page.getByRole('heading', { name: new RegExp(name) })
+    await expect(
+      heading.getByRole('button', { name: 'Information' })
+    ).toHaveCount(1)
+  }
+  await expect(
+    page
+      .locator('.settings-section-body')
+      .getByRole('button', { name: 'Information', exact: true })
+  ).toHaveCount(0)
+})
+
 test('closes the interface language picker with mouse and keyboard', async ({
   page,
   desktop,

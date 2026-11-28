@@ -1,7 +1,12 @@
 <template>
   <SettingsSection
     :title="t('settings.sectionDialogHistory')"
-    :info="t('settings.dialogHistoryHint')"
+    :info="
+      [
+        t('settings.dialogHistoryHint'),
+        t('settings.dialogHistoryRetentionDaysHint'),
+      ].join('\n\n')
+    "
   >
     <template #actions>
       <SettingsHistoryClear
@@ -17,11 +22,7 @@
         :clear="clearAllDialogs"
       />
     </template>
-    <FieldRow
-      :label="t('settings.dialogHistoryRetentionDays')"
-      :info="t('settings.dialogHistoryRetentionDaysHint')"
-      inline
-    >
+    <FieldRow :label="t('settings.dialogHistoryRetentionDays')" inline>
       <FieldSelect
         size="sm"
         class="w-44 shrink-0"

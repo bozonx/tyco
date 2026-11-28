@@ -1,15 +1,20 @@
 <template>
   <span class="sr-only" role="status">{{ announcement }}</span>
-  <div v-if="status" ref="containerRef" class="relative" @focusout="onFocusout">
+  <div
+    v-if="status"
+    ref="containerRef"
+    class="relative min-w-0"
+    @focusout="onFocusout"
+  >
     <button
       ref="triggerRef"
       type="button"
-      class="flex max-w-48 cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-sm"
+      class="flex w-full max-w-48 cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-sm"
       :aria-expanded="isOpen"
       :title="status.commandName"
       @click="toggle"
     >
-      <AppIcon icon="mdi:loading" size="sm" class="animate-spin" />
+      <AppIcon icon="mdi:loading" size="sm" class="shrink-0 animate-spin" />
       <span class="truncate">{{ status.commandName }}</span>
     </button>
     <div
@@ -47,7 +52,7 @@
         : announcement
     "
     :disabled="!completion.historyId"
-    class="max-w-48"
+    class="quiet-run-result max-w-48"
     @click="completion.historyId && $emit('openHistory', completion.historyId)"
   >
     <span class="truncate">{{
@@ -136,6 +141,11 @@ const announcement = computed(() => {
 </script>
 
 <style scoped>
+.btn.quiet-run-result {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
 .quiet-run-popover {
   background: var(--color-surface);
   border-color: var(--color-border);
