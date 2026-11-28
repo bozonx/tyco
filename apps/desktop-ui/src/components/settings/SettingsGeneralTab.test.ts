@@ -108,17 +108,20 @@ describe('SettingsGeneralTab.vue', () => {
     const config = createConfig({ language: { ui: AUTO_LANGUAGE_VALUE } })
     const wrapper = mountTab(config)
     const row = wrapper.get('[data-label="settings.appLanguage"]')
-    const select = row.get('.field-select-stub')
-    expect(select.element).toHaveProperty('value', AUTO_LANGUAGE_VALUE)
-    expect(row.find('button').exists()).toBe(false)
+    const trigger = row.get('[role="combobox"]')
+    expect(trigger.text()).toBe('settings.appLanguageSystem')
 
-    await select.setValue('ru-RU')
-    expect(config.language.ui).toBe('ru-RU')
-    expect(row.find('.field-select-stub').exists()).toBe(true)
+    await trigger.trigger('keydown', { key: 'Enter' })
+    await trigger.trigger('keydown', { key: 'End' })
+    await trigger.trigger('keydown', { key: 'Enter' })
+    expect(config.language.ui).not.toBe(AUTO_LANGUAGE_VALUE)
+    expect(trigger.attributes('aria-expanded')).toBe('false')
 
-    await select.setValue(AUTO_LANGUAGE_VALUE)
+    await trigger.trigger('keydown', { key: 'Enter' })
+    await trigger.trigger('keydown', { key: 'Home' })
+    await trigger.trigger('keydown', { key: 'Enter' })
     expect(config.language.ui).toBe(AUTO_LANGUAGE_VALUE)
-    expect(row.find('.field-select-stub').exists()).toBe(true)
+    expect(trigger.text()).toBe('settings.appLanguageSystem')
   })
 
   it('pastes automatically by default and takes a fixed combination', async () => {

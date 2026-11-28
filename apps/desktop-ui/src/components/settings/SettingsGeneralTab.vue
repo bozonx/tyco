@@ -9,10 +9,9 @@
         />
       </FieldRow>
       <FieldRow :label="t('settings.appLanguage')">
-        <FieldSelect
-          :model-value="userConfig.language.ui"
+        <FieldListbox
+          v-model="userConfig.language.ui"
           :options="appLanguageOptions"
-          @update:model-value="updateAppLanguage"
         />
       </FieldRow>
     </SettingsSection>
@@ -66,6 +65,7 @@ import {
 } from '../../lib/locale/language'
 import { preventMouseFocus } from '../../lib/ui/focus'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
+import FieldListbox from '../common/FieldListbox.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
@@ -106,14 +106,6 @@ const appLanguageOptions = computed(() => {
     ),
   ]
 })
-
-const updateAppLanguage = (value: number | string | undefined) => {
-  if (typeof value !== 'string') {
-    return
-  }
-
-  userConfig.value.language.ui = value
-}
 </script>
 
 <style scoped>

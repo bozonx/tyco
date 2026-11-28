@@ -18,6 +18,46 @@ test.beforeEach(async ({ page }) => {
     .click()
 })
 
+test('closes the interface language picker with mouse and keyboard', async ({
+  page,
+  desktop,
+}) => {
+  const picker = page.getByRole('combobox', { name: 'Interface language' })
+  const list = page.getByRole('listbox', { name: 'Interface language' })
+  const outside = page.getByRole('button', { name: 'General', exact: true })
+
+  await picker.click()
+  await expect(list).toBeVisible()
+  await outside.click()
+  await expect(list).toBeHidden()
+  await expect(picker).not.toBeFocused()
+
+  await picker.focus()
+  await page.keyboard.press('Space')
+  await expect(list).toBeVisible()
+  const firstOption = list.getByRole('option').first()
+  await expect(firstOption).toHaveAttribute('aria-selected', 'true')
+  await page.keyboard.press('ArrowDown')
+  await expect(picker).toHaveAttribute(
+    'aria-activedescendant',
+    (await list.getByRole('option').nth(1).getAttribute('id'))!
+  )
+  await page.keyboard.press('Escape')
+  await expect(list).toBeHidden()
+  await expect(picker).toBeFocused()
+  await expect(picker).toHaveText('System default')
+
+  await page.keyboard.press('Space')
+  await page.keyboard.press('Tab')
+  await expect(list).toBeHidden()
+  await expect(picker).not.toBeFocused()
+
+  await picker.click()
+  await list.getByRole('option', { name: 'Russian', exact: true }).click()
+  await expect(list).toBeHidden()
+  await expect.poll(() => desktop.userConfig.language.ui).toBe('ru-RU')
+})
+
 test('saves a changed setting and applies it', async ({ page, desktop }) => {
   await themeOption(page, 'Dark').click()
 
