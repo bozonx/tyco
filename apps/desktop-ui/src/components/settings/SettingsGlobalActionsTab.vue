@@ -712,7 +712,7 @@ onMounted(async () => {
   width: 100%;
 }
 
-.custom-action-select {
+:deep(.custom-action-select) {
   flex: 1 1 200px;
   min-width: 180px;
 }

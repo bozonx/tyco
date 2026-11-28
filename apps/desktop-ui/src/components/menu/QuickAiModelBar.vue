@@ -132,7 +132,7 @@ onMounted(() => {
   cursor: default;
 }
 
-.quick-ai-select.is-locked {
+:deep(.quick-ai-select.is-locked) {
   background-image: none;
   padding-inline-end: 0.75rem;
   cursor: default;

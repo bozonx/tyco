@@ -455,7 +455,7 @@ watch(
   min-width: 0;
 }
 
-.mic-select {
+:deep(.mic-select) {
   flex: 1 1 14rem;
   min-width: 10rem;
 }

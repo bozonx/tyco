@@ -52,8 +52,9 @@ remain bundled and work offline.
   entry points, including teleported content. Tab and Shift+Tab still reach
   buttons. Controls that start a keyboard interaction, such as hotkey recording,
   can move focus explicitly.
-- A primary mouse press outside a focused select clears its focus when the
-  webview delivers the press to the page. Escape keeps focus on the select.
+- `FieldSelect` opens an in-app listbox. Clicking outside closes it and clears
+  trigger focus. Escape keeps focus on the trigger, and Tab continues normal
+  navigation. Arrow keys skip disabled options.
 - `BaseDialog` uses native `showModal()` for focus containment and inert background.
   Supply `labelledby` (visible title) or a localized `label`. The parent owns
   `open` and handles `close`; `ConfirmModal` supplies confirmation actions and

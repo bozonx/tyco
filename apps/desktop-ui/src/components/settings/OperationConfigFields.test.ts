@@ -60,13 +60,26 @@ describe('OperationConfigFields', () => {
         },
       },
     })
-    const select = wrapper.get('select')
-    expect((select.element as HTMLSelectElement).selectedIndex).toBe(2)
-    await select.setValue('1')
+    const select = wrapper.get('[role="combobox"]')
+    const pick = async (index: number) => {
+      await select.trigger('click')
+      document.querySelectorAll<HTMLElement>('[role="option"]')[index].click()
+      await wrapper.vm.$nextTick()
+    }
+    await select.trigger('click')
+    expect(
+      document.querySelector('[role="option"][aria-selected="true"]')
+        ?.textContent
+    ).toBe(document.querySelectorAll('[role="option"]')[2].textContent)
+    await select.trigger('click')
+    await pick(1)
     expect(wrapper.emitted('update')?.at(-1)).toEqual(['enabled', true])
-    await select.setValue('0')
+    await pick(0)
     expect(wrapper.emitted('update')?.at(-1)).toEqual(['enabled', undefined])
-    await select.setValue('2')
+    await wrapper.setProps({
+      command: { ...wrapper.props('command'), operationConfig: {} },
+    })
+    await pick(2)
     expect(wrapper.emitted('update')?.at(-1)).toEqual(['enabled', false])
   })
 

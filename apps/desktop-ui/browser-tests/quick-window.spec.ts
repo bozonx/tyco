@@ -201,9 +201,8 @@ test.describe('command configuration', () => {
       .getByRole('textbox', { name: 'Command', exact: true })
       .fill('printf configured')
     await command.getByRole('button', { name: /^Advanced/ }).click()
-    await command
-      .getByRole('combobox', { name: 'Action', exact: true })
-      .selectOption({ label: 'Show result' })
+    await command.getByRole('combobox', { name: 'Action', exact: true }).click()
+    await page.getByRole('option', { name: 'Show result', exact: true }).click()
     await page.getByRole('button', { name: 'Actions', exact: true }).click()
     const slot = page.locator('.shortcut-slot').first()
     await slot.getByRole('button', { name: 'Add', exact: true }).click()
@@ -217,9 +216,10 @@ test.describe('command configuration', () => {
     const commandId = desktop.userConfig.commands.find(
       (item) => item.name === 'Configured command'
     )!.id
-    await slot
-      .getByRole('combobox')
-      .selectOption({ label: 'Configured command' })
+    await slot.getByRole('combobox').click()
+    await page
+      .getByRole('option', { name: 'Configured command', exact: true })
+      .click()
     await expect
       .poll(() => desktop.userConfig.actionPages[0]?.slots.q)
       .toEqual({ type: 'command', commandId })

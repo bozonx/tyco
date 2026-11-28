@@ -662,7 +662,13 @@ const withHotkey = (keys: string[]) =>
 
 const onKeyDown = (event: KeyboardEvent) => {
   // Enter that confirms an IME composition belongs to the text
-  if (event.repeat || event.isComposing || event.keyCode === 229) return
+  if (
+    event.defaultPrevented ||
+    event.repeat ||
+    event.isComposing ||
+    event.keyCode === 229
+  )
+    return
   if (
     props.shortcutsDisabled ||
     (menuModalsStore.hasOpenModal &&
@@ -919,7 +925,7 @@ onUnmounted(() => {
   line-height: 1.5;
 }
 
-.voice-language {
+:deep(.voice-language) {
   width: auto;
   max-width: 14rem;
 }

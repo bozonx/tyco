@@ -30,7 +30,7 @@ test('mouse clicks preserve text focus and buttons stay in the Tab order', async
   await expect(primary).toBeFocused()
 })
 
-test('an outside mouse press clears select focus and Escape preserves it', async ({
+test('an outside click clears select focus and Escape preserves it', async ({
   page,
 }) => {
   const select = page.getByRole('combobox', { name: 'Small select' })
@@ -39,17 +39,22 @@ test('an outside mouse press clears select focus and Escape preserves it', async
 
   await select.focus()
   await page.keyboard.press('Space')
+  const list = page.getByRole('listbox', { name: 'Small select' })
+  await expect(list).toBeVisible()
   await page.keyboard.press('Escape')
+  await expect(list).toBeHidden()
   await expect(select).toBeFocused()
 
   await select.click()
-  await expect(select).toBeFocused()
+  await expect(list).toBeVisible()
   await button.click()
+  await expect(list).toBeHidden()
   await expect(select).not.toBeFocused()
   await expect(button).not.toBeFocused()
 
-  await select.focus()
+  await select.click()
   await input.click()
+  await expect(list).toBeHidden()
   await expect(input).toBeFocused()
 })
 
@@ -120,6 +125,15 @@ test('native dialogs contain focus and close one layer at a time', async ({
   await innerTrigger.click()
   await page.keyboard.press('Escape')
   await expect(innerTrigger).toBeFocused()
+  const outerDialog = page.getByRole('dialog', { name: 'Outer dialog' })
+  const select = outerDialog.getByRole('combobox', { name: 'Dialog select' })
+  await select.click()
+  const list = outerDialog.getByRole('listbox', { name: 'Dialog select' })
+  await expect(list.getByRole('option', { name: 'One' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(list).toBeHidden()
+  await expect(select).toBeFocused()
+  await expect(outerDialog).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(nestedTrigger).toBeFocused()
 })
@@ -137,9 +151,8 @@ for (const theme of ['Light', 'Dark', 'E-ink']) {
         ).toBeChecked()
         await page.getByLabel('High contrast', { exact: true }).check()
         await page.getByLabel('Reduced motion', { exact: true }).check()
-        await page
-          .getByLabel('Interface scale', { exact: true })
-          .selectOption('2')
+        await page.getByLabel('Interface scale', { exact: true }).click()
+        await page.getByRole('option', { name: '150%', exact: true }).click()
         await expect(page.locator('html')).toHaveAttribute(
           'data-motion',
           'reduce'

@@ -116,7 +116,9 @@ describe('AiCommandOperationFields', () => {
     const confirmModalBefore = wrapper.findComponent(ConfirmModal)
     expect(confirmModalBefore.props('open')).toBe(false)
 
-    const deleteBtn = wrapper.find('.ai-tool-row button')
+    const deleteBtn = wrapper.get(
+      '.ai-tool-row button[aria-label="common.delete"]'
+    )
     await deleteBtn.trigger('click')
 
     const confirmModal = wrapper.findComponent(ConfirmModal)
@@ -176,7 +178,9 @@ describe('AiCommandOperationFields', () => {
     expect(wrapper.text()).toContain('doSomething')
     expect(wrapper.text()).toContain('commands.aiToolUnavailable')
 
-    const deleteBtn = wrapper.find('.ai-tool-row button')
+    const deleteBtn = wrapper.get(
+      '.ai-tool-row button[aria-label="common.delete"]'
+    )
     await deleteBtn.trigger('click')
 
     const confirmModal = wrapper.findComponent(ConfirmModal)

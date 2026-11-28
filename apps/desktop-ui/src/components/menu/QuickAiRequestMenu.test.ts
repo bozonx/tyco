@@ -414,15 +414,19 @@ describe('QuickAiRequestMenu', () => {
 
   it('shows the profile, model, chat and editor buttons on the left and run button on the right', () => {
     const wrapper = mountMenu()
-    expect(wrapper.find('.action-overlay-header select').exists()).toBe(false)
+    expect(
+      wrapper.find('.action-overlay-header [role="combobox"]').exists()
+    ).toBe(false)
     const footerStart = wrapper.find('.query-panel-footer-start')
     const footerEnd = wrapper.find('.query-panel-footer-end')
     const bar = footerStart.find('.quick-ai-model-bar')
-    expect(bar.findAll('select')).toHaveLength(2)
-    expect(bar.find('option').text()).toBe('quickAiRequest.standardProfile')
-    expect(footerStart.findAll('button').map((b) => b.text())).toEqual([
-      'quickAiRequest.goToChat',
-    ])
+    expect(bar.findAll('[role="combobox"]')).toHaveLength(2)
+    expect(bar.find('[role="combobox"]').text()).toBe(
+      'quickAiRequest.standardProfile'
+    )
+    expect(
+      footerStart.findAll('button:not([role="combobox"])').map((b) => b.text())
+    ).toEqual(['quickAiRequest.goToChat'])
     expect(footerEnd.find('.run-action-btn').exists()).toBe(true)
     expect(
       wrapper.find('[aria-label="action.askInCurrentChat"]').exists()
@@ -540,10 +544,14 @@ describe('QuickAiRequestMenu', () => {
 
     const wrapper = mountMenu()
     await flushPromises()
-    const labels = wrapper
-      .findAll('select')[1]
-      .findAll('option')
-      .map((option) => option.text())
+    await wrapper
+      .get('.quick-ai-model-bar')
+      .findAll('[role="combobox"]')[1]
+      .trigger('click')
+    const labels = Array.from(
+      document.querySelectorAll('.field-select-panel [role="option"]'),
+      (option) => option.textContent
+    )
     expect(labels).toEqual([
       expect.stringContaining('GPT 4'),
       expect.stringContaining('Gemini'),
@@ -569,14 +577,22 @@ describe('QuickAiRequestMenu', () => {
     })
 
     const wrapper = mountMenu()
-    const modelSelect = wrapper.findAll('select')[1]
-    const labels = modelSelect.findAll('option').map((option) => option.text())
+    await wrapper
+      .get('.quick-ai-model-bar')
+      .findAll('[role="combobox"]')[1]
+      .trigger('click')
+    const options = [
+      ...document.querySelectorAll<HTMLElement>(
+        '.field-select-panel [role="option"]'
+      ),
+    ]
+    const labels = options.map((option) => option.textContent)
     expect(labels).toEqual([
       expect.stringContaining('GPT 4'),
       expect.stringContaining('chat.noToolCalling'),
     ])
 
-    await modelSelect.setValue('1')
+    options[1].click()
     await flushPromises()
 
     expect(desktop.backend.userConfig.llm.quickRequestModelId).toBe('local')

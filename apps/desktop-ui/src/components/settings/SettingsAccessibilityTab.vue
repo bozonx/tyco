@@ -74,7 +74,6 @@ const uiScaleOptions = computed(() =>
 
 const isEInkTheme = computed(() => appearance.value.theme === 'eInk')
 
-// <select> reports option values as strings
 const updateUiScale = (value: string | number | undefined) => {
   const scale = Number(value)
 

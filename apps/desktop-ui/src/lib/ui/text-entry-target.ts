@@ -11,7 +11,7 @@ const NON_TEXT_INPUT_TYPES: ReadonlySet<string> = new Set([
 ])
 
 const TEXT_ENTRY_SELECTOR =
-  'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
+  'input, textarea, select, button[role="combobox"], [contenteditable]:not([contenteditable="false"])'
 
 /**
  * Whether a key event aimed at `target` types into a field: Space and Enter

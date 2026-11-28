@@ -33,7 +33,7 @@ describe('SettingsChatPromptsTab', () => {
       global: {
         plugins: [desktop.pinia],
         provide: context.provide,
-        stubs: { ConfirmModal: true },
+        stubs: { ConfirmModal: true, Teleport: true },
       },
     })
     return { context, wrapper }
@@ -52,12 +52,13 @@ describe('SettingsChatPromptsTab', () => {
     expect(context.draft.value.chatPrompts.items).toEqual([
       { id: 'chat-prompt-1', name: '', rule: '', profileId: '' },
     ])
-    const select = wrapper.get('select')
-    expect(select.findAll('option').map((option) => option.text())).toEqual([
+    await wrapper.get('[role="combobox"]').trigger('click')
+    const options = wrapper.findAll('[role="option"]')
+    expect(options.map((option) => option.text())).toEqual([
       'chatPrompts.everyProfile',
       'Writer',
     ])
-    await select.setValue('1')
+    await options[1].trigger('click')
     expect(context.draft.value.chatPrompts.items[0]?.profileId).toBe('writer')
   })
 
@@ -69,12 +70,9 @@ describe('SettingsChatPromptsTab', () => {
     })
     await flushPromises()
     expect(wrapper.text()).toContain('chatPrompts.profileMissing')
-    expect(
-      wrapper
-        .get('select')
-        .findAll('option')
-        .map((option) => option.text())
-    ).toContain('chatPrompts.missingProfile')
+    expect(wrapper.get('[role="combobox"]').text()).toBe(
+      'chatPrompts.missingProfile'
+    )
   })
 
   it('removes a non-empty prompt only upon confirmation and drops its actions', async () => {

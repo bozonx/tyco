@@ -407,6 +407,12 @@
         label="Dialog actions"
         :items="[{ label: 'Dialog action', action: () => {} }]"
       />
+      <FieldSelect
+        size="sm"
+        aria-label="Dialog select"
+        model-value="one"
+        :options="[{ id: 'one', name: 'One' }]"
+      />
     </BaseDialog>
     <EditorContextMenu
       v-if="contextMenuOpen"

@@ -42,7 +42,9 @@ describe('ConfigFields', () => {
   it('hides a field for other values of its condition and keeps its value', async () => {
     const wrapper = mount(ConfigFields, { props: { config: fields('a') } })
     expect(wrapper.text()).not.toContain('Template')
-    await wrapper.get('select').setValue('1')
+    await wrapper.get('[role="combobox"]').trigger('click')
+    document.querySelectorAll<HTMLElement>('[role="option"]')[1].click()
+    await wrapper.vm.$nextTick()
     expect(wrapper.text()).toContain('Template')
     expect(wrapper.emitted('update:values')?.at(-1)).toEqual([
       { folder: '/notes', mode: 'b', template: 'kept' },

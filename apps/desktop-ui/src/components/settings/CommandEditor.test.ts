@@ -1,4 +1,4 @@
-import { type DOMWrapper, flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCommand } from '../../lib/commands/command-config'
@@ -38,7 +38,9 @@ const mountEditor = (
 ) =>
   mount(CommandEditor, {
     props: { command, ...props },
-    global: { stubs: { CustomActionFields: true, CommandTestRun: true } },
+    global: {
+      stubs: { CustomActionFields: true, CommandTestRun: true, Teleport: true },
+    },
   })
 
 const lastUpdate = (wrapper: ReturnType<typeof mountEditor>) =>
@@ -77,32 +79,26 @@ describe('CommandEditor.vue', () => {
     expect(nameInput.props('autofocus')).toBe(true)
   })
 
-  const optionValue = (
-    select: Pick<DOMWrapper<Element>, 'findAll'>,
-    text: string
-  ) =>
-    select
-      .findAll('option')
-      .find((option) => option.text() === text)!
-      .attributes('value')
-
   it('has one output action, with or without a selection', async () => {
     const command = script(
       { command: 'echo {{TEXT}}' },
       { name: 'Echo', outputAction: 'insertIntoWindow' }
     )
     const wrapper = mountEditor(command)
-    const selects = wrapper.findAll('select')
+    const selects = wrapper.findAll('[role="combobox"]')
     expect(selects).toHaveLength(1)
-    expect((selects[0].element as HTMLSelectElement).value).toBe(
-      optionValue(selects[0], 'commands.afterRunInsert')
-    )
-    await selects[0].setValue(optionValue(selects[0], 'commands.afterRunCopy'))
+    expect(selects[0].text()).toBe('commands.afterRunInsert')
+    await selects[0].trigger('click')
+    await wrapper
+      .findAll('[role="option"]')
+      .find((option) => option.text() === 'commands.afterRunCopy')!
+      .trigger('click')
     expect(lastUpdate(wrapper).outputAction).toBe('copyToClipboard')
   })
 
-  it('offers the insertion for a command without text too', () => {
+  it('offers the insertion for a command without text too', async () => {
     const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
+    await wrapper.get('[role="combobox"]').trigger('click')
     expect(wrapper.text()).toContain('commands.afterRunInsert')
   })
 
@@ -112,11 +108,9 @@ describe('CommandEditor.vue', () => {
       { name: 'Firefox', outputAction: 'insertIntoWindow' }
     )
     const wrapper = mountEditor(command)
-    const select = wrapper.find('select')
+    const select = wrapper.find('[role="combobox"]')
     expect(select.attributes('disabled')).toBeDefined()
-    expect((select.element as HTMLSelectElement).value).toBe(
-      optionValue(select, 'settings.actionAfterRunNone')
-    )
+    expect(select.text()).toBe('settings.actionAfterRunNone')
     expect(wrapper.text()).toContain('commands.detachedOutputActionHint')
   })
 

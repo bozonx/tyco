@@ -281,7 +281,7 @@ onUnmounted(() => {
   min-width: 0;
 }
 
-.chat-prompt-card-profile {
+:deep(.chat-prompt-card-profile) {
   flex: 0 1 14rem;
   min-width: 0;
 }

@@ -48,11 +48,7 @@ describe('SettingsGeneralTab.vue', () => {
             template:
               '<div class="segmented-control-stub" :data-value="modelValue"><button v-for="opt in options" :key="opt.id" :class="\'seg-\' + opt.id" @click="$emit(\'update:modelValue\', opt.id)">{{ opt.name }}</button></div>',
           },
-          FieldSelect: {
-            props: ['modelValue', 'options'],
-            template:
-              '<input class="field-select-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
-          },
+          Teleport: true,
           FieldInput: {
             props: ['modelValue'],
             template:
@@ -127,10 +123,12 @@ describe('SettingsGeneralTab.vue', () => {
   it('pastes automatically by default and takes a fixed combination', async () => {
     const config = createConfig()
     const wrapper = mountTab(config)
-    const field = wrapper.find('[data-label="settings.pasteShortcut"] input')
-    expect(field.element).toHaveProperty('value', 'auto')
+    const row = wrapper.get('[data-label="settings.pasteShortcut"]')
+    const field = row.get('[role="combobox"]')
+    expect(field.text()).toBe('settings.pasteShortcutAuto')
 
-    await field.setValue('Shift+Insert')
+    await field.trigger('click')
+    await row.findAll('[role="option"]').at(-1)!.trigger('click')
     expect(config.windowInsertion.linux.pasteShortcut).toBe('Shift+Insert')
     expect(
       wrapper.find('[data-label="settings.terminalPasteShortcut"]').exists()

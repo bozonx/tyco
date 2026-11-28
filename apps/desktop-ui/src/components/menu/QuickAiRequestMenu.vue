@@ -956,7 +956,7 @@ onUnmounted(() => {
   outline: none;
 }
 
-.quick-result-actions .select {
+.quick-result-actions :deep(.field-select-trigger) {
   width: 100%;
   min-width: 0;
 }

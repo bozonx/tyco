@@ -1,3 +1,4 @@
+import FieldSelect from '../common/FieldSelect.vue'
 import { mount } from '@vue/test-utils'
 import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -94,18 +95,22 @@ describe('SettingsMainActionsTab.vue', () => {
     mount(SettingsMainActionsTab, {
       global: {
         provide: context.provide,
-        stubs: { ShortcutSlots, ConfirmModal: true },
+        stubs: { ShortcutSlots, ConfirmModal: true, Teleport: true },
       },
     })
   const optionTexts = (wrapper: ReturnType<typeof mountTab>) =>
-    wrapper.findAll('option').map((option) => option.text())
+    wrapper
+      .getComponent(FieldSelect)
+      .props('options')
+      .map((option) => option.name)
 
   it('offers standard actions, profiles, named transformations and plugin actions', () => {
     const wrapper = mountTab()
     const texts = optionTexts(wrapper)
     const optgroupLabels = wrapper
-      .findAll('optgroup')
-      .map((group) => group.attributes('label'))
+      .getComponent(FieldSelect)
+      .props('options')
+      .map((option) => option.group)
     expect(optgroupLabels).toContain('settings.chatPromptProfile: Assistant')
     expect(optgroupLabels).toContain('quickAiRequest.defaultProfile')
     expect(optgroupLabels).toContain('settings.mainActionGroups.basic')
@@ -167,22 +172,20 @@ describe('SettingsMainActionsTab.vue', () => {
     const wrapper = mountTab()
     const groupOf = (text: string) =>
       wrapper
-        .findAll('optgroup')
-        .find((group) =>
-          group.findAll('option').some((option) => option.text() === text)
-        )
-        ?.attributes('label')
+        .getComponent(FieldSelect)
+        .props('options')
+        .find((option) => option.name === text)?.group
     const name = (prompt: string) =>
       `chatPrompts.actionName:${JSON.stringify({ prompt })}`
     expect(groupOf(name('Fix'))).toBe('settings.chatPromptProfile: Assistant')
     expect(groupOf(name('Sum'))).toBe('settings.mainActionGroups.chatPrompts')
     expect(optionTexts(wrapper)).not.toContain(name('Blank'))
 
-    const select = wrapper.get('select')
-    const fix = select
-      .findAll('option')
+    await wrapper.get('[role="combobox"]').trigger('click')
+    const fix = wrapper
+      .findAll('[role="option"]')
       .find((option) => option.text() === name('Fix'))!
-    await select.setValue(fix.element.value)
+    await fix.trigger('click')
     expect(context.draft.value.actionPages[0].slots.q).toEqual({
       type: 'chatPrompt',
       promptId: 'fix',
@@ -191,11 +194,11 @@ describe('SettingsMainActionsTab.vue', () => {
 
   it('replaces a slot with the picked action', async () => {
     const wrapper = mountTab()
-    const select = wrapper.get('select')
-    const shorten = select
-      .findAll('option')
+    await wrapper.get('[role="combobox"]').trigger('click')
+    const shorten = wrapper
+      .findAll('[role="option"]')
       .find((option) => option.text() === 'Shorten')!
-    await select.setValue(shorten.element.value)
+    await shorten.trigger('click')
     expect(context.draft.value.actionPages[0].slots.q).toEqual({
       type: 'transformation',
       transformationId: 'shorten',
@@ -204,11 +207,11 @@ describe('SettingsMainActionsTab.vue', () => {
 
   it('assigns voiceCommands to a shortcut slot', async () => {
     const wrapper = mountTab()
-    const select = wrapper.get('select')
-    const option = select
-      .findAll('option')
+    await wrapper.get('[role="combobox"]').trigger('click')
+    const option = wrapper
+      .findAll('[role="option"]')
       .find((item) => item.text() === 'action.voiceCommands…')!
-    await select.setValue(option.element.value)
+    await option.trigger('click')
     expect(context.draft.value.actionPages[0].slots.q).toEqual({
       type: 'standard',
       actionId: 'voiceCommands',

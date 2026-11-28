@@ -61,14 +61,9 @@ describe('DialogLanguageRoute.vue', () => {
     // Model indication must not be present
     expect(document.body.querySelector('.dialog-route-model')).toBeNull()
 
-    // Own language select includes the default language name
-    const selects = panel!.querySelectorAll('select')
-    expect(selects.length).toBeGreaterThan(0)
-
-    // The ownLanguage select options
-    const ownLanguageSelect = selects[selects.length - 1]
-    const firstOption = ownLanguageSelect.querySelector('option')
-    expect(firstOption?.textContent).toContain('Russian')
+    const ownLanguageSelect =
+      panel!.querySelectorAll<HTMLButtonElement>('[role="combobox"]')
+    expect([...ownLanguageSelect].at(-1)?.textContent).toContain('Russian')
 
     wrapper.unmount()
   })
@@ -95,10 +90,9 @@ describe('DialogLanguageRoute.vue', () => {
     await wrapper.find('button.dialog-route-trigger').trigger('click')
 
     const panel = document.body.querySelector('.dialog-route-panel')
-    const selects = panel!.querySelectorAll('select')
-    const ownLanguageSelect = selects[selects.length - 1]
-    const firstOption = ownLanguageSelect.querySelector('option')
-    expect(firstOption?.textContent).toContain('Auto')
+    const ownLanguageSelect =
+      panel!.querySelectorAll<HTMLButtonElement>('[role="combobox"]')
+    expect([...ownLanguageSelect].at(-1)?.textContent).toContain('Auto')
 
     wrapper.unmount()
   })

@@ -325,11 +325,13 @@ describe('separate voice command overlay', () => {
     voice.selected = { ...candidate(translation.id), parameters: {} }
     voice.command = translation
     const wrapper = mountView()
-    const select = wrapper.find<HTMLSelectElement>('.voice-language')
-    const index = [...select.element.options].findIndex(
-      (option) => option.text === translate(getLanguageLabelKey('es-AR'))
+    await wrapper.get('.voice-language').trigger('click')
+    const option = [
+      ...document.querySelectorAll<HTMLElement>('[role="option"]'),
+    ].find(
+      (item) => item.textContent === translate(getLanguageLabelKey('es-AR'))
     )
-    await select.setValue(String(index))
+    option!.click()
     expect(mocks.setParameter).toHaveBeenCalledWith('language', 'es-AR')
     expect(mocks.run).not.toHaveBeenCalled()
     wrapper.unmount()
