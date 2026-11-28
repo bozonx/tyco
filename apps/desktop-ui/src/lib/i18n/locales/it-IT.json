@@ -21,7 +21,9 @@
     "voiceCommands": "Comandi vocali",
     "voiceQuickAiRequest": "Voce all’IA",
     "voiceScreenshotQuickAiRequest": "Schermata, voce all’IA",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "insertIntoApp": "In {app}",
+    "insertIntoAppTitle": "Inserisci in {app}"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "Scrivi testo",
     "toPrompt": "Al campo della richiesta",
     "editText": "Modifica testo",
-    "translateSwapLanguages": "Inverti lingue"
+    "translateSwapLanguages": "Inverti lingue",
+    "noInsertTarget": "Nessuna finestra in cui inserire",
+    "keyboardAway": "Tasti inattivi: fai clic sul pannello"
   },
   "nav": {
     "aiChat": "Chiedi all’IA",

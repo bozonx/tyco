@@ -21,7 +21,9 @@
     "voiceCommands": "語音命令",
     "voiceQuickAiRequest": "語音向 AI",
     "voiceScreenshotQuickAiRequest": "截圖，語音向 AI",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "insertIntoApp": "到 {app}",
+    "insertIntoAppTitle": "插入到 {app}"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "輸入文字",
     "toPrompt": "前往提問輸入框",
     "editText": "編輯文字",
-    "translateSwapLanguages": "交換語言"
+    "translateSwapLanguages": "交換語言",
+    "noInsertTarget": "沒有可插入的視窗",
+    "keyboardAway": "按鍵無效：請點擊面板"
   },
   "nav": {
     "aiChat": "詢問 AI",

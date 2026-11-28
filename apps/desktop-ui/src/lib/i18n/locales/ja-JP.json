@@ -21,7 +21,9 @@
     "voiceCommands": "音声コマンド",
     "voiceQuickAiRequest": "音声でAIへ",
     "voiceScreenshotQuickAiRequest": "スクリーンショット、音声でAIへ",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "insertIntoApp": "{app} へ",
+    "insertIntoAppTitle": "{app} に挿入"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "テキストを入力",
     "toPrompt": "質問入力欄へ",
     "editText": "テキストを編集",
-    "translateSwapLanguages": "言語を入れ替える"
+    "translateSwapLanguages": "言語を入れ替える",
+    "noInsertTarget": "挿入先のウィンドウがありません",
+    "keyboardAway": "キーが無効です：パネルをクリックしてください"
   },
   "nav": {
     "aiChat": "AIに質問",

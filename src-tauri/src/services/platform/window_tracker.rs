@@ -76,6 +76,8 @@ struct TrackerState {
     /// tells its pid.
     active_process: Option<String>,
     last_foreign_window_id: Option<String>,
+    /// The application of `last_foreign_window_id`.
+    last_foreign_app: Option<WindowApp>,
     missing_window_id: Option<String>,
 }
 
@@ -138,7 +140,77 @@ impl TrackerState {
         }
         if self.last_foreign_window_id.as_deref() == Some(id) {
             self.last_foreign_window_id = None;
+            self.last_foreign_app = None;
         }
+    }
+
+    /// Remembers the application of the activated window when it became the
+    /// last foreign one, see `window_activated`.
+    fn remember_app(&mut self, id: &str, kind: WindowKind, class: &str, process: Option<&str>) {
+        match kind {
+            WindowKind::Foreign if !id.is_empty() => {
+                self.last_foreign_app = Some(WindowApp {
+                    class: class.to_owned(),
+                    process: process.map(str::to_owned),
+                });
+            }
+            WindowKind::Other if !id.is_empty() => self.last_foreign_app = None,
+            _ => {}
+        }
+    }
+}
+
+/// The application a window belongs to, as a backend reports it.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct WindowApp {
+    /// The resource class (application id) on Linux, the window class on
+    /// Windows.
+    pub class: String,
+    /// The program name of its process, if the backend knows it.
+    pub process: Option<String>,
+}
+
+/// Trailing parts of a reverse-DNS application id that name no application,
+/// as in `org.telegram.desktop`.
+const GENERIC_APP_ID_PARTS: [&str; 5] = ["desktop", "app", "application", "client", "gui"];
+
+impl WindowApp {
+    /// A short name of the application for the user, e.g. `Firefox` for
+    /// `firefox` or `Konsole` for `org.kde.konsole`; `None` when nothing
+    /// readable is known. A Windows window class (`Chrome_WidgetWin_1`) names
+    /// a toolkit rather than an application, so only the process counts there.
+    pub fn display_name(&self) -> Option<String> {
+        let from_class = if cfg!(target_os = "windows") {
+            None
+        } else {
+            app_id_name(&self.class)
+        };
+        from_class
+            .or_else(|| self.process.as_deref().and_then(app_id_name))
+            .map(|name| capitalize(&name))
+    }
+}
+
+fn app_id_name(id: &str) -> Option<String> {
+    let id = id.trim();
+    let id = id
+        .strip_suffix(".exe")
+        .or_else(|| id.strip_suffix(".EXE"))
+        .unwrap_or(id);
+    let parts: Vec<&str> = id.split('.').filter(|part| !part.is_empty()).collect();
+    let name = parts
+        .iter()
+        .rev()
+        .find(|part| !GENERIC_APP_ID_PARTS.contains(&part.to_ascii_lowercase().as_str()))
+        .or(parts.last())?;
+    Some((*name).to_owned())
+}
+
+fn capitalize(name: &str) -> String {
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().chain(chars).collect(),
+        None => String::new(),
     }
 }
 
@@ -189,6 +261,7 @@ impl WindowTracker {
                 return false;
             }
             state.window_activated(id, kind);
+            state.remember_app(id, kind, class, process.as_deref());
             class.clone_into(&mut state.active_class);
             state.active_process = process;
             true
@@ -232,6 +305,22 @@ impl WindowTracker {
             class: state.active_class.clone(),
             process: state.active_process.clone(),
         })
+    }
+
+    /// The application of `id` when it is the window text goes to, see
+    /// `target`.
+    pub fn target_app(&self, id: &str) -> Option<WindowApp> {
+        let state = self.state.locked();
+        if !state.running || state.target().as_deref() != Some(id) {
+            return None;
+        }
+        if state.active_kind == WindowKind::Foreign {
+            return Some(WindowApp {
+                class: state.active_class.clone(),
+                process: state.active_process.clone(),
+            });
+        }
+        state.last_foreign_app.clone()
     }
 
     /// Whether a backend is running and reports a Tyco window as focused.
@@ -399,6 +488,56 @@ mod tests {
 
     fn seq(number: u64) -> String {
         format!("s:{number}")
+    }
+
+    #[test]
+    fn names_the_application_of_a_window() {
+        let name = |class: &str, process: Option<&str>| {
+            WindowApp {
+                class: class.into(),
+                process: process.map(Into::into),
+            }
+            .display_name()
+        };
+        if cfg!(target_os = "windows") {
+            assert_eq!(
+                name("Chrome_WidgetWin_1", Some("chrome.exe")).as_deref(),
+                Some("Chrome")
+            );
+            assert_eq!(name("Chrome_WidgetWin_1", None), None);
+        } else {
+            assert_eq!(name("firefox", None).as_deref(), Some("Firefox"));
+            assert_eq!(name("org.kde.konsole", None).as_deref(), Some("Konsole"));
+            assert_eq!(
+                name("org.telegram.desktop", None).as_deref(),
+                Some("Telegram")
+            );
+            assert_eq!(name("", Some("kate")).as_deref(), Some("Kate"));
+        }
+        assert_eq!(name("", None), None);
+    }
+
+    #[test]
+    fn knows_the_application_of_the_target_only() {
+        let tracker = running_tracker();
+        tracker.window_activated_with_process(
+            &seq(1),
+            "a",
+            WindowKind::Foreign,
+            "org.kde.kate",
+            None,
+        );
+        tracker.window_activated(&seq(2), "tyco", WindowKind::Own, "tyco");
+        let app = tracker.target_app("a").expect("target app");
+        assert_eq!(app.class, "org.kde.kate");
+        assert_eq!(tracker.target_app("tyco"), None);
+        tracker.window_closed(&seq(3), "a");
+        assert_eq!(tracker.target_app("a"), None);
+        tracker.window_activated(&seq(4), "b", WindowKind::Foreign, "firefox");
+        assert_eq!(
+            tracker.target_app("b").map(|app| app.class).as_deref(),
+            Some("firefox")
+        );
     }
 
     #[test]

@@ -20,6 +20,7 @@ describe('QuickAiRequestMenu', () => {
 
   beforeEach(() => {
     desktop = installFakeDesktop({}, 'quick')
+    desktop.setState({ windowId: 'target' })
     desktop.backend.handle('hide_window', () => undefined)
     desktop.backend.handle('paste_into_target_and_hide', () => undefined)
     desktop.backend.handle('open_main_chat', () => undefined)
@@ -200,6 +201,19 @@ describe('QuickAiRequestMenu', () => {
     expect(desktop.backend.callsOf('paste_into_target_and_hide')).toEqual([
       expect.objectContaining({ text: 'Ready to paste' }),
     ])
+  })
+
+  it('does not insert a result once the target window is gone', async () => {
+    const wrapper = await answerRequest([{ text: 'Ready to paste' }])
+    desktop.setState({ windowId: null })
+    await flushPromises()
+    expect(
+      wrapper.find('.quick-insert-action').attributes('disabled')
+    ).toBeDefined()
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }))
+    await flushPromises()
+    expect(desktop.backend.callsOf('paste_into_target_and_hide')).toEqual([])
   })
 
   it('keeps plain answers without insertion and reopens the composer for a follow-up', async () => {

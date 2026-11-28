@@ -21,7 +21,9 @@
     "voiceCommands": "Voice commands",
     "voiceQuickAiRequest": "Voice to AI",
     "voiceScreenshotQuickAiRequest": "Screenshot, voice to AI",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "insertIntoApp": "To {app}",
+    "insertIntoAppTitle": "Insert into {app}"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "Type text",
     "toPrompt": "To prompt input",
     "editText": "Edit text",
-    "translateSwapLanguages": "Swap languages"
+    "translateSwapLanguages": "Swap languages",
+    "noInsertTarget": "No window to insert into",
+    "keyboardAway": "Keys are inactive: click the panel"
   },
   "nav": {
     "aiChat": "Ask AI",

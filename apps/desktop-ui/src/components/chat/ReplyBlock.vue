@@ -28,9 +28,11 @@
         size="xs"
         variant="primary"
         icon="mdi:arrow-down-bold-box-outline"
+        :disabled="!insertTarget.canInsert.value"
+        :title="insertTarget.title.value"
         @click="emit('insert', block.text)"
       >
-        {{ t('replyBlocks.insertIntoWindow') }}
+        {{ insertTarget.label.value }}
       </Button>
 
       <Button
@@ -67,6 +69,7 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useInsertTarget } from '../../composables/use-insert-target'
 import type { ReplyBlockData } from '../../lib/reply-blocks/reply-blocks-tool'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -95,6 +98,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const insertTarget = useInsertTarget('replyBlocks.insertIntoWindow')
 const isDiffOpen = ref(false)
 
 const hasDiffOption = computed(

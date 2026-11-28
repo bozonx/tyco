@@ -46,6 +46,11 @@ pub fn set_quick_input_region(
     runtime::set_quick_input_region(&app, region, activation_id)
 }
 
+#[tauri::command]
+pub fn reclaim_quick_keyboard(app: AppHandle, activation_id: u64) -> Result<(), AppError> {
+    runtime::reclaim_quick_keyboard(&app, activation_id)
+}
+
 /// On the blocking pool: the opener and the clipboard tools are separate
 /// processes, which must stall neither the UI nor an async worker.
 #[tauri::command]

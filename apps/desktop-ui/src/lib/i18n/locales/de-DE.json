@@ -21,7 +21,9 @@
     "voiceCommands": "Sprachbefehle",
     "voiceQuickAiRequest": "Sprache an KI",
     "voiceScreenshotQuickAiRequest": "Bildschirmfoto, Sprache an KI",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "insertIntoApp": "In {app}",
+    "insertIntoAppTitle": "In {app} einfügen"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "Text eingeben",
     "toPrompt": "Zum Eingabefeld",
     "editText": "Text bearbeiten",
-    "translateSwapLanguages": "Sprachen tauschen"
+    "translateSwapLanguages": "Sprachen tauschen",
+    "noInsertTarget": "Kein Fenster zum Einfügen",
+    "keyboardAway": "Tasten inaktiv: auf das Panel klicken"
   },
   "nav": {
     "aiChat": "KI fragen",

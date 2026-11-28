@@ -21,7 +21,9 @@
     "voiceCommands": "Hangparancsok",
     "voiceQuickAiRequest": "Hang az MI-nek",
     "voiceScreenshotQuickAiRequest": "Képernyőkép, hang az MI-nek",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "insertIntoApp": "Ide: {app}",
+    "insertIntoAppTitle": "Beszúrás ide: {app}"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "Szöveg beírása",
     "toPrompt": "A kérés mezőjébe",
     "editText": "Szöveg szerkesztése",
-    "translateSwapLanguages": "Nyelvek megcserélése"
+    "translateSwapLanguages": "Nyelvek megcserélése",
+    "noInsertTarget": "Nincs ablak a beszúráshoz",
+    "keyboardAway": "A billentyűk nem működnek: kattintson a panelre"
   },
   "nav": {
     "aiChat": "Kérdezze az MI-t",

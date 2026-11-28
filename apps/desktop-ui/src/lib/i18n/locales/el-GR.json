@@ -21,7 +21,9 @@
     "voiceCommands": "Φωνητικές εντολές",
     "voiceQuickAiRequest": "Φωνή στην ΤΝ",
     "voiceScreenshotQuickAiRequest": "Στιγμιότυπο, φωνή στην ΤΝ",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "insertIntoApp": "Στο {app}",
+    "insertIntoAppTitle": "Εισαγωγή στο {app}"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "Πληκτρολόγηση κειμένου",
     "toPrompt": "Στο πεδίο ερωτήματος",
     "editText": "Επεξεργασία κειμένου",
-    "translateSwapLanguages": "Εναλλαγή γλωσσών"
+    "translateSwapLanguages": "Εναλλαγή γλωσσών",
+    "noInsertTarget": "Δεν υπάρχει παράθυρο για εισαγωγή",
+    "keyboardAway": "Τα πλήκτρα δεν λειτουργούν: κάντε κλικ στο πάνελ"
   },
   "nav": {
     "aiChat": "Ρωτήστε την ΤΝ",

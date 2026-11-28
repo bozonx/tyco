@@ -21,7 +21,9 @@
     "voiceCommands": "음성 명령",
     "voiceQuickAiRequest": "음성으로 AI에게",
     "voiceScreenshotQuickAiRequest": "스크린샷, 음성으로 AI에게",
-    "webhook": "웹후크"
+    "webhook": "웹후크",
+    "insertIntoApp": "{app}(으)로",
+    "insertIntoAppTitle": "{app}에 삽입"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "텍스트 입력",
     "toPrompt": "요청 입력란으로",
     "editText": "텍스트 편집",
-    "translateSwapLanguages": "언어 바꾸기"
+    "translateSwapLanguages": "언어 바꾸기",
+    "noInsertTarget": "삽입할 창이 없습니다",
+    "keyboardAway": "키가 작동하지 않음: 패널을 클릭하세요"
   },
   "nav": {
     "aiChat": "AI에게 질문",

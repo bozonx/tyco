@@ -423,6 +423,7 @@ pub fn run() {
             commands::window::reveal_quick_window,
             commands::window::reposition_quick_window,
             commands::window::set_quick_input_region,
+            commands::window::reclaim_quick_keyboard,
             commands::window::set_tray_menu_labels,
             commands::window::set_tray_recording,
         ])

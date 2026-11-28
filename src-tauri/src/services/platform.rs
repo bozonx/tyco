@@ -47,8 +47,9 @@ pub use foreground_context::{
 pub use panel_surface::{
     apply_panel_surface, attach_panel_surface, attach_subtitles_surface, cover_output,
     defer_quick_reveal, disable_panel_keyboard, focus_window, is_layer_shell_supported,
-    is_panel_relocating, select_panel_monitor, set_panel_input_region, set_window_opacity,
-    settle_panel_keyboard, target_monitor_point, uncover_output, InputRegion, PanelKeyboardMode,
+    is_panel_relocating, reclaim_panel_keyboard, select_panel_monitor, set_panel_input_region,
+    set_window_opacity, settle_panel_keyboard, target_monitor_point, uncover_output, InputRegion,
+    PanelKeyboardMode,
 };
 pub use shortcut_settings::{has_shortcut_settings, open_shortcut_settings};
 pub use text_injector::{

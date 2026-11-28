@@ -21,7 +21,9 @@
     "voiceCommands": "Hlasové příkazy",
     "voiceQuickAiRequest": "Hlasem na AI",
     "voiceScreenshotQuickAiRequest": "Snímek, hlasem na AI",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "insertIntoApp": "Do {app}",
+    "insertIntoAppTitle": "Vložit do {app}"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "Napsat text",
     "toPrompt": "Do pole dotazu",
     "editText": "Upravit text",
-    "translateSwapLanguages": "Prohodit jazyky"
+    "translateSwapLanguages": "Prohodit jazyky",
+    "noInsertTarget": "Žádné okno pro vložení",
+    "keyboardAway": "Klávesy nefungují: klikněte na panel"
   },
   "nav": {
     "aiChat": "Zeptat se AI",

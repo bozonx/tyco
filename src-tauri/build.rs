@@ -177,6 +177,7 @@ fn main() {
             "reveal_quick_window",
             "reposition_quick_window",
             "set_quick_input_region",
+            "reclaim_quick_keyboard",
             "set_secret",
             "set_operation_catalog",
             "set_tray_menu_labels",

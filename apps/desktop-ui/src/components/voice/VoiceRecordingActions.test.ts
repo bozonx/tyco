@@ -1,12 +1,23 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { i18n } from '../../lib/i18n'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
+
+let desktop: TestDesktop
+beforeEach(() => {
+  desktop = installFakeDesktop()
+  desktop.setState({ windowId: 'target' })
+})
+afterEach(() => desktop.dispose())
 
 const mountActions = (props: Record<string, unknown>) =>
   mount(VoiceRecordingActions, {
-    global: { plugins: [i18n] },
+    global: { plugins: [i18n, desktop.pinia] },
     props: {
       isFinishing: false,
       finish: async () => {},
@@ -109,5 +120,57 @@ describe('VoiceRecordingActions', () => {
     ])
     await shortcutButtons[0]?.trigger('click')
     expect(intents).toEqual(['submit'])
+  })
+
+  it('names the application the text goes to', () => {
+    desktop.setState({ windowId: 'target', windowAppName: 'Thunderbird' })
+    const wrapper = mountActions({ finishBehavior: 'insertIntoTarget' })
+    const insert = wrapper.find('.shortcut.is-primary')
+    expect(insert.text()).toContain('To Thunderbi…')
+    expect(insert.attributes('title')).toBe('Insert into Thunderbird')
+  })
+
+  it('leads to the actions once the target window is gone', async () => {
+    const intents: unknown[] = []
+    desktop.setState({ windowId: null })
+    const wrapper = mountActions({
+      finishBehavior: 'insertIntoTarget',
+      finish: async (intent: unknown) => {
+        intents.push(intent)
+      },
+    })
+    expect(wrapper.find('.voice-actions-notice').text()).toBe(
+      'No window to insert into'
+    )
+    const primary = wrapper.find('.shortcut.is-primary')
+    expect(primary.text()).toContain('Actions')
+    expect(primaryKeys(wrapper)).toEqual(['Space', 'Enter'])
+    const insert = wrapper.findAll('.shortcut').at(-1)!
+    expect(insert.attributes('disabled')).toBeDefined()
+    await primary.trigger('click')
+    expect(intents).toEqual(['next'])
+  })
+
+  it('tells in the quick panel that its keys do not arrive', async () => {
+    desktop.dispose()
+    desktop = installFakeDesktop({}, 'quick')
+    desktop.setState({ windowId: 'target' })
+    vi.useFakeTimers()
+    const hasFocus = vi.spyOn(document, 'hasFocus').mockReturnValue(false)
+    try {
+      const wrapper = mountActions({ finishBehavior: 'insertIntoTarget' })
+      expect(wrapper.find('.voice-actions-notice').exists()).toBe(false)
+      await vi.advanceTimersByTimeAsync(500)
+      expect(wrapper.find('.voice-actions-notice').text()).toBe(
+        'Keys are inactive: click the panel'
+      )
+      hasFocus.mockReturnValue(true)
+      window.dispatchEvent(new Event('focus'))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(wrapper.find('.voice-actions-notice').exists()).toBe(false)
+    } finally {
+      hasFocus.mockRestore()
+      vi.useRealTimers()
+    }
   })
 })

@@ -87,6 +87,31 @@ pub(super) fn is_current_quick_activation(
     is_quick_window_shown(active_label, is_window_shown) && current_id == requested_id
 }
 
+/// A click on the shown quick window of `activation_id` arrived while its
+/// page had no keyboard focus: takes the keyboard back, so its keys work.
+pub fn reclaim_quick_keyboard(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
+    on_main_thread(app, move |app| {
+        let snapshot = app.state::<AppState>().snapshot();
+        let active_label = app.state::<RuntimeWindows>().active_label();
+        if !is_current_quick_activation(
+            active_label,
+            snapshot.window.is_window_shown,
+            snapshot.activation.activation_id,
+            activation_id,
+        ) {
+            return Ok(());
+        }
+        let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) else {
+            return Ok(());
+        };
+        log::info!(
+            "Click on the quick window without page focus; window focused: {:?}",
+            window.is_focused()
+        );
+        crate::services::platform::reclaim_panel_keyboard(&window, panel_layer(app).is_some())
+    })
+}
+
 /// Leaves the exclusive grab once the quick window has the focus. Runs on the
 /// main thread, as window events do.
 pub(super) fn settle_quick_keyboard(app: &AppHandle) {

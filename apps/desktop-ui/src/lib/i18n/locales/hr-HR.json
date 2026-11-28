@@ -21,7 +21,9 @@
     "voiceCommands": "Glasovne naredbe",
     "voiceQuickAiRequest": "Glasom na AI",
     "voiceScreenshotQuickAiRequest": "Snimka, glasom na AI",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "insertIntoApp": "U {app}",
+    "insertIntoAppTitle": "Umetni u {app}"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "Upiši tekst",
     "toPrompt": "U polje upita",
     "editText": "Uredi tekst",
-    "translateSwapLanguages": "Zamijeni jezike"
+    "translateSwapLanguages": "Zamijeni jezike",
+    "noInsertTarget": "Nema prozora za umetanje",
+    "keyboardAway": "Tipke ne rade: kliknite na ploču"
   },
   "nav": {
     "aiChat": "Pitaj AI",

@@ -11,7 +11,9 @@ mod warmup;
 mod window_visibility;
 
 pub use lifecycle::{create_windows, manage_state, request_exit, request_restart, setup, shutdown};
-pub use panel_layer::{reposition_quick_window, reveal_quick_window, set_quick_input_region};
+pub use panel_layer::{
+    reclaim_quick_keyboard, reposition_quick_window, reveal_quick_window, set_quick_input_region,
+};
 pub use target_focus::{follow_target_window, forget_target_window, wait_until_unfocused};
 pub use target_paste::paste_into_target;
 pub(crate) use tray::{quiet_run_label, set_tray_quiet_run};
@@ -305,6 +307,8 @@ fn activate_on_main_thread(
         snapshot.activation.quick_input_text = quick_input_text;
         snapshot.activation.activation_id = snapshot.activation.activation_id.wrapping_add(1);
         snapshot.activation.mode = Some(activation.mode);
+        snapshot.activation.target_app_name =
+            target_focus::target_app_name(activation.target_window_id.as_deref());
         snapshot.activation.target_window_id = activation.target_window_id;
         snapshot.activation.selected_text = activation.selected_text;
         snapshot.activation.screenshot_profile_id = activation.screenshot_profile_id;

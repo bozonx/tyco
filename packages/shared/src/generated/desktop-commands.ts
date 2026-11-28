@@ -389,6 +389,7 @@ export interface DesktopCommands {
   }
   read_dropped_file: { args: { path: string }; result: ArrayBuffer }
   rebind_hotkeys: { args: undefined; result: void }
+  reclaim_quick_keyboard: { args: { activationId: number }; result: void }
   release_deleted_chat_images: { args: { id: string }; result: void }
   release_dialog_recordings: { args: { id: string }; result: void }
   relink_ai_workspace: {
@@ -651,6 +652,7 @@ export const ACTIVATION_DESKTOP_COMMANDS = [
   'open_main_editor',
   'open_transferred_chat',
   'paste_into_target_and_hide',
+  'reclaim_quick_keyboard',
   'remove_screenshot',
   'reposition_quick_window',
   'reveal_quick_window',

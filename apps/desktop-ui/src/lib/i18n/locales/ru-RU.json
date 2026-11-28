@@ -21,7 +21,9 @@
     "voiceCommands": "Голосовые команды",
     "voiceQuickAiRequest": "Голосом к ИИ",
     "voiceScreenshotQuickAiRequest": "Скриншот, голосом к ИИ",
-    "webhook": "Вебхук"
+    "webhook": "Вебхук",
+    "insertIntoApp": "В {app}",
+    "insertIntoAppTitle": "Вставить в {app}"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "Ввести текст",
     "toPrompt": "В поле запроса",
     "editText": "Редактировать текст",
-    "translateSwapLanguages": "Поменять местами"
+    "translateSwapLanguages": "Поменять местами",
+    "noInsertTarget": "Нет окна для вставки",
+    "keyboardAway": "Клавиши не работают: нажмите на панель"
   },
   "nav": {
     "aiChat": "Спросить ИИ",

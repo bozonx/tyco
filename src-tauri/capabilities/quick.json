@@ -24,6 +24,7 @@
     "allow-reveal-quick-window",
     "allow-reposition-quick-window",
     "allow-set-quick-input-region",
+    "allow-reclaim-quick-keyboard",
     "allow-set-operation-catalog",
     "allow-submit-activation-metric-value"
   ]

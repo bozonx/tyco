@@ -28,6 +28,12 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
       Boolean(desktopState.value.windowId) ||
       insertionStatus.value?.target === 'focusReturn'
   )
+  /** The application text goes to, when the window tracker knows it */
+  const insertTargetAppName = computed(() =>
+    desktopState.value.windowId
+      ? (desktopState.value.windowAppName ?? undefined)
+      : undefined
+  )
   // the config of the last snapshot: a run with its own config never
   // changes what the settings edit and save over
   const savedUserConfig = ref<UserConfig>(desktopState.value.userConfig)
@@ -127,6 +133,7 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
   return {
     setExecutionConfig,
     canInsertIntoWindow,
+    insertTargetAppName,
     desktopState,
     userConfig: computed(() => desktopState.value.userConfig),
     /** The stored config, without the config of a run in progress */

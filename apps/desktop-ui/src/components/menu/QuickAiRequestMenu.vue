@@ -188,11 +188,15 @@
           variant="primary"
           :keys="['Space', 'Enter']"
           :disabled="
-            !model.selectedReplyBlock.value || isInputBlocked || isApplying
+            !model.selectedReplyBlock.value ||
+            isInputBlocked ||
+            isApplying ||
+            !insertTarget.canInsert.value
           "
+          :title="insertTarget.title.value"
           @click="insertSelectedReply"
         >
-          {{ t('replyBlocks.insertIntoWindow') }}
+          {{ insertTarget.label.value }}
         </ShortcutButton>
       </div>
       <QueryPanel
@@ -290,6 +294,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useFeedbackMotion } from '../../composables/use-feedback-motion'
 import { useI18n } from '../../composables/use-i18n'
+import { useInsertTarget } from '../../composables/use-insert-target'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
 import useToast from '../../composables/use-toast'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
@@ -353,6 +358,7 @@ const secretsStore = useSecretsStore()
 const editorNavigation = useEditorNavigation()
 const { toastKey, toastText } = useToast()
 const { t } = useI18n()
+const insertTarget = useInsertTarget('replyBlocks.insertIntoWindow')
 const { handleEsc: defaultHandleEsc, isAtRoot } = useOverlayNav(() => ({
   escMode: canReturnToPrevious.value ? 'back' : 'close',
 }))
@@ -478,6 +484,7 @@ async function applyReply(
 async function insertSelectedReply() {
   const block = model.selectedReplyBlock.value
   if (
+    !insertTarget.canInsert.value ||
     !isResultVisible.value ||
     !block ||
     isInputBlocked.value ||

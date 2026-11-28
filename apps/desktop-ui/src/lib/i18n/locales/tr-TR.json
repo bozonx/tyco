@@ -21,7 +21,9 @@
     "voiceCommands": "Sesli komutlar",
     "voiceQuickAiRequest": "Sesle YZ’ye",
     "voiceScreenshotQuickAiRequest": "Ekran görüntüsü, sesle YZ’ye",
-    "webhook": "Web kancası"
+    "webhook": "Web kancası",
+    "insertIntoApp": "{app} uygulamasına",
+    "insertIntoAppTitle": "{app} uygulamasına ekle"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "Metin yaz",
     "toPrompt": "İstek alanına",
     "editText": "Metni düzenle",
-    "translateSwapLanguages": "Dilleri değiştir"
+    "translateSwapLanguages": "Dilleri değiştir",
+    "noInsertTarget": "Eklenecek pencere yok",
+    "keyboardAway": "Tuşlar çalışmıyor: panele tıklayın"
   },
   "nav": {
     "aiChat": "Yapay Zekâya Sor",

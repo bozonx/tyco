@@ -138,6 +138,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useCloseWindowInterceptor } from '../../composables/use-close-window-interceptor'
 import { useFeedbackMotion } from '../../composables/use-feedback-motion'
 import { useI18n } from '../../composables/use-i18n'
+import { useQuickKeyboardReclaim } from '../../composables/use-quick-keyboard-reclaim'
 import { useQuickWindowSession } from '../../composables/use-quick-window-session'
 import { desktopClient } from '../../lib/desktop/client'
 import { getDesktopWindow as getCurrentWindow } from '../../lib/desktop/window'
@@ -307,6 +308,7 @@ const regionSync = createInputRegionSync({
 })
 
 // a new activation owns its own operations, results and input region
+useQuickKeyboardReclaim()
 const session = useQuickWindowSession({
   onActivation: () => regionSync.invalidate(),
 })

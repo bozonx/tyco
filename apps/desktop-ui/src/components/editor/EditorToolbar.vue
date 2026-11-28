@@ -72,9 +72,9 @@
       <IconButton
         size="sm"
         variant="ghost"
-        :disabled="!desktopStore.canInsertIntoWindow"
+        :disabled="!insertTarget.canInsert.value"
         @click="emit('insert-to-window')"
-        :label="scoped(t('action.insertIntoWindow'))"
+        :label="scoped(insertLabel)"
         icon="mdi:application-export"
       />
     </div>
@@ -86,6 +86,7 @@ import { computed } from 'vue'
 
 import { useEditorActions } from '../../composables/use-editor-actions'
 import { useI18n } from '../../composables/use-i18n'
+import { useInsertTarget } from '../../composables/use-insert-target'
 import { useMarkupMode } from '../../composables/use-markup-mode'
 import useToast from '../../composables/use-toast'
 import { scopedActionLabel } from '../../lib/editor/editor-toolbar-item'
@@ -111,6 +112,13 @@ const editorInputStore = useEditorInputStore()
 const editMenuStore = useEditMenuStore()
 const toolbarStore = useToolbarStore()
 const desktopStore = useDesktopStore()
+const insertTarget = useInsertTarget()
+/** The application when it is known; a disabled button speaks for itself */
+const insertLabel = computed(() =>
+  insertTarget.appName.value
+    ? (insertTarget.title.value ?? t('action.insertIntoWindow'))
+    : t('action.insertIntoWindow')
+)
 const { t } = useI18n()
 const { toastKey, toastError } = useToast()
 

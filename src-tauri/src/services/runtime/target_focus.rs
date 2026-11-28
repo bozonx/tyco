@@ -57,6 +57,7 @@ pub fn forget_target_window(app: &AppHandle, window_id: &str) -> Result<(), AppE
     state.update_snapshot(|snapshot| {
         if snapshot.activation.target_window_id.as_deref() == Some(window_id) {
             snapshot.activation.target_window_id = None;
+            snapshot.activation.target_app_name = None;
         }
     });
     emit_state(app, &state)
@@ -77,6 +78,7 @@ pub fn follow_target_window(app: &AppHandle) -> Result<(), AppError> {
         if is_main_window_shown(active_label, snapshot.window.is_window_shown)
             && snapshot.activation.target_window_id.as_ref() != Some(&target)
         {
+            snapshot.activation.target_app_name = target_app_name(Some(&target));
             snapshot.activation.target_window_id = Some(target);
             changed = true;
         }
@@ -85,6 +87,14 @@ pub fn follow_target_window(app: &AppHandle) -> Result<(), AppError> {
         emit_state(app, &state)?;
     }
     Ok(())
+}
+
+/// The name of the application `target_window_id` belongs to, see
+/// `WindowApp::display_name`.
+pub(super) fn target_app_name(target_window_id: Option<&str>) -> Option<String> {
+    crate::services::platform::window_tracker::tracker()
+        .target_app(target_window_id?)?
+        .display_name()
 }
 
 fn is_main_window_shown(active_label: &str, is_window_shown: bool) -> bool {

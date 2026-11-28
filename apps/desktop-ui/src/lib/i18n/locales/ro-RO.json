@@ -21,7 +21,9 @@
     "voiceCommands": "Comenzi vocale",
     "voiceQuickAiRequest": "Voce către IA",
     "voiceScreenshotQuickAiRequest": "Captură, voce către IA",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "insertIntoApp": "În {app}",
+    "insertIntoAppTitle": "Inserează în {app}"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "Introdu text",
     "toPrompt": "În câmpul solicitării",
     "editText": "Editează textul",
-    "translateSwapLanguages": "Inversează limbile"
+    "translateSwapLanguages": "Inversează limbile",
+    "noInsertTarget": "Nicio fereastră pentru inserare",
+    "keyboardAway": "Tastele nu funcționează: dați clic pe panou"
   },
   "nav": {
     "aiChat": "Întreabă AI",

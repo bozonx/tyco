@@ -37,6 +37,7 @@ pub fn default_desktop_snapshot(
         activation: ActivationSnapshot {
             activation_id: 0,
             target_window_id: None,
+            target_app_name: None,
             selected_text: None,
             quick_input_text: None,
             screenshot_profile_id: None,

@@ -82,6 +82,18 @@ pub fn attach_panel_surface(
         else {
             return;
         };
+        // WebKitGTK may leave the keyboard focus on the toplevel when the
+        // panel gets it back from a click, so the page sees no keys
+        let focus_view = view.downgrade();
+        window.connect_focus_in_event(move |_, _| {
+            if let Some(view) = focus_view.upgrade() {
+                if !view.has_focus() {
+                    log::info!("The quick window got the focus without its webview");
+                    view.grab_focus();
+                }
+            }
+            gtk::glib::Propagation::Proceed
+        });
         let weak_window = window.downgrade();
         let weak_view = view.downgrade();
         if let Some(display) = gtk::gdk::Display::default() {
@@ -95,6 +107,14 @@ pub fn attach_panel_surface(
         }
     })?;
     gtk_window.connect_focus_in_event(|window, _| {
+        log::debug!("The quick window got the keyboard focus");
+        if KEYBOARD_RECLAIMING.replace(false) {
+            clear_reclaim_timer();
+            super::linux::layer_shell::set_keyboard(
+                window,
+                super::linux::layer_shell::KeyboardMode::OnDemand,
+            );
+        }
         if PANEL_RELOCATING.replace(false) {
             clear_relocation_timer();
             super::linux::layer_shell::set_keyboard(
@@ -115,8 +135,66 @@ pub fn attach_panel_surface(
     Ok(())
 }
 
+/// How long a click on the panel holds the keyboard grab while waiting for
+/// the focus, see `reclaim_panel_keyboard`.
+#[cfg(target_os = "linux")]
+const KEYBOARD_RECLAIM_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(1500);
+
+/// Takes the keyboard back for the shown panel after a click on it that did
+/// not bring the focus along: a layer surface grabs the keyboard until the
+/// focus arrives, then lets the compositor move it away again; a regular
+/// window asks to be focused. Either way the webview gets the toolkit focus.
+#[cfg(target_os = "linux")]
+pub fn reclaim_panel_keyboard(window: &WebviewWindow, layer: bool) -> Result<(), AppError> {
+    use super::linux::layer_shell::{self, KeyboardMode};
+
+    let gtk_window = window.gtk_window()?;
+    log::debug!(
+        "Reclaiming the keyboard for the quick window: layer {layer}, window active {}",
+        gtk_window.is_active()
+    );
+    if layer {
+        layer_shell::set_keyboard(&gtk_window, KeyboardMode::Exclusive);
+        KEYBOARD_RECLAIMING.set(true);
+        clear_reclaim_timer();
+        let weak_window = gtk_window.downgrade();
+        let timer = gtk::glib::timeout_add_local_once(KEYBOARD_RECLAIM_TIMEOUT, move || {
+            RECLAIM_TIMER.with_borrow_mut(|timer| *timer = None);
+            if !KEYBOARD_RECLAIMING.replace(false) {
+                return;
+            }
+            log::info!("The quick window did not get the focus it reclaimed");
+            if let Some(window) = weak_window.upgrade() {
+                layer_shell::set_keyboard(&window, KeyboardMode::OnDemand);
+            }
+        });
+        RECLAIM_TIMER.with_borrow_mut(|slot| *slot = Some(timer));
+    } else {
+        focus_window(window)?;
+    }
+    window.with_webview(|webview| webview.inner().grab_focus())?;
+    Ok(())
+}
+
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+pub fn reclaim_panel_keyboard(window: &WebviewWindow, _layer: bool) -> Result<(), AppError> {
+    log::debug!("Reclaiming the keyboard for the quick window");
+    window.set_focus().map_err(Into::into)
+}
+
+#[cfg(target_os = "linux")]
+fn clear_reclaim_timer() {
+    RECLAIM_TIMER.with_borrow_mut(|timer| {
+        if let Some(timer) = timer.take() {
+            timer.remove();
+        }
+    });
+}
+
 #[cfg(target_os = "linux")]
 pub fn disable_panel_keyboard(window: &WebviewWindow) -> Result<(), AppError> {
+    KEYBOARD_RECLAIMING.set(false);
+    clear_reclaim_timer();
     crate::services::platform::linux::layer_shell::set_keyboard(
         &window.gtk_window()?,
         crate::services::platform::linux::layer_shell::KeyboardMode::None,
@@ -408,6 +486,9 @@ thread_local! {
     static SELECTED_PANEL_MONITOR: std::cell::RefCell<Option<gtk::gdk::Monitor>> = const { std::cell::RefCell::new(None) };
     static PANEL_RELOCATING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
     static RELOCATION_TIMER: std::cell::RefCell<Option<gtk::glib::SourceId>> = const { std::cell::RefCell::new(None) };
+    /// A click asked for the keyboard, see `reclaim_panel_keyboard`.
+    static KEYBOARD_RECLAIMING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    static RECLAIM_TIMER: std::cell::RefCell<Option<gtk::glib::SourceId>> = const { std::cell::RefCell::new(None) };
 }
 
 pub fn is_panel_relocating() -> bool {

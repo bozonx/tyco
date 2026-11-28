@@ -17,6 +17,11 @@ pub struct ActivationSnapshot {
     pub activation_id: u64,
     #[serde(rename = "windowId")]
     pub target_window_id: Option<String>,
+    /// A short name of the application `target_window_id` belongs to, when
+    /// the window tracker knows it, e.g. `Firefox`.
+    #[serde(rename = "windowAppName", skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub target_app_name: Option<String>,
     pub selected_text: Option<String>,
     /// Explicit text passed when opening quick input from another workflow.
     #[serde(skip_serializing_if = "Option::is_none")]

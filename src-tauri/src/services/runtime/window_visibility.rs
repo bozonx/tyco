@@ -295,7 +295,13 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
                     }
                 }
             }
+            WindowEvent::Focused(false) if window_label == QUICK_WINDOW_LABEL => {
+                log::debug!("The quick window lost the focus");
+            }
             WindowEvent::Focused(true) => {
+                if window_label == QUICK_WINDOW_LABEL {
+                    log::debug!("The quick window got the focus");
+                }
                 crate::services::storage::watcher::check_now(app);
                 crate::services::activation::metrics::mark_os_focus(app);
                 if window_label == QUICK_WINDOW_LABEL {

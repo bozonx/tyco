@@ -21,7 +21,9 @@
     "voiceCommands": "ხმოვანი ბრძანებები",
     "voiceQuickAiRequest": "ხმით AI-ს",
     "voiceScreenshotQuickAiRequest": "სკრინშოტი, ხმით AI-ს",
-    "webhook": "ვებჰუკი"
+    "webhook": "ვებჰუკი",
+    "insertIntoApp": "{app}-ში",
+    "insertIntoAppTitle": "{app}-ში ჩასმა"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "ტექსტის შეყვანა",
     "toPrompt": "მოთხოვნის ველში",
     "editText": "ტექსტის რედაქტირება",
-    "translateSwapLanguages": "ენების შეცვლა"
+    "translateSwapLanguages": "ენების შეცვლა",
+    "noInsertTarget": "ჩასასმელი ფანჯარა არ არის",
+    "keyboardAway": "კლავიშები არ მუშაობს: დააწკაპუნეთ პანელზე"
   },
   "nav": {
     "aiChat": "ჰკითხეთ AI-ს",

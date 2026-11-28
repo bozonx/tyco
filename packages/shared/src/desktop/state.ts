@@ -101,6 +101,7 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
     revision,
     activationId,
     windowId,
+    windowAppName,
     selectedText,
     quickInputText,
     screenshotProfileId,
@@ -126,6 +127,7 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
     activation: {
       activationId,
       windowId,
+      ...(windowAppName !== undefined ? { windowAppName } : {}),
       selectedText,
       ...(quickInputText !== undefined ? { quickInputText } : {}),
       ...(screenshotProfileId !== undefined ? { screenshotProfileId } : {}),

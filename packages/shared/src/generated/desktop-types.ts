@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 88e4418162668bc5003729e0dbaa707ac3c3de96a4d8132cdeb7d541c8b1dd6b
+// Source hash: c2469a6518724afa2c3853dbbb718f555980c6c632aa2c564553bccd3a6b65c7
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -480,6 +480,11 @@ export type CropRect = { x: number; y: number; width: number; height: number }
 export type DesktopActivationState = {
   activationId: number
   windowId: string | null
+  /**
+   * A short name of the application `target_window_id` belongs to, when the
+   * window tracker knows it, e.g. `Firefox`.
+   */
+  windowAppName?: string
   selectedText: string | null
   /** Explicit text passed when opening quick input from another workflow. */
   quickInputText?: string

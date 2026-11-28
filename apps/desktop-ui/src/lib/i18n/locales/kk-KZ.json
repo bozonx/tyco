@@ -21,7 +21,9 @@
     "voiceCommands": "Дауыстық командалар",
     "voiceQuickAiRequest": "Дауыспен ЖИ-ге",
     "voiceScreenshotQuickAiRequest": "Скриншот, дауыспен ЖИ-ге",
-    "webhook": "Вебхук"
+    "webhook": "Вебхук",
+    "insertIntoApp": "{app} ішіне",
+    "insertIntoAppTitle": "{app} ішіне кірістіру"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -678,7 +680,9 @@
     "typeText": "Мәтін енгізу",
     "toPrompt": "Сұрау өрісіне",
     "editText": "Мәтінді өңдеу",
-    "translateSwapLanguages": "Тілдерді ауыстыру"
+    "translateSwapLanguages": "Тілдерді ауыстыру",
+    "noInsertTarget": "Кірістіретін терезе жоқ",
+    "keyboardAway": "Пернелер істемейді: панельді басыңыз"
   },
   "nav": {
     "aiChat": "ЖИ-ден сұрау",
